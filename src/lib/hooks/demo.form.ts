@@ -5,8 +5,8 @@ import {
   SubscribeButton,
   TextArea,
   TextField,
-} from '../components/demo.FormComponents'
-import { fieldContext, formContext } from './demo.form-context'
+} from '@/lib/components/demo.FormComponents.tsx'
+import { fieldContext, formContext } from './demo.form-context.ts'
 
 export const { useAppForm } = createFormHook({
   fieldComponents: {

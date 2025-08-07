@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 
-import { useChat, useMessages } from '@/hooks/demo.useChat'
+import { useChat, useMessages } from '@/lib/hooks/useStreamConnection.ts'
 
-import Messages from './demo.messages'
+import Messages from './demo.messages.tsx'
 
 export default function ChatArea() {
   const messagesEndRef = useRef<HTMLDivElement>(null)
