@@ -23,6 +23,12 @@ export const ServerRoute = createServerFileRoute('/api/time-entries').methods({
           console.log('Streaming row:', row, parsedRow)
           controller.enqueue(JSON.stringify(parsedRow) + '\n')
         })
+
+        queryStream.on('end', () => {
+          console.log('Query stream ended')
+          controller.close()
+          client.release()
+        })
       },
     })
 
@@ -42,6 +48,8 @@ export const ServerRoute = createServerFileRoute('/api/time-entries').methods({
     const db = drizzle({ client })
 
     const res = await db.insert(timeEntries).values(validatedData).returning()
+
+    client.release()
 
     return new Response(JSON.stringify(res.map(timeEntriesSelectSchema.parse)), {
       status: 201,
