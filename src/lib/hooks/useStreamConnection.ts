@@ -78,6 +78,7 @@ export function useTimeEntries() {
   useEffect(() => {
     void (async () => {
       await loadKey()
+      console.log('Encryption key loaded successfully')
 
       const response = await fetch('/api/time-entries')
 
@@ -89,12 +90,14 @@ export function useTimeEntries() {
             for (const row of rows) {
               const parsed = await decryptData(JSON.parse(row))
 
+              console.log('Parsed row:', parsed)
+
               timeEntriesCollection.insert(parsed)
             }
         },
       }))
     })()
-  })
+  }, [])
 
   async function createDummyData() {
     const data = createData(
