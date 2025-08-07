@@ -102,7 +102,7 @@ export function useTimeEntries() {
   async function createDummyData() {
     const data = createData(
       new Date('2025-10-01T08:00:00Z'),
-      new Date('2025-10-01T10:00:00Z'),
+      new Date('2025-11-21T10:00:00Z'),
     )
     const encryptedData = await Promise.all(data.map(async (entry) => {
       return {

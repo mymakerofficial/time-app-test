@@ -17,6 +17,7 @@ function App() {
 
   return <div className="text-center">
     <Button onClick={createDummyData}>Create Dummy Data</Button>
+    <p className="text-muted-foreground">Entries loaded: {data.length}</p>
     {data.map((entry) => (
       <div key={entry.id}>
         <p>{entry.message}</p>
