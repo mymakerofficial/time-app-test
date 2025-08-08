@@ -1,11 +1,13 @@
 import {
   createCollection,
-  localOnlyCollectionOptions,
+  localStorageCollectionOptions,
 } from '@tanstack/react-db'
 import { TimeEntrySchema } from '@/lib/schema/timeEntries.ts'
 
 export const timeEntriesCollection = createCollection(
-  localOnlyCollectionOptions({
+  localStorageCollectionOptions({
+    id: 'time-entries',
+    storageKey: 'app-time-entries',
     getKey: (timeEntry) => timeEntry.id,
     schema: TimeEntrySchema,
   }),

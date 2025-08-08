@@ -16,10 +16,10 @@ function App() {
     dateToLookupKey(new Date('2025-10-11T08:00:00Z')),
   )
   const [end, setEnd] = useState(
-    dateToLookupKey(new Date('2025-10-21T10:00:00Z')),
+    dateToLookupKey(new Date('2025-11-21T10:00:00Z')),
   )
 
-  const { createDummyData } = useTimeEntries({
+  const { progress, createDummyData } = useTimeEntries({
     start,
     end,
   })
@@ -43,14 +43,24 @@ function App() {
         placeholder="End"
         className="mb-4 w-1/3 mx-auto"
       />
-      <p className="text-muted-foreground">Entries loaded: {data.length}</p>
-      {data.map((entry) => (
-        <div key={entry.id}>
-          <p>{entry.message}</p>
-          <p>Started at: {entry.startedAt.toLocaleString()}</p>
-          <p>Ended at: {entry.endedAt?.toLocaleString()}</p>
+      <div className="text-muted-foreground flex flex-row justify-center items-center gap-2">
+        Progress:{' '}
+        <div className="bg-neutral-200 h-4 w-24">
+          <div
+            className="bg-green-400 h-full"
+            style={{ width: `${progress}%` }}
+          ></div>
         </div>
-      ))}
+      </div>
+      <p className="text-muted-foreground">Entries loaded: {data.length}</p>
+      {progress === 100 &&
+        data.map((entry) => (
+          <div key={entry.id}>
+            <p>{entry.message}</p>
+            <p>Started at: {entry.startedAt.toLocaleString()}</p>
+            <p>Ended at: {entry.endedAt?.toLocaleString()}</p>
+          </div>
+        ))}
     </div>
   )
 }

@@ -65,11 +65,6 @@ export const ServerRoute = createServerFileRoute('/api/time-entries').methods({
 
         const count = await db.$count(query)
 
-        if (count === 0) {
-          controller.close()
-          return
-        }
-
         controller.enqueue(
           msgpack.encode({
             t: StreamingResponseRowType.HEADER,

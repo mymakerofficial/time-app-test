@@ -3,7 +3,7 @@ import {
   TimeEntriesSelect,
   TimeEntriesSelectSchema,
 } from '@/lib/db/schema/schema.ts'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { CryptoManager, uInt8Array2ab } from '@/lib/crypt.ts'
 import { createData } from '@/lib/utils.ts'
 import { z } from 'zod'
@@ -52,13 +52,17 @@ async function decryptData(
 }
 
 async function fetchStreaming({
-  url,
+  start,
+  end,
   signal,
+  onProgress,
 }: {
-  url: string
+  start: number
+  end: number
   signal?: AbortSignal
+  onProgress?: (progress: number) => void
 }) {
-  const response = await fetch(url, {
+  const response = await fetch(`/api/time-entries?start=${start}&end=${end}`, {
     signal,
   })
 
@@ -67,6 +71,15 @@ async function fetchStreaming({
   }
 
   let totalCount = 0
+  const newEntries = new Map<string, TimeEntry>()
+  const oldEntries = new Map<string, TimeEntry>()
+
+  const iterator = timeEntriesCollection.values()
+  for (const entry of iterator) {
+    if (entry.lookupKey > start && entry.lookupKey < end) {
+      oldEntries.set(entry.id, entry)
+    }
+  }
 
   const decodeStream = new TransformStream({
     transform: (chunk, controller) => {
@@ -95,16 +108,13 @@ async function fetchStreaming({
     },
   })
 
-  const collectionInsertStream = new WritableStream<TimeEntry>({
-    write: async (entry) => {
-      const existing = timeEntriesCollection.get(entry.id)
-
-      if (existing && existing.syncStatus === 'synced') {
-        // If the entry already exists and is synced, skip inserting it
-        return
+  const insertStream = new WritableStream<TimeEntry>({
+    write: (entry) => {
+      newEntries.set(entry.id, entry)
+      if (onProgress) {
+        const progress = Math.round((newEntries.size / totalCount) * 100)
+        onProgress(progress)
       }
-
-      timeEntriesCollection.insert(entry)
     },
   })
 
@@ -112,16 +122,27 @@ async function fetchStreaming({
     .pipeThrough(decodeStream)
     .pipeThrough(parseStream)
     .pipeThrough(decryptStream)
-    .pipeTo(collectionInsertStream)
+    .pipeTo(insertStream)
+
+  const newIdsSet = new Set(newEntries.keys())
+  const oldIdsSet = new Set(oldEntries.keys())
+
+  const idsToDelete = Array.from(oldIdsSet).filter((id) => !newIdsSet.has(id))
+  const entriesToInsert = Array.from(newEntries.values()).filter(
+    (entry) => !oldEntries.has(entry.id),
+  )
+
+  console.log('inserting:', entriesToInsert)
+  console.log('deleting:', idsToDelete)
+
+  if (entriesToInsert.length) timeEntriesCollection.insert(entriesToInsert)
+  if (idsToDelete.length) timeEntriesCollection.delete(idsToDelete)
+  // TODO update
 }
 
-export function useTimeEntries({
-  start = 0,
-  end = 999999,
-}: {
-  start?: number
-  end?: number
-}) {
+export function useTimeEntries({ start, end }: { start: number; end: number }) {
+  const [progress, setProgress] = useState(0)
+
   useEffect(() => {
     const controller = new AbortController()
 
@@ -129,8 +150,10 @@ export function useTimeEntries({
       await loadKey()
 
       await fetchStreaming({
-        url: `/api/time-entries?start=${start}&end=${end}`,
+        start,
+        end,
         signal: controller.signal,
+        onProgress: setProgress,
       })
     })()
 
@@ -173,6 +196,7 @@ export function useTimeEntries({
   }
 
   return {
+    progress,
     createDummyData,
   }
 }
