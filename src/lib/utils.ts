@@ -1,8 +1,8 @@
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
-import { TimeEntry } from './collections'
 import { nanoid } from 'nanoid'
 import { faker } from '@faker-js/faker/locale/en'
+import { TimeEntry } from '@/lib/schema/timeEntries.ts'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))

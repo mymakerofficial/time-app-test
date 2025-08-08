@@ -1,33 +1,97 @@
 import { createServerFileRoute } from '@tanstack/react-start/server'
-import { Pool } from 'pg'
+import { Pool, PoolClient } from 'pg'
 import QueryStream from 'pg-query-stream'
 import { drizzle } from 'drizzle-orm/node-postgres'
-import { timeEntries, timeEntriesInsertSchema, timeEntriesSelectSchema } from '@/lib/db/schema/schema.ts'
+import {
+  timeEntries,
+  TimeEntriesInsertSchema,
+  TimeEntriesSelectSchema,
+} from '@/lib/db/schema/schema.ts'
 import msgpack from '@ygoe/msgpack'
+import { PgSelect, QueryBuilder } from 'drizzle-orm/pg-core'
+import {
+  GetTimeEntriesParamsSchema,
+  StreamingResponseHeaderSchema,
+  StreamingResponseRowType,
+} from '@/lib/schema/timeEntries.ts'
+import { and, gt, lt } from 'drizzle-orm'
+import { z } from 'zod'
 
 const pool = new Pool({
   connectionString:
     'postgres://postgres_user:password@localhost:5432/postgres_db',
 })
 
+const client = await pool.connect()
+const db = drizzle({ client })
+
+const qb = new QueryBuilder()
+
+function drizzleQueryStream<T extends { toSQL: PgSelect['toSQL'] }>(
+  client: PoolClient,
+  query: T,
+) {
+  const sql = query.toSQL()
+  return client.query(new QueryStream(sql.sql, sql.params))
+}
+
+function getParams<T extends z.ZodObject>(
+  request: Request,
+  schema: T,
+): z.infer<T> {
+  const url = new URL(request.url)
+  const params: Record<string, string> = {}
+  for (const [key, value] of url.searchParams.entries()) {
+    params[key] = value
+  }
+  return schema.parse(params)
+}
+
 export const ServerRoute = createServerFileRoute('/api/time-entries').methods({
-  GET: () => {
+  GET: async ({ request }) => {
     const stream = new ReadableStream({
       start: async (controller) => {
-        const client = await pool.connect()
+        const { start, end } = getParams(request, GetTimeEntriesParamsSchema)
 
-        const query = new QueryStream('SELECT * FROM time_entries')
-        const queryStream = client.query(query)
+        const query = qb
+          .select()
+          .from(timeEntries)
+          .where(
+            and(
+              gt(timeEntries.lookupKey, start),
+              lt(timeEntries.lookupKey, end),
+            ),
+          )
+
+        const count = await db.$count(query)
+
+        if (count === 0) {
+          controller.close()
+          return
+        }
+
+        controller.enqueue(
+          msgpack.encode({
+            t: StreamingResponseRowType.HEADER,
+            data: StreamingResponseHeaderSchema.parse({
+              count,
+            }),
+          }),
+        )
+
+        const queryStream = drizzleQueryStream(client, query)
 
         queryStream.on('data', (row) => {
-          const parsedRow = timeEntriesSelectSchema.parse(row)
-          const buf = msgpack.encode(parsedRow);
-          controller.enqueue(buf);
-        });
+          const parsedRow = TimeEntriesSelectSchema.parse(row)
+          const buf = msgpack.encode({
+            t: StreamingResponseRowType.ENTRY,
+            data: parsedRow,
+          })
+          controller.enqueue(buf)
+        })
 
         queryStream.on('end', () => {
           controller.close()
-          client.release()
         })
       },
     })
@@ -41,14 +105,9 @@ export const ServerRoute = createServerFileRoute('/api/time-entries').methods({
   POST: async ({ request }) => {
     const data = await request.bytes()
     const decodedData = msgpack.decode(data) as unknown[]
-    const validatedData = timeEntriesInsertSchema.array().parse(decodedData)
-
-    const client = await pool.connect()
-    const db = drizzle({ client })
+    const validatedData = TimeEntriesInsertSchema.array().parse(decodedData)
 
     await db.insert(timeEntries).values(validatedData)
-
-    client.release()
 
     return new Response(undefined, {
       status: 201,
