@@ -1,9 +1,10 @@
 import { timeEntriesCollection, TimeEntry } from '@/lib/collections'
 import { timeEntriesSelectSchema } from '@/lib/db/schema/schema.ts'
 import { useEffect } from 'react'
-import { CryptoManager } from '@/lib/crypt.ts'
+import { CryptoManager, uInt8Array2ab } from '@/lib/crypt.ts'
 import { createData } from '@/lib/utils.ts'
 import { z } from 'zod'
+import msgpack from '@ygoe/msgpack'
 
 export function useTimeEntries() {
   const crypto = new CryptoManager()
@@ -23,22 +24,20 @@ export function useTimeEntries() {
   async function decryptData(
     encryptedData: z.Infer<typeof timeEntriesSelectSchema>,
   ): Promise<TimeEntry> {
-    const validated = timeEntriesSelectSchema.parse(encryptedData)
-
-    const createdAt = await crypto.decrypt(validated.createdAt)
-    const updatedAt = await crypto.decrypt(validated.updatedAt)
-    const startedAt = await crypto.decrypt(validated.startedAt)
-    const endedAt = validated.endedAt
-      ? await crypto.decrypt(validated.endedAt)
+    const createdAt = await crypto.decrypt(encryptedData.createdAt)
+    const updatedAt = await crypto.decrypt(encryptedData.updatedAt)
+    const startedAt = await crypto.decrypt(encryptedData.startedAt)
+    const endedAt = encryptedData.endedAt
+      ? await crypto.decrypt(encryptedData.endedAt)
       : null
-    const message = await crypto.decrypt(validated.message)
+    const message = await crypto.decrypt(encryptedData.message)
 
     return {
-      id: validated.id,
+      id: encryptedData.id,
       createdAt: new Date(createdAt),
       updatedAt: new Date(updatedAt),
       syncStatus: 'synced',
-      lookupKey: validated.lookupKey,
+      lookupKey: encryptedData.lookupKey,
       startedAt: new Date(startedAt),
       endedAt: endedAt ? new Date(endedAt) : null,
       message: message,
@@ -48,26 +47,38 @@ export function useTimeEntries() {
   useEffect(() => {
     void (async () => {
       await loadKey()
-      console.log('Encryption key loaded successfully')
 
       const response = await fetch('/api/time-entries')
 
-      response.body?.pipeThrough(new TextDecoderStream()).pipeTo(
-        new WritableStream({
-          write: async (chunk) => {
-            console.log('Received chunk:', chunk)
+      if (!response.body) {
+        throw new Error('No response body from API')
+      }
 
-            const rows = chunk.split('\n').filter((row) => row.length > 0)
-            for (const row of rows) {
-              const parsed = await decryptData(JSON.parse(row))
+      const decodeStream = new TransformStream({
+        transform: (chunk, controller) => {
+          const decoded = msgpack.decode(chunk, { multiple: true }) as unknown[]
+          decoded.forEach((entry) =>
+            controller.enqueue(timeEntriesSelectSchema.parse(entry)))
+        }
+      })
 
-              console.log('Parsed row:', parsed)
+      const decryptStream = new TransformStream<z.Infer<typeof timeEntriesSelectSchema>, TimeEntry>({
+        transform: async (entry, controller) => {
+          const decryptedEntry = await decryptData(entry)
+          controller.enqueue(decryptedEntry)
+        },
+      })
 
-              timeEntriesCollection.insert(parsed)
-            }
-          },
-        }),
-      )
+      const collectionInsertStream = new WritableStream<TimeEntry>({
+        write: async (entry) => {
+          timeEntriesCollection.insert(entry)
+        },
+      })
+
+      await response.body
+        .pipeThrough(decodeStream)
+        .pipeThrough(decryptStream)
+        .pipeTo(collectionInsertStream)
     })()
   }, [])
 
@@ -76,6 +87,7 @@ export function useTimeEntries() {
       new Date('2025-10-01T08:00:00Z'),
       new Date('2025-11-21T10:00:00Z'),
     )
+
     const encryptedData = await Promise.all(
       data.map(async (entry) => {
         return {
@@ -92,25 +104,18 @@ export function useTimeEntries() {
       }),
     )
 
+    const encodedData = uInt8Array2ab(msgpack.encode(encryptedData))
+
     await fetch(
-      new Request('/api/time-entries', {
+      '/api/time-entries',
+      {
         method: 'POST',
-        body: JSON.stringify(encryptedData),
+        body: encodedData,
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/octet-stream',
         },
-      }),
+      },
     )
-      .then(async (response) => {
-        if (!response.ok) {
-          throw new Error('Failed to create dummy data')
-        }
-        console.log('Dummy data created successfully')
-        console.log(data[0], await decryptData((await response.json())[0]))
-      })
-      .catch((error) => {
-        console.error('Error creating dummy data:', error)
-      })
   }
 
   return {

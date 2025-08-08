@@ -48,20 +48,29 @@ export class CryptoManager {
       this.key,
       str2ab(data),
     )
-    return ab2str(encrypted)
+    return new Uint8Array(encrypted)
   }
 
-  async decrypt(encrypted: string) {
+  async decrypt(encrypted: Uint8Array) {
     if (!this.key) {
       throw new Error('Key not initialized')
     }
     const decrypted = await window.crypto.subtle.decrypt(
       { name: 'AES-GCM', iv: new Uint8Array(12) },
       this.key,
-      str2ab(encrypted),
+      uInt8Array2ab(encrypted)
     )
     return ab2str(decrypted)
   }
+}
+
+export function uInt8Array2ab(arr: Uint8Array) {
+  const buf = new ArrayBuffer(arr.length)
+  const bufView = new Uint8Array(buf)
+  for (let i = 0, arrLen = arr.length; i < arrLen; i++) {
+    bufView[i] = arr[i]
+  }
+  return buf
 }
 
 export function ab2str(buf: ArrayBuffer) {
@@ -77,7 +86,7 @@ export function str2ab(str: string) {
   return buf
 }
 
-export function Uint8Array2str(arr: Uint8Array) {
+export function uInt8Array2str(arr: Uint8Array) {
   return String.fromCharCode(...arr)
 }
 

@@ -1,7 +1,6 @@
 import { customType, integer, pgTable, varchar } from 'drizzle-orm/pg-core'
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod'
-import { any, string } from 'zod'
-import { ab2str, str2ab, str2Uint8Array, Uint8Array2str } from '@/lib/crypt.ts'
+import * as z from 'zod'
 
 const bytea = customType<{ data: Uint8Array }>({
   dataType() {
@@ -19,21 +18,17 @@ export const timeEntries = pgTable('time_entries', {
   message: bytea().notNull(),
 })
 
-const ab2strType = any().transform((it) => typeof it === "string" ? it : ab2str(it))
-
 export const timeEntriesSelectSchema = createSelectSchema(timeEntries, {
-  createdAt: ab2strType,
-  updatedAt: ab2strType,
-  startedAt: ab2strType,
-  endedAt: ab2strType.nullable(),
-  message: ab2strType,
+  createdAt: z.instanceof(Uint8Array),
+  updatedAt: z.instanceof(Uint8Array),
+  startedAt: z.instanceof(Uint8Array),
+  endedAt: z.instanceof(Uint8Array).nullable(),
+  message: z.instanceof(Uint8Array),
 })
 export const timeEntriesInsertSchema = createInsertSchema(timeEntries, {
-  createdAt: string().transform(str2Uint8Array),
-  updatedAt: string().transform(str2Uint8Array),
-  startedAt: string().transform(str2Uint8Array),
-  endedAt: string()
-    .transform(str2Uint8Array)
-    .nullable(),
-  message: string().transform(str2Uint8Array),
+  createdAt: z.instanceof(Uint8Array),
+  updatedAt: z.instanceof(Uint8Array),
+  startedAt: z.instanceof(Uint8Array),
+  endedAt: z.instanceof(Uint8Array).nullable(),
+  message: z.instanceof(Uint8Array),
 })

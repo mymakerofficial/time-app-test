@@ -3,6 +3,7 @@ import { Pool } from 'pg'
 import QueryStream from 'pg-query-stream'
 import { drizzle } from 'drizzle-orm/node-postgres'
 import { timeEntries, timeEntriesInsertSchema, timeEntriesSelectSchema } from '@/lib/db/schema/schema.ts'
+import msgpack from '@ygoe/msgpack'
 
 const pool = new Pool({
   connectionString:
@@ -18,14 +19,13 @@ export const ServerRoute = createServerFileRoute('/api/time-entries').methods({
         const query = new QueryStream('SELECT * FROM time_entries')
         const queryStream = client.query(query)
 
-        queryStream.forEach((row) => {
+        queryStream.on('data', (row) => {
           const parsedRow = timeEntriesSelectSchema.parse(row)
-          console.log('Streaming row:', row, parsedRow)
-          controller.enqueue(JSON.stringify(parsedRow) + '\n')
-        })
+          const buf = msgpack.encode(parsedRow);
+          controller.enqueue(buf);
+        });
 
         queryStream.on('end', () => {
-          console.log('Query stream ended')
           controller.close()
           client.release()
         })
@@ -34,24 +34,23 @@ export const ServerRoute = createServerFileRoute('/api/time-entries').methods({
 
     return new Response(stream, {
       headers: {
-        'Content-Type': 'application/x-ndjson',
+        'Content-Type': 'application/octet-stream',
       },
     })
   },
   POST: async ({ request }) => {
-    const data = await request.json()
-    const validatedData = timeEntriesInsertSchema.array().parse(data)
-
-    console.log('Inserting data:', validatedData)
+    const data = await request.bytes()
+    const decodedData = msgpack.decode(data) as unknown[]
+    const validatedData = timeEntriesInsertSchema.array().parse(decodedData)
 
     const client = await pool.connect()
     const db = drizzle({ client })
 
-    const res = await db.insert(timeEntries).values(validatedData).returning()
+    await db.insert(timeEntries).values(validatedData)
 
     client.release()
 
-    return new Response(JSON.stringify(res.map(timeEntriesSelectSchema.parse)), {
+    return new Response(undefined, {
       status: 201,
       headers: {
         'Content-Type': 'application/json',

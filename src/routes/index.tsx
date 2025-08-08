@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useTimeEntries } from '@/lib/hooks/useStreamConnection.ts'
+import { useTimeEntries } from '@/lib/hooks/useTimeEntries.ts'
 import { useLiveQuery } from '@tanstack/react-db'
 import { timeEntriesCollection } from '@/lib/collections'
 import { Button } from '@/lib/components/ui/button.tsx'
