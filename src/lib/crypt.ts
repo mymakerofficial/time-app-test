@@ -14,9 +14,13 @@ export class CryptoManager {
 
   async exportKey() {
     if (!this.key) {
-      return null
+      throw new Error('Key not initialized')
     }
-    return (await window.crypto.subtle.exportKey('jwk', this.key)).k
+    const { k } = await window.crypto.subtle.exportKey('jwk', this.key)
+    if (!k) {
+      throw new Error('Failed to export key')
+    }
+    return k
   }
 
   async importKey(objectKey: string) {

@@ -12,9 +12,6 @@ import { createServerRootRoute } from '@tanstack/react-start/server'
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as DemoDbChatRouteImport } from './routes/demo.db-chat'
-import { Route as DemoFormAddressRouteImport } from './routes/demo.form.address'
-import { ServerRoute as DemoDbChatApiServerRouteImport } from './routes/demo.db-chat-api'
 import { ServerRoute as ApiTimeEntriesServerRouteImport } from './routes/api/time-entries'
 
 const rootServerRouteImport = createServerRootRoute()
@@ -24,21 +21,6 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DemoDbChatRoute = DemoDbChatRouteImport.update({
-  id: '/demo/db-chat',
-  path: '/demo/db-chat',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DemoFormAddressRoute = DemoFormAddressRouteImport.update({
-  id: '/demo/form/address',
-  path: '/demo/form/address',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DemoDbChatApiServerRoute = DemoDbChatApiServerRouteImport.update({
-  id: '/demo/db-chat-api',
-  path: '/demo/db-chat-api',
-  getParentRoute: () => rootServerRouteImport,
-} as any)
 const ApiTimeEntriesServerRoute = ApiTimeEntriesServerRouteImport.update({
   id: '/api/time-entries',
   path: '/api/time-entries',
@@ -47,57 +29,45 @@ const ApiTimeEntriesServerRoute = ApiTimeEntriesServerRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/demo/db-chat': typeof DemoDbChatRoute
-  '/demo/form/address': typeof DemoFormAddressRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/demo/db-chat': typeof DemoDbChatRoute
-  '/demo/form/address': typeof DemoFormAddressRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/demo/db-chat': typeof DemoDbChatRoute
-  '/demo/form/address': typeof DemoFormAddressRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/demo/db-chat' | '/demo/form/address'
+  fullPaths: '/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/demo/db-chat' | '/demo/form/address'
-  id: '__root__' | '/' | '/demo/db-chat' | '/demo/form/address'
+  to: '/'
+  id: '__root__' | '/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  DemoDbChatRoute: typeof DemoDbChatRoute
-  DemoFormAddressRoute: typeof DemoFormAddressRoute
 }
 export interface FileServerRoutesByFullPath {
   '/api/time-entries': typeof ApiTimeEntriesServerRoute
-  '/demo/db-chat-api': typeof DemoDbChatApiServerRoute
 }
 export interface FileServerRoutesByTo {
   '/api/time-entries': typeof ApiTimeEntriesServerRoute
-  '/demo/db-chat-api': typeof DemoDbChatApiServerRoute
 }
 export interface FileServerRoutesById {
   __root__: typeof rootServerRouteImport
   '/api/time-entries': typeof ApiTimeEntriesServerRoute
-  '/demo/db-chat-api': typeof DemoDbChatApiServerRoute
 }
 export interface FileServerRouteTypes {
   fileServerRoutesByFullPath: FileServerRoutesByFullPath
-  fullPaths: '/api/time-entries' | '/demo/db-chat-api'
+  fullPaths: '/api/time-entries'
   fileServerRoutesByTo: FileServerRoutesByTo
-  to: '/api/time-entries' | '/demo/db-chat-api'
-  id: '__root__' | '/api/time-entries' | '/demo/db-chat-api'
+  to: '/api/time-entries'
+  id: '__root__' | '/api/time-entries'
   fileServerRoutesById: FileServerRoutesById
 }
 export interface RootServerRouteChildren {
   ApiTimeEntriesServerRoute: typeof ApiTimeEntriesServerRoute
-  DemoDbChatApiServerRoute: typeof DemoDbChatApiServerRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -109,31 +79,10 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/demo/db-chat': {
-      id: '/demo/db-chat'
-      path: '/demo/db-chat'
-      fullPath: '/demo/db-chat'
-      preLoaderRoute: typeof DemoDbChatRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/demo/form/address': {
-      id: '/demo/form/address'
-      path: '/demo/form/address'
-      fullPath: '/demo/form/address'
-      preLoaderRoute: typeof DemoFormAddressRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 declare module '@tanstack/react-start/server' {
   interface ServerFileRoutesByPath {
-    '/demo/db-chat-api': {
-      id: '/demo/db-chat-api'
-      path: '/demo/db-chat-api'
-      fullPath: '/demo/db-chat-api'
-      preLoaderRoute: typeof DemoDbChatApiServerRouteImport
-      parentRoute: typeof rootServerRouteImport
-    }
     '/api/time-entries': {
       id: '/api/time-entries'
       path: '/api/time-entries'
@@ -146,15 +95,12 @@ declare module '@tanstack/react-start/server' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  DemoDbChatRoute: DemoDbChatRoute,
-  DemoFormAddressRoute: DemoFormAddressRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
 const rootServerRouteChildren: RootServerRouteChildren = {
   ApiTimeEntriesServerRoute: ApiTimeEntriesServerRoute,
-  DemoDbChatApiServerRoute: DemoDbChatApiServerRoute,
 }
 export const serverRouteTree = rootServerRouteImport
   ._addFileChildren(rootServerRouteChildren)
