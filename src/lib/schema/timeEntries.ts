@@ -3,7 +3,7 @@ import { TimeEntriesSelectSchema } from '@/lib/db/schema/schema.ts'
 
 export const StreamingResponseRowType = {
   HEADER: 0,
-  ENTRY: 1,
+  ROW: 1,
 } as const
 export type StreamingResponseRowType =
   (typeof StreamingResponseRowType)[keyof typeof StreamingResponseRowType]
@@ -33,7 +33,7 @@ export const GetTimeEntriesResponseSchema = z.discriminatedUnion('t', [
     data: StreamingResponseHeaderSchema,
   }),
   z.object({
-    t: z.literal(StreamingResponseRowType.ENTRY),
+    t: z.literal(StreamingResponseRowType.ROW),
     data: TimeEntriesSelectSchema,
   }),
 ])

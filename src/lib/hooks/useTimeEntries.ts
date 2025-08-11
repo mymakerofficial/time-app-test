@@ -72,12 +72,12 @@ async function fetchStreaming({
 
   let totalCount = 0
   const newEntries = new Map<string, TimeEntry>()
-  const oldEntries = new Map<string, TimeEntry>()
+  const oldIdsSet = new Set<string>()
 
   const iterator = timeEntriesCollection.values()
   for (const entry of iterator) {
     if (entry.lookupKey > start && entry.lookupKey < end) {
-      oldEntries.set(entry.id, entry)
+      oldIdsSet.add(entry.id)
     }
   }
 
@@ -95,7 +95,7 @@ async function fetchStreaming({
       if (parsed.t === StreamingResponseRowType.HEADER) {
         totalCount = parsed.data.count
         console.log(`Total entries to process: ${totalCount}`)
-      } else if (parsed.t === StreamingResponseRowType.ENTRY) {
+      } else if (parsed.t === StreamingResponseRowType.ROW) {
         controller.enqueue(parsed.data)
       }
     },
@@ -110,7 +110,11 @@ async function fetchStreaming({
 
   const insertStream = new WritableStream<TimeEntry>({
     write: (entry) => {
+      // entries left in oldIdsSet after processing are to be deleted
+      oldIdsSet.delete(entry.id)
+
       newEntries.set(entry.id, entry)
+
       if (onProgress) {
         const progress = Math.round((newEntries.size / totalCount) * 100)
         onProgress(progress)
@@ -124,20 +128,15 @@ async function fetchStreaming({
     .pipeThrough(decryptStream)
     .pipeTo(insertStream)
 
-  const newIdsSet = new Set(newEntries.keys())
-  const oldIdsSet = new Set(oldEntries.keys())
+  const idsToDelete = Array.from(oldIdsSet)
+  const entriesToInsert = Array.from(newEntries.values())
 
-  const idsToDelete = Array.from(oldIdsSet).filter((id) => !newIdsSet.has(id))
-  const entriesToInsert = Array.from(newEntries.values()).filter(
-    (entry) => !oldEntries.has(entry.id),
-  )
-
-  console.log('inserting:', entriesToInsert)
   console.log('deleting:', idsToDelete)
+  console.log('inserting:', entriesToInsert)
 
-  if (entriesToInsert.length) timeEntriesCollection.insert(entriesToInsert)
+  // Important: deleting needs to be done before inserting new entries
   if (idsToDelete.length) timeEntriesCollection.delete(idsToDelete)
-  // TODO update
+  if (entriesToInsert.length) timeEntriesCollection.insert(entriesToInsert)
 }
 
 export function useTimeEntries({ start, end }: { start: number; end: number }) {
