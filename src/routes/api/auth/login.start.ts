@@ -13,43 +13,43 @@ export const ServerRoute = createServerFileRoute(
   '/api/auth/login/start',
 ).methods({
   POST: routeHandler(async ({ request }) => {
-    const body = await getRequestBody({
+    const { username, clientPublicEphemeral } = await getRequestBody({
       request,
       schema: PostAuthLoginStartRequestSchema,
     })
 
-    const [dbUser] = await db
+    const [user] = await db
       .select({
         id: users.id,
         salt: users.salt,
         verifier: users.verifier,
       })
       .from(users)
-      .where(eq(users.username, body.username))
+      .where(eq(users.username, username))
       .limit(1)
 
-    if (!dbUser) {
+    if (!user) {
       error({
         code: 'USER_NOT_FOUND',
         message: 'User with this username does not exist',
       })
     }
 
-    const serverEphemeral = SRP.generateEphemeral(dbUser.verifier)
+    const serverEphemeral = SRP.generateEphemeral(user.verifier)
 
-    pendingLogins.set(dbUser.id, {
-      serverSecret: serverEphemeral.secret,
-      clientPublic: body.clientPublic,
-      salt: dbUser.salt,
-      verifier: dbUser.verifier,
+    pendingLogins.set(user.id, {
+      serverSecretEphemeral: serverEphemeral.secret,
+      clientPublicEphemeral,
+      salt: user.salt,
+      verifier: user.verifier,
     })
 
     return new Response(
       JSON.stringify(
         PostAuthLoginStartResponseSchema.parse({
-          userId: dbUser.id,
-          salt: dbUser.salt,
-          serverPublic: serverEphemeral.public,
+          userId: user.id,
+          salt: user.salt,
+          serverPublicEphemeral: serverEphemeral.public,
         }),
       ),
       {

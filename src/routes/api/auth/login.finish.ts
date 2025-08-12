@@ -26,8 +26,8 @@ export const ServerRoute = createServerFileRoute(
     }
 
     const serverSession = SRP.deriveSession(
-      pending.serverSecret,
-      pending.clientPublic,
+      pending.serverSecretEphemeral,
+      pending.clientPublicEphemeral,
       pending.salt,
       body.userId,
       pending.verifier,

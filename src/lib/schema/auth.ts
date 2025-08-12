@@ -30,7 +30,7 @@ export type PostAuthRegisterFinishRequest = z.infer<
 
 export const PostAuthLoginStartRequestSchema = z.object({
   username: z.string(),
-  clientPublic: z.string(),
+  clientPublicEphemeral: z.string(),
 })
 export type PostAuthLoginStartRequest = z.infer<
   typeof PostAuthLoginStartRequestSchema
@@ -39,7 +39,7 @@ export type PostAuthLoginStartRequest = z.infer<
 export const PostAuthLoginStartResponseSchema = z.object({
   userId: z.string(),
   salt: z.string(),
-  serverPublic: z.string(),
+  serverPublicEphemeral: z.string(),
 })
 export type PostAuthLoginStartResponse = z.infer<
   typeof PostAuthLoginStartResponseSchema

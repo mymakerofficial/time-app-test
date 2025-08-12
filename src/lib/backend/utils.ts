@@ -119,6 +119,7 @@ export function routeHandler<
     try {
       return await handler(ctx)
     } catch (error) {
+      console.error(error)
       const appError = ApiError.fromUnknown(error)
       return new Response(appError.toJSON(), {
         status: appError.statusCode,

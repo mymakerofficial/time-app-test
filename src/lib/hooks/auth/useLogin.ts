@@ -44,17 +44,18 @@ export function useLogin() {
     mutationFn: async ({ username, password }: LoginFormValues) => {
       const clientEphemeral = SRP.generateEphemeral()
 
-      const { userId, salt, serverPublic } = await startLogin({
+      const { userId, salt, serverPublicEphemeral } = await startLogin({
         username,
-        clientPublic: clientEphemeral.public,
+        clientPublicEphemeral: clientEphemeral.public,
       })
 
+      const privateKey = SRP.derivePrivateKey(salt, userId, password)
       const clientSession = SRP.deriveSession(
         clientEphemeral.secret,
-        serverPublic,
+        serverPublicEphemeral,
         salt,
         userId,
-        password,
+        privateKey,
       )
 
       const { serverProof } = await finishLogin({
