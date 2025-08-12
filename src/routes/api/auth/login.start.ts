@@ -1,13 +1,14 @@
 import { createServerFileRoute } from '@tanstack/react-start/server'
-import { db, error, getRequestBody, routeHandler } from '@/lib/backend/utils.ts'
+import { error, getRequestBody, routeHandler } from '@/lib/backend/utils.ts'
 import {
   PostAuthLoginStartRequestSchema,
   PostAuthLoginStartResponseSchema,
 } from '@/lib/schema/auth.ts'
 import { users } from '@/lib/db/schema/schema.ts'
 import { eq } from 'drizzle-orm'
-import * as SRP from 'secure-remote-password/server'
+import * as srp from 'secure-remote-password/server'
 import { pendingLogins } from '@/lib/backend/auth.ts'
+import { db } from '@/lib/backend/constants.ts'
 
 export const ServerRoute = createServerFileRoute(
   '/api/auth/login/start',
@@ -35,7 +36,7 @@ export const ServerRoute = createServerFileRoute(
       })
     }
 
-    const serverEphemeral = SRP.generateEphemeral(user.verifier)
+    const serverEphemeral = srp.generateEphemeral(user.verifier)
 
     pendingLogins.set(user.id, {
       serverSecretEphemeral: serverEphemeral.secret,

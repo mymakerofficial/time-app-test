@@ -55,6 +55,7 @@ export type PostAuthLoginFinishRequest = z.infer<
 
 export const PostAuthLoginFinishResponseSchema = z.object({
   serverProof: z.string(),
+  accessToken: z.string(),
 })
 export type PostAuthLoginFinishResponse = z.infer<
   typeof PostAuthLoginFinishResponseSchema

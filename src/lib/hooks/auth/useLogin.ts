@@ -1,6 +1,6 @@
 import { useMutation } from '@tanstack/react-query'
 import { LoginFormValues } from '@/lib/schema/form.ts'
-import * as SRP from 'secure-remote-password/client'
+import * as srp from 'secure-remote-password/client'
 import {
   PostAuthLoginFinishRequest,
   PostAuthLoginFinishRequestSchema,
@@ -10,6 +10,7 @@ import {
   PostAuthLoginStartResponseSchema,
 } from '@/lib/schema/auth.ts'
 import { getResponseBody } from '@/lib/utils.ts'
+import { clearAccessToken, setAccessToken } from '@/lib/authStore.ts'
 
 async function startLogin(data: PostAuthLoginStartRequest) {
   const response = await fetch('/api/auth/login/start', {
@@ -42,15 +43,15 @@ async function finishLogin(data: PostAuthLoginFinishRequest) {
 export function useLogin() {
   return useMutation({
     mutationFn: async ({ username, password }: LoginFormValues) => {
-      const clientEphemeral = SRP.generateEphemeral()
+      const clientEphemeral = srp.generateEphemeral()
 
       const { userId, salt, serverPublicEphemeral } = await startLogin({
         username,
         clientPublicEphemeral: clientEphemeral.public,
       })
 
-      const privateKey = SRP.derivePrivateKey(salt, userId, password)
-      const clientSession = SRP.deriveSession(
+      const privateKey = srp.derivePrivateKey(salt, userId, password)
+      const clientSession = srp.deriveSession(
         clientEphemeral.secret,
         serverPublicEphemeral,
         salt,
@@ -58,14 +59,17 @@ export function useLogin() {
         privateKey,
       )
 
-      const { serverProof } = await finishLogin({
+      const { serverProof, accessToken } = await finishLogin({
         userId,
         clientProof: clientSession.proof,
       })
 
-      SRP.verifySession(clientEphemeral.public, clientSession, serverProof)
+      srp.verifySession(clientEphemeral.public, clientSession, serverProof)
 
-      console.log('Authenticated! Session key:', clientSession.key)
+      setAccessToken(accessToken)
+    },
+    onError: () => {
+      clearAccessToken()
     },
   })
 }

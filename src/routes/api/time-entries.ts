@@ -7,13 +7,12 @@ import {
 } from '@/lib/schema/timeEntries.ts'
 import { and, gt, lt } from 'drizzle-orm'
 import {
-  client,
   createEncodedStream,
-  db,
   drizzleQueryStream,
   getEncodedBody,
   getParams,
 } from '@/lib/backend/utils.ts'
+import { client, db } from '@/lib/backend/constants.ts'
 
 export const ServerRoute = createServerFileRoute('/api/time-entries').methods({
   GET: ({ request }) => {

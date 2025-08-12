@@ -11,10 +11,12 @@
 import { createServerRootRoute } from '@tanstack/react-start/server'
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as MeRouteImport } from './routes/me'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthRegisterRouteImport } from './routes/auth/register'
 import { Route as AuthLoginRouteImport } from './routes/auth/login'
 import { ServerRoute as ApiTimeEntriesServerRouteImport } from './routes/api/time-entries'
+import { ServerRoute as ApiMeServerRouteImport } from './routes/api/me'
 import { ServerRoute as ApiAuthRegisterStartServerRouteImport } from './routes/api/auth/register.start'
 import { ServerRoute as ApiAuthRegisterFinishServerRouteImport } from './routes/api/auth/register.finish'
 import { ServerRoute as ApiAuthLoginStartServerRouteImport } from './routes/api/auth/login.start'
@@ -22,6 +24,11 @@ import { ServerRoute as ApiAuthLoginFinishServerRouteImport } from './routes/api
 
 const rootServerRouteImport = createServerRootRoute()
 
+const MeRoute = MeRouteImport.update({
+  id: '/me',
+  path: '/me',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -40,6 +47,11 @@ const AuthLoginRoute = AuthLoginRouteImport.update({
 const ApiTimeEntriesServerRoute = ApiTimeEntriesServerRouteImport.update({
   id: '/api/time-entries',
   path: '/api/time-entries',
+  getParentRoute: () => rootServerRouteImport,
+} as any)
+const ApiMeServerRoute = ApiMeServerRouteImport.update({
+  id: '/api/me',
+  path: '/api/me',
   getParentRoute: () => rootServerRouteImport,
 } as any)
 const ApiAuthRegisterStartServerRoute =
@@ -68,34 +80,39 @@ const ApiAuthLoginFinishServerRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/me': typeof MeRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/me': typeof MeRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/me': typeof MeRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/register': typeof AuthRegisterRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth/login' | '/auth/register'
+  fullPaths: '/' | '/me' | '/auth/login' | '/auth/register'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth/login' | '/auth/register'
-  id: '__root__' | '/' | '/auth/login' | '/auth/register'
+  to: '/' | '/me' | '/auth/login' | '/auth/register'
+  id: '__root__' | '/' | '/me' | '/auth/login' | '/auth/register'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  MeRoute: typeof MeRoute
   AuthLoginRoute: typeof AuthLoginRoute
   AuthRegisterRoute: typeof AuthRegisterRoute
 }
 export interface FileServerRoutesByFullPath {
+  '/api/me': typeof ApiMeServerRoute
   '/api/time-entries': typeof ApiTimeEntriesServerRoute
   '/api/auth/login/finish': typeof ApiAuthLoginFinishServerRoute
   '/api/auth/login/start': typeof ApiAuthLoginStartServerRoute
@@ -103,6 +120,7 @@ export interface FileServerRoutesByFullPath {
   '/api/auth/register/start': typeof ApiAuthRegisterStartServerRoute
 }
 export interface FileServerRoutesByTo {
+  '/api/me': typeof ApiMeServerRoute
   '/api/time-entries': typeof ApiTimeEntriesServerRoute
   '/api/auth/login/finish': typeof ApiAuthLoginFinishServerRoute
   '/api/auth/login/start': typeof ApiAuthLoginStartServerRoute
@@ -111,6 +129,7 @@ export interface FileServerRoutesByTo {
 }
 export interface FileServerRoutesById {
   __root__: typeof rootServerRouteImport
+  '/api/me': typeof ApiMeServerRoute
   '/api/time-entries': typeof ApiTimeEntriesServerRoute
   '/api/auth/login/finish': typeof ApiAuthLoginFinishServerRoute
   '/api/auth/login/start': typeof ApiAuthLoginStartServerRoute
@@ -120,6 +139,7 @@ export interface FileServerRoutesById {
 export interface FileServerRouteTypes {
   fileServerRoutesByFullPath: FileServerRoutesByFullPath
   fullPaths:
+    | '/api/me'
     | '/api/time-entries'
     | '/api/auth/login/finish'
     | '/api/auth/login/start'
@@ -127,6 +147,7 @@ export interface FileServerRouteTypes {
     | '/api/auth/register/start'
   fileServerRoutesByTo: FileServerRoutesByTo
   to:
+    | '/api/me'
     | '/api/time-entries'
     | '/api/auth/login/finish'
     | '/api/auth/login/start'
@@ -134,6 +155,7 @@ export interface FileServerRouteTypes {
     | '/api/auth/register/start'
   id:
     | '__root__'
+    | '/api/me'
     | '/api/time-entries'
     | '/api/auth/login/finish'
     | '/api/auth/login/start'
@@ -142,6 +164,7 @@ export interface FileServerRouteTypes {
   fileServerRoutesById: FileServerRoutesById
 }
 export interface RootServerRouteChildren {
+  ApiMeServerRoute: typeof ApiMeServerRoute
   ApiTimeEntriesServerRoute: typeof ApiTimeEntriesServerRoute
   ApiAuthLoginFinishServerRoute: typeof ApiAuthLoginFinishServerRoute
   ApiAuthLoginStartServerRoute: typeof ApiAuthLoginStartServerRoute
@@ -151,6 +174,13 @@ export interface RootServerRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/me': {
+      id: '/me'
+      path: '/me'
+      fullPath: '/me'
+      preLoaderRoute: typeof MeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -181,6 +211,13 @@ declare module '@tanstack/react-start/server' {
       path: '/api/time-entries'
       fullPath: '/api/time-entries'
       preLoaderRoute: typeof ApiTimeEntriesServerRouteImport
+      parentRoute: typeof rootServerRouteImport
+    }
+    '/api/me': {
+      id: '/api/me'
+      path: '/api/me'
+      fullPath: '/api/me'
+      preLoaderRoute: typeof ApiMeServerRouteImport
       parentRoute: typeof rootServerRouteImport
     }
     '/api/auth/register/start': {
@@ -216,6 +253,7 @@ declare module '@tanstack/react-start/server' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  MeRoute: MeRoute,
   AuthLoginRoute: AuthLoginRoute,
   AuthRegisterRoute: AuthRegisterRoute,
 }
@@ -223,6 +261,7 @@ export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
 const rootServerRouteChildren: RootServerRouteChildren = {
+  ApiMeServerRoute: ApiMeServerRoute,
   ApiTimeEntriesServerRoute: ApiTimeEntriesServerRoute,
   ApiAuthLoginFinishServerRoute: ApiAuthLoginFinishServerRoute,
   ApiAuthLoginStartServerRoute: ApiAuthLoginStartServerRoute,

@@ -9,3 +9,8 @@ export const pendingLogins = new Map<
     verifier: string
   }
 >()
+
+export const refreshTokens = new Map<
+  string,
+  { userId: string; expiresAt: number }
+>()

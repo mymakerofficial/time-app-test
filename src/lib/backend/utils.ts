@@ -1,9 +1,7 @@
-import { Pool, PoolClient } from 'pg'
+import { PoolClient } from 'pg'
 import { z } from 'zod'
 import msgpack from '@ygoe/msgpack'
 import { PgSelect } from 'drizzle-orm/pg-core'
-import { drizzle } from 'drizzle-orm/node-postgres'
-import { timeEntries, users } from '@/lib/db/schema/schema.ts'
 import QueryStream from 'pg-query-stream'
 import {
   AnyServerRouteWithTypes,
@@ -12,13 +10,8 @@ import {
 } from '@tanstack/start-server-core'
 import { ApiError } from '@/lib/backend/error.ts'
 import { ApiErrorResponse } from '@/lib/schema/error.ts'
-
-const pool = new Pool({
-  connectionString:
-    'postgres://postgres_user:password@localhost:5432/postgres_db',
-})
-export const client = await pool.connect()
-export const db = drizzle({ client, schema: { timeEntries, users } })
+import { JWTPayload, jwtVerify } from 'jose'
+import { JWT_SECRET } from '@/lib/backend/constants.ts'
 
 export function drizzleQueryStream<T extends { toSQL: PgSelect['toSQL'] }>(
   client: PoolClient,
@@ -83,6 +76,43 @@ export function createEncodedStream<T extends z.ZodTypeAny>({
       },
     }),
   )
+}
+
+export function getAuthHeader(request: Request): string {
+  const authHeader = request.headers.get('Authorization')
+  if (!authHeader) {
+    throw new ApiError('Authorization header is missing', {
+      statusCode: 401,
+      errorCode: 'MISSING_AUTHORIZATION',
+    })
+  }
+
+  const parts = authHeader.split(' ')
+  if (parts.length !== 2 || parts[0] !== 'Bearer') {
+    throw new ApiError('Invalid Authorization header format', {
+      statusCode: 401,
+      errorCode: 'INVALID_AUTHORIZATION_FORMAT',
+    })
+  }
+
+  return parts[1]
+}
+
+export async function validateAuthHeader(request: Request) {
+  const authHeader = getAuthHeader(request)
+
+  const { payload } = await jwtVerify(authHeader, JWT_SECRET, {
+    algorithms: ['HS256'],
+  })
+
+  if (!payload || typeof payload !== 'object' || !('sub' in payload)) {
+    throw new ApiError('Invalid JWT payload', {
+      statusCode: 401,
+      errorCode: 'INVALID_JWT_PAYLOAD',
+    })
+  }
+
+  return payload as JWTPayload & { sub: string }
 }
 
 export function error(err: ApiErrorResponse): never {

@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query'
-import * as SRP from 'secure-remote-password/client'
+import * as srp from 'secure-remote-password/client'
 import {
   PostAuthRegisterFinishRequest,
   PostAuthRegisterFinishRequestSchema,
@@ -45,9 +45,9 @@ export function useRegister() {
     mutationFn: async ({ username, password }: RegisterFormValues) => {
       const { userId } = await startRegistration({ username })
 
-      const salt = SRP.generateSalt()
-      const privateKey = SRP.derivePrivateKey(salt, userId, password)
-      const verifier = SRP.deriveVerifier(privateKey)
+      const salt = srp.generateSalt()
+      const privateKey = srp.derivePrivateKey(salt, userId, password)
+      const verifier = srp.deriveVerifier(privateKey)
 
       await finishRegistration({
         username,

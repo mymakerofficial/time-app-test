@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useLogin } from '@/lib/hooks/auth/useLogin'
 import { useLoginForm } from '@/lib/hooks/form/useLoginForm.ts'
+import { useMe } from '@/lib/hooks/useMe.ts'
 
 export const Route = createFileRoute('/auth/login')({
   component: RouteComponent,
@@ -11,9 +12,10 @@ function RouteComponent() {
   const form = useLoginForm({
     onSubmit: login,
   })
+  const { data: me } = useMe()
 
   return (
-    <div className="max-w-md mx-auto mt-10 p-6">
+    <div className="max-w-md mx-auto mt-10 p-6 space-y-6">
       <form
         onSubmit={async (e) => {
           e.preventDefault()
@@ -42,6 +44,7 @@ function RouteComponent() {
           {error.message || 'An unknown error occurred.'}
         </div>
       )}
+      <div>{JSON.stringify(me)}</div>
     </div>
   )
 }

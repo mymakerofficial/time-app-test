@@ -1,8 +1,9 @@
 import { createServerFileRoute } from '@tanstack/react-start/server'
-import { db, error, getRequestBody, routeHandler } from '@/lib/backend/utils.ts'
+import { error, getRequestBody, routeHandler } from '@/lib/backend/utils.ts'
 import { PostAuthRegisterFinishRequestSchema } from '@/lib/schema/auth.ts'
 import { pendingRegistrations } from '@/lib/backend/auth.ts'
 import { users } from '@/lib/db/schema/schema.ts'
+import { db } from '@/lib/backend/constants.ts'
 
 export const ServerRoute = createServerFileRoute(
   '/api/auth/register/finish',
