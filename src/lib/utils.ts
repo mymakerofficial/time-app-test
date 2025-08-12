@@ -3,11 +3,11 @@ import { twMerge } from 'tailwind-merge'
 import { nanoid } from 'nanoid'
 import { faker } from '@faker-js/faker/locale/en'
 import { TimeEntry } from '@/lib/schema/timeEntries.ts'
+import { z } from 'zod'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
-
 
 export function dateToLookupKey(date: Date): number {
   return Math.round(date.getTime() / 60000000)
@@ -61,4 +61,15 @@ export function wait(ms: number, signal?: AbortSignal): Promise<void> {
       reject(new Error('Operation aborted'))
     })
   })
+}
+
+export async function getResponseBody<T extends z.ZodTypeAny>({
+  response,
+  schema,
+}: {
+  response: Response
+  schema: T
+}): Promise<z.infer<T>> {
+  const data = await response.json()
+  return schema.parse(data)
 }

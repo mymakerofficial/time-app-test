@@ -1,4 +1,10 @@
-import { customType, integer, pgTable, varchar } from 'drizzle-orm/pg-core'
+import {
+  customType,
+  integer,
+  pgTable,
+  timestamp,
+  varchar,
+} from 'drizzle-orm/pg-core'
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod'
 import z from 'zod'
 
@@ -35,3 +41,12 @@ export const TimeEntriesInsertSchema = createInsertSchema(timeEntries, {
   message: z.instanceof(Uint8Array),
 })
 export type TimeEntriesInsert = z.infer<typeof TimeEntriesInsertSchema>
+
+export const users = pgTable('users', {
+  id: varchar().primaryKey(),
+  createdAt: timestamp().notNull().defaultNow(),
+  updatedAt: timestamp().notNull().defaultNow(),
+  username: varchar().notNull().unique(),
+  salt: varchar().notNull(),
+  verifier: varchar().notNull(),
+})
