@@ -1,5 +1,5 @@
 import { createServerFileRoute } from '@tanstack/react-start/server'
-import { errorResponse, getRequestBody } from '@/lib/backend/utils.ts'
+import { error, getRequestBody, routeHandler } from '@/lib/backend/utils.ts'
 import {
   PostAuthLoginFinishRequestSchema,
   PostAuthLoginFinishResponseSchema,
@@ -10,7 +10,7 @@ import { pendingLogins } from '@/lib/backend/auth.ts'
 export const ServerRoute = createServerFileRoute(
   '/api/auth/login/finish',
 ).methods({
-  POST: async ({ request }) => {
+  POST: routeHandler(async ({ request }) => {
     const body = await getRequestBody({
       request,
       schema: PostAuthLoginFinishRequestSchema,
@@ -19,7 +19,7 @@ export const ServerRoute = createServerFileRoute(
     const pending = pendingLogins.get(body.userId)
 
     if (!pending) {
-      return errorResponse({
+      error({
         code: 'INVALID_LOGIN',
         message: 'User login not found or invalid',
       })
@@ -49,5 +49,5 @@ export const ServerRoute = createServerFileRoute(
         },
       },
     )
-  },
+  }),
 })

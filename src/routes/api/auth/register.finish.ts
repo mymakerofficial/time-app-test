@@ -1,5 +1,5 @@
 import { createServerFileRoute } from '@tanstack/react-start/server'
-import { db, errorResponse, getRequestBody } from '@/lib/backend/utils.ts'
+import { db, error, getRequestBody, routeHandler } from '@/lib/backend/utils.ts'
 import { PostAuthRegisterFinishRequestSchema } from '@/lib/schema/auth.ts'
 import { pendingRegistrations } from '@/lib/backend/auth.ts'
 import { users } from '@/lib/db/schema/schema.ts'
@@ -7,7 +7,7 @@ import { users } from '@/lib/db/schema/schema.ts'
 export const ServerRoute = createServerFileRoute(
   '/api/auth/register/finish',
 ).methods({
-  POST: async ({ request }) => {
+  POST: routeHandler(async ({ request }) => {
     const body = await getRequestBody({
       request,
       schema: PostAuthRegisterFinishRequestSchema,
@@ -16,7 +16,7 @@ export const ServerRoute = createServerFileRoute(
     const pending = pendingRegistrations.get(body.userId)
 
     if (!pending || pending.username !== body.username) {
-      return errorResponse({
+      error({
         code: 'INVALID_REGISTRATION',
         message: 'User registration not found or invalid',
       })
@@ -37,5 +37,5 @@ export const ServerRoute = createServerFileRoute(
         'Content-Type': 'application/json',
       },
     })
-  },
+  }),
 })

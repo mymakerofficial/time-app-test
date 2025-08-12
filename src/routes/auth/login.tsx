@@ -1,15 +1,15 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useRegister } from '@/lib/hooks/auth/useRegister.ts'
-import { useRegisterForm } from '@/lib/hooks/form/useRegisterForm.ts'
+import { useLogin } from '@/lib/hooks/auth/useLogin'
+import { useLoginForm } from '@/lib/hooks/form/useLoginForm.ts'
 
-export const Route = createFileRoute('/auth/register')({
+export const Route = createFileRoute('/auth/login')({
   component: RouteComponent,
 })
 
 function RouteComponent() {
-  const { mutateAsync: register, error } = useRegister()
-  const form = useRegisterForm({
-    onSubmit: register,
+  const { mutateAsync: login, error } = useLogin()
+  const form = useLoginForm({
+    onSubmit: login,
   })
 
   return (
@@ -30,10 +30,10 @@ function RouteComponent() {
         </form.AppField>
         <div className="flex items-center space-x-3">
           <form.AppForm>
-            <form.SubscribeButton label="Register" />
+            <form.SubscribeButton label="Login" />
           </form.AppForm>
-          <a href="/auth/login" className="text-blue-500 hover:underline">
-            Login
+          <a href="/auth/register" className="text-blue-500 hover:underline">
+            Register
           </a>
         </div>
       </form>

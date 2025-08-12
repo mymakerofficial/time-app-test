@@ -5,7 +5,13 @@ import { PgSelect } from 'drizzle-orm/pg-core'
 import { drizzle } from 'drizzle-orm/node-postgres'
 import { timeEntries, users } from '@/lib/db/schema/schema.ts'
 import QueryStream from 'pg-query-stream'
-import { ApiError, ApiErrorSchema } from '@/lib/schema/error.ts'
+import {
+  AnyServerRouteWithTypes,
+  ServerRouteMethodHandlerCtx,
+  ServerRouteMethodHandlerFn,
+} from '@tanstack/start-server-core'
+import { ApiError } from '@/lib/backend/error.ts'
+import { ApiErrorResponse } from '@/lib/schema/error.ts'
 
 const pool = new Pool({
   connectionString:
@@ -79,11 +85,47 @@ export function createEncodedStream<T extends z.ZodTypeAny>({
   )
 }
 
-export function errorResponse(err: ApiError) {
-  return new Response(JSON.stringify(ApiErrorSchema.parse(err)), {
-    status: 400,
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  })
+export function error(err: ApiErrorResponse): never {
+  throw ApiError.fromApiErrorResponse(err)
+}
+
+export function routeHandler<
+  TParentRoute extends AnyServerRouteWithTypes,
+  TFullPath extends string,
+  TMiddlewares,
+>(
+  handler: ServerRouteMethodHandlerFn<
+    TParentRoute,
+    TFullPath,
+    TMiddlewares,
+    undefined,
+    any
+  >,
+): ServerRouteMethodHandlerFn<
+  TParentRoute,
+  TFullPath,
+  TMiddlewares,
+  undefined,
+  any
+> {
+  return async (
+    ctx: ServerRouteMethodHandlerCtx<
+      TParentRoute,
+      TFullPath,
+      TMiddlewares,
+      undefined
+    >,
+  ) => {
+    try {
+      return await handler(ctx)
+    } catch (error) {
+      const appError = ApiError.fromUnknown(error)
+      return new Response(appError.toJSON(), {
+        status: appError.statusCode,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+    }
+  }
 }

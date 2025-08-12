@@ -1,5 +1,5 @@
 import { createServerFileRoute } from '@tanstack/react-start/server'
-import { db, errorResponse, getRequestBody } from '@/lib/backend/utils.ts'
+import { db, error, getRequestBody, routeHandler } from '@/lib/backend/utils.ts'
 import {
   PostAuthRegisterStartRequestSchema,
   PostAuthRegisterStartResponseSchema,
@@ -12,7 +12,7 @@ import { pendingRegistrations } from '@/lib/backend/auth.ts'
 export const ServerRoute = createServerFileRoute(
   '/api/auth/register/start',
 ).methods({
-  POST: async ({ request }) => {
+  POST: routeHandler(async ({ request }) => {
     const { username } = await getRequestBody({
       request,
       schema: PostAuthRegisterStartRequestSchema,
@@ -28,7 +28,7 @@ export const ServerRoute = createServerFileRoute(
     )
 
     if (existing > 0) {
-      return errorResponse({
+      error({
         code: 'USER_EXISTS',
         message: 'User with this username or ID already exists',
       })
@@ -49,5 +49,5 @@ export const ServerRoute = createServerFileRoute(
         },
       },
     )
-  },
+  }),
 })

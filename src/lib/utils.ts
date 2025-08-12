@@ -4,6 +4,8 @@ import { nanoid } from 'nanoid'
 import { faker } from '@faker-js/faker/locale/en'
 import { TimeEntry } from '@/lib/schema/timeEntries.ts'
 import { z } from 'zod'
+import { ApiErrorResponseSchema } from '@/lib/schema/error.ts'
+import { ApiError } from '@/lib/backend/error.ts'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -71,5 +73,13 @@ export async function getResponseBody<T extends z.ZodTypeAny>({
   schema: T
 }): Promise<z.infer<T>> {
   const data = await response.json()
+  if (!response.ok) {
+    const apiError = ApiErrorResponseSchema.safeParse(data)
+    if (apiError.success) {
+      throw ApiError.fromApiErrorResponse(apiError.data)
+    } else {
+      throw new Error('Invalid API error response')
+    }
+  }
   return schema.parse(data)
 }

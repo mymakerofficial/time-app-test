@@ -9,6 +9,7 @@ import {
 } from '@/lib/schema/auth.ts'
 import { RegisterFormValues } from '@/lib/schema/form.ts'
 import { getResponseBody } from '@/lib/utils.ts'
+import { useLogin } from '@/lib/hooks/auth/useLogin.ts'
 
 async function startRegistration(data: PostAuthRegisterStartRequest) {
   const response = await fetch('/api/auth/register/start', {
@@ -38,11 +39,13 @@ async function finishRegistration(data: PostAuthRegisterFinishRequest) {
 }
 
 export function useRegister() {
+  const { mutateAsync: login } = useLogin()
+
   return useMutation({
     mutationFn: async ({ username, password }: RegisterFormValues) => {
       const { userId } = await startRegistration({ username })
 
-      const salt = 'bean' // crypto.randomBytes(16).toString('hex')
+      const salt = SRP.generateSalt()
       const privateKey = SRP.derivePrivateKey(salt, userId, password)
       const verifier = SRP.deriveVerifier(privateKey)
 
@@ -52,6 +55,9 @@ export function useRegister() {
         salt,
         verifier,
       })
+    },
+    onSuccess: async (_, { username, password }) => {
+      await login({ username, password })
     },
   })
 }

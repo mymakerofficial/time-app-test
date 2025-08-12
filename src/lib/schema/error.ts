@@ -1,7 +1,8 @@
 import z from 'zod'
 
-export const ApiErrorSchema = z.object({
+export const ApiErrorResponseSchema = z.object({
   code: z.string(),
   message: z.string(),
+  cause: z.any().optional(),
 })
-export type ApiError = z.infer<typeof ApiErrorSchema>
+export type ApiErrorResponse = z.infer<typeof ApiErrorResponseSchema>
