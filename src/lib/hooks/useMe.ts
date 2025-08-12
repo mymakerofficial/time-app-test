@@ -1,7 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
-import { getAccessToken } from '@/lib/authStore.ts'
+import { useAccessToken } from '@/lib/authStore.ts'
 
 export function useMe() {
+  const getAccessToken = useAccessToken()
+
   return useQuery({
     queryKey: ['me'],
     queryFn: async () => {

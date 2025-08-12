@@ -10,7 +10,7 @@ import {
   PostAuthLoginStartResponseSchema,
 } from '@/lib/schema/auth.ts'
 import { getResponseBody } from '@/lib/utils.ts'
-import { clearAccessToken, setAccessToken } from '@/lib/authStore.ts'
+import { useSetAccessToken } from '@/lib/authStore.ts'
 
 async function startLogin(data: PostAuthLoginStartRequest) {
   const response = await fetch('/api/auth/login/start', {
@@ -40,7 +40,13 @@ async function finishLogin(data: PostAuthLoginFinishRequest) {
   })
 }
 
-export function useLogin() {
+export function useLogin({
+  onSuccess,
+}: {
+  onSuccess?: () => void | Promise<void>
+}) {
+  const setAccessToken = useSetAccessToken()
+
   return useMutation({
     mutationFn: async ({ username, password }: LoginFormValues) => {
       const clientEphemeral = srp.generateEphemeral()
@@ -68,8 +74,8 @@ export function useLogin() {
 
       setAccessToken(accessToken)
     },
-    onError: () => {
-      clearAccessToken()
+    onSuccess: async () => {
+      return onSuccess?.()
     },
   })
 }

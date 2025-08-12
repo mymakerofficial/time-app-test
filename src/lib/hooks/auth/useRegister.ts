@@ -38,8 +38,14 @@ async function finishRegistration(data: PostAuthRegisterFinishRequest) {
   }
 }
 
-export function useRegister() {
-  const { mutateAsync: login } = useLogin()
+export function useRegister({
+  onSuccess,
+}: {
+  onSuccess?: () => void | Promise<void>
+}) {
+  const { mutateAsync: login } = useLogin({
+    onSuccess,
+  })
 
   return useMutation({
     mutationFn: async ({ username, password }: RegisterFormValues) => {

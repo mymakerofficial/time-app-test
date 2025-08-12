@@ -1,13 +1,7 @@
 import { Store } from '@tanstack/store'
-import { useStore } from '@tanstack/react-form'
-import { useCallback } from 'react'
 
 const store = new Store({
   accessToken: null as string | null,
-})
-
-store.subscribe((state) => {
-  console.log('Access token updated:', state.currentVal.accessToken)
 })
 
 export function setAccessToken(token: string | null) {
@@ -16,20 +10,9 @@ export function setAccessToken(token: string | null) {
   }))
 }
 
-export function clearAccessToken() {
-  store.setState(() => ({
-    accessToken: null,
-  }))
-}
-
-export function useAccessToken() {
-  const accessToken = useStore(store, (state) => state.accessToken)
-  return useCallback(() => {
-    if (!accessToken) {
-      throw new Error('Access token is not set')
-    }
-    return accessToken
-  }, [accessToken])
+export function useSetAccessToken() {
+  // TODO the access token changed, queries should be rerun
+  return setAccessToken
 }
 
 export function getAccessToken() {
@@ -38,4 +21,9 @@ export function getAccessToken() {
     throw new Error('Access token is not set')
   }
   return accessToken
+}
+
+export function useAccessToken() {
+  // TODO if access token is not set we need to refresh it
+  return getAccessToken
 }

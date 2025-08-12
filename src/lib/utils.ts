@@ -76,7 +76,10 @@ export async function getResponseBody<T extends z.ZodTypeAny>({
   if (!response.ok) {
     const apiError = ApiErrorResponseSchema.safeParse(data)
     if (apiError.success) {
-      throw ApiError.fromApiErrorResponse(apiError.data)
+      throw ApiError.fromApiErrorResponse({
+        ...apiError.data,
+        statusCode: response.status,
+      })
     } else {
       throw new Error('Invalid API error response')
     }

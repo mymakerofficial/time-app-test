@@ -8,10 +8,12 @@ import {
   ServerRouteMethodHandlerCtx,
   ServerRouteMethodHandlerFn,
 } from '@tanstack/start-server-core'
-import { ApiError } from '@/lib/backend/error.ts'
-import { ApiErrorResponse } from '@/lib/schema/error.ts'
-import { JWTPayload, jwtVerify } from 'jose'
-import { JWT_SECRET } from '@/lib/backend/constants.ts'
+import { ApiError, ApiErrorParams } from '@/lib/backend/error.ts'
+import { JWTPayload, jwtVerify, SignJWT } from 'jose'
+import {
+  ACCESS_TOKEN_EXPIRY_SECONDS,
+  JWT_SECRET,
+} from '@/lib/backend/constants.ts'
 
 export function drizzleQueryStream<T extends { toSQL: PgSelect['toSQL'] }>(
   client: PoolClient,
@@ -115,7 +117,34 @@ export async function validateAuthHeader(request: Request) {
   return payload as JWTPayload & { sub: string }
 }
 
-export function error(err: ApiErrorResponse): never {
+export function getCookies(request: Request): Record<string, string> {
+  const cookieHeader = request.headers.get('Cookie')
+  if (!cookieHeader) {
+    return {}
+  }
+
+  return Object.fromEntries(
+    cookieHeader.split('; ').map((cookie) => {
+      const [key, value] = cookie.split('=')
+      return [key, decodeURIComponent(value)]
+    }),
+  )
+}
+
+export function getRefreshTokenCookie(request: Request) {
+  const cookies = getCookies(request)
+
+  if (!cookies.refreshToken) {
+    throw new ApiError('Refresh token cookie is missing', {
+      statusCode: 401,
+      errorCode: 'MISSING_REFRESH_TOKEN',
+    })
+  }
+
+  return cookies.refreshToken
+}
+
+export function error(err: ApiErrorParams): never {
   throw ApiError.fromApiErrorResponse(err)
 }
 
@@ -159,4 +188,14 @@ export function routeHandler<
       })
     }
   }
+}
+
+export function generateAccessToken({ userId }: { userId: string }) {
+  return new SignJWT({ sub: userId })
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt()
+    .setExpirationTime(
+      Math.floor(Date.now() / 1000) + ACCESS_TOKEN_EXPIRY_SECONDS,
+    )
+    .sign(JWT_SECRET)
 }

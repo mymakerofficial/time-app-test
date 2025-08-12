@@ -17,6 +17,8 @@ import { Route as AuthRegisterRouteImport } from './routes/auth/register'
 import { Route as AuthLoginRouteImport } from './routes/auth/login'
 import { ServerRoute as ApiTimeEntriesServerRouteImport } from './routes/api/time-entries'
 import { ServerRoute as ApiMeServerRouteImport } from './routes/api/me'
+import { ServerRoute as ApiAuthRefreshServerRouteImport } from './routes/api/auth/refresh'
+import { ServerRoute as ApiAuthLogoutServerRouteImport } from './routes/api/auth/logout'
 import { ServerRoute as ApiAuthRegisterStartServerRouteImport } from './routes/api/auth/register.start'
 import { ServerRoute as ApiAuthRegisterFinishServerRouteImport } from './routes/api/auth/register.finish'
 import { ServerRoute as ApiAuthLoginStartServerRouteImport } from './routes/api/auth/login.start'
@@ -52,6 +54,16 @@ const ApiTimeEntriesServerRoute = ApiTimeEntriesServerRouteImport.update({
 const ApiMeServerRoute = ApiMeServerRouteImport.update({
   id: '/api/me',
   path: '/api/me',
+  getParentRoute: () => rootServerRouteImport,
+} as any)
+const ApiAuthRefreshServerRoute = ApiAuthRefreshServerRouteImport.update({
+  id: '/api/auth/refresh',
+  path: '/api/auth/refresh',
+  getParentRoute: () => rootServerRouteImport,
+} as any)
+const ApiAuthLogoutServerRoute = ApiAuthLogoutServerRouteImport.update({
+  id: '/api/auth/logout',
+  path: '/api/auth/logout',
   getParentRoute: () => rootServerRouteImport,
 } as any)
 const ApiAuthRegisterStartServerRoute =
@@ -114,6 +126,8 @@ export interface RootRouteChildren {
 export interface FileServerRoutesByFullPath {
   '/api/me': typeof ApiMeServerRoute
   '/api/time-entries': typeof ApiTimeEntriesServerRoute
+  '/api/auth/logout': typeof ApiAuthLogoutServerRoute
+  '/api/auth/refresh': typeof ApiAuthRefreshServerRoute
   '/api/auth/login/finish': typeof ApiAuthLoginFinishServerRoute
   '/api/auth/login/start': typeof ApiAuthLoginStartServerRoute
   '/api/auth/register/finish': typeof ApiAuthRegisterFinishServerRoute
@@ -122,6 +136,8 @@ export interface FileServerRoutesByFullPath {
 export interface FileServerRoutesByTo {
   '/api/me': typeof ApiMeServerRoute
   '/api/time-entries': typeof ApiTimeEntriesServerRoute
+  '/api/auth/logout': typeof ApiAuthLogoutServerRoute
+  '/api/auth/refresh': typeof ApiAuthRefreshServerRoute
   '/api/auth/login/finish': typeof ApiAuthLoginFinishServerRoute
   '/api/auth/login/start': typeof ApiAuthLoginStartServerRoute
   '/api/auth/register/finish': typeof ApiAuthRegisterFinishServerRoute
@@ -131,6 +147,8 @@ export interface FileServerRoutesById {
   __root__: typeof rootServerRouteImport
   '/api/me': typeof ApiMeServerRoute
   '/api/time-entries': typeof ApiTimeEntriesServerRoute
+  '/api/auth/logout': typeof ApiAuthLogoutServerRoute
+  '/api/auth/refresh': typeof ApiAuthRefreshServerRoute
   '/api/auth/login/finish': typeof ApiAuthLoginFinishServerRoute
   '/api/auth/login/start': typeof ApiAuthLoginStartServerRoute
   '/api/auth/register/finish': typeof ApiAuthRegisterFinishServerRoute
@@ -141,6 +159,8 @@ export interface FileServerRouteTypes {
   fullPaths:
     | '/api/me'
     | '/api/time-entries'
+    | '/api/auth/logout'
+    | '/api/auth/refresh'
     | '/api/auth/login/finish'
     | '/api/auth/login/start'
     | '/api/auth/register/finish'
@@ -149,6 +169,8 @@ export interface FileServerRouteTypes {
   to:
     | '/api/me'
     | '/api/time-entries'
+    | '/api/auth/logout'
+    | '/api/auth/refresh'
     | '/api/auth/login/finish'
     | '/api/auth/login/start'
     | '/api/auth/register/finish'
@@ -157,6 +179,8 @@ export interface FileServerRouteTypes {
     | '__root__'
     | '/api/me'
     | '/api/time-entries'
+    | '/api/auth/logout'
+    | '/api/auth/refresh'
     | '/api/auth/login/finish'
     | '/api/auth/login/start'
     | '/api/auth/register/finish'
@@ -166,6 +190,8 @@ export interface FileServerRouteTypes {
 export interface RootServerRouteChildren {
   ApiMeServerRoute: typeof ApiMeServerRoute
   ApiTimeEntriesServerRoute: typeof ApiTimeEntriesServerRoute
+  ApiAuthLogoutServerRoute: typeof ApiAuthLogoutServerRoute
+  ApiAuthRefreshServerRoute: typeof ApiAuthRefreshServerRoute
   ApiAuthLoginFinishServerRoute: typeof ApiAuthLoginFinishServerRoute
   ApiAuthLoginStartServerRoute: typeof ApiAuthLoginStartServerRoute
   ApiAuthRegisterFinishServerRoute: typeof ApiAuthRegisterFinishServerRoute
@@ -220,6 +246,20 @@ declare module '@tanstack/react-start/server' {
       preLoaderRoute: typeof ApiMeServerRouteImport
       parentRoute: typeof rootServerRouteImport
     }
+    '/api/auth/refresh': {
+      id: '/api/auth/refresh'
+      path: '/api/auth/refresh'
+      fullPath: '/api/auth/refresh'
+      preLoaderRoute: typeof ApiAuthRefreshServerRouteImport
+      parentRoute: typeof rootServerRouteImport
+    }
+    '/api/auth/logout': {
+      id: '/api/auth/logout'
+      path: '/api/auth/logout'
+      fullPath: '/api/auth/logout'
+      preLoaderRoute: typeof ApiAuthLogoutServerRouteImport
+      parentRoute: typeof rootServerRouteImport
+    }
     '/api/auth/register/start': {
       id: '/api/auth/register/start'
       path: '/api/auth/register/start'
@@ -263,6 +303,8 @@ export const routeTree = rootRouteImport
 const rootServerRouteChildren: RootServerRouteChildren = {
   ApiMeServerRoute: ApiMeServerRoute,
   ApiTimeEntriesServerRoute: ApiTimeEntriesServerRoute,
+  ApiAuthLogoutServerRoute: ApiAuthLogoutServerRoute,
+  ApiAuthRefreshServerRoute: ApiAuthRefreshServerRoute,
   ApiAuthLoginFinishServerRoute: ApiAuthLoginFinishServerRoute,
   ApiAuthLoginStartServerRoute: ApiAuthLoginStartServerRoute,
   ApiAuthRegisterFinishServerRoute: ApiAuthRegisterFinishServerRoute,

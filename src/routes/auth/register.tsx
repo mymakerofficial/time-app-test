@@ -1,18 +1,22 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useRegister } from '@/lib/hooks/auth/useRegister.ts'
 import { useRegisterForm } from '@/lib/hooks/form/useRegisterForm.ts'
-import { useMe } from '@/lib/hooks/useMe.ts'
 
 export const Route = createFileRoute('/auth/register')({
   component: RouteComponent,
 })
 
 function RouteComponent() {
-  const { mutateAsync: register, error } = useRegister()
+  const navigate = useNavigate()
+  const { mutateAsync: register, error } = useRegister({
+    onSuccess: () =>
+      navigate({
+        to: '/me',
+      }),
+  })
   const form = useRegisterForm({
     onSubmit: register,
   })
-  const { data: me } = useMe()
 
   return (
     <div className="max-w-md mx-auto mt-10 p-6 space-y-6">
@@ -44,7 +48,6 @@ function RouteComponent() {
           {error.message || 'An unknown error occurred.'}
         </div>
       )}
-      <div>{JSON.stringify(me)}</div>
     </div>
   )
 }

@@ -60,3 +60,8 @@ export const PostAuthLoginFinishResponseSchema = z.object({
 export type PostAuthLoginFinishResponse = z.infer<
   typeof PostAuthLoginFinishResponseSchema
 >
+
+export const AuthRefreshResponseSchema = z.object({
+  accessToken: z.string(),
+})
+export type AuthRefreshResponse = z.infer<typeof AuthRefreshResponseSchema>

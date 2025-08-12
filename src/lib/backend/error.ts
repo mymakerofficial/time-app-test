@@ -1,5 +1,9 @@
 import { ApiErrorResponse, ApiErrorResponseSchema } from '@/lib/schema/error.ts'
 
+export type ApiErrorParams = ApiErrorResponse & {
+  statusCode?: number
+}
+
 export class ApiError extends Error {
   errorCode: string
   statusCode: number
@@ -36,11 +40,11 @@ export class ApiError extends Error {
     }
   }
 
-  static fromApiErrorResponse(response: ApiErrorResponse): ApiError {
+  static fromApiErrorResponse(response: ApiErrorParams): ApiError {
     return new ApiError(response.message, {
       cause: response.cause,
       errorCode: response.code,
-      statusCode: 500,
+      statusCode: response.statusCode ?? 500,
     })
   }
 

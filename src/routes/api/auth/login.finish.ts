@@ -1,17 +1,17 @@
 import { createServerFileRoute } from '@tanstack/react-start/server'
-import { error, getRequestBody, routeHandler } from '@/lib/backend/utils.ts'
+import {
+  error,
+  generateAccessToken,
+  getRequestBody,
+  routeHandler,
+} from '@/lib/backend/utils.ts'
 import {
   PostAuthLoginFinishRequestSchema,
   PostAuthLoginFinishResponseSchema,
 } from '@/lib/schema/auth.ts'
 import * as srp from 'secure-remote-password/server'
 import { pendingLogins, refreshTokens } from '@/lib/backend/auth.ts'
-import { SignJWT } from 'jose'
-import {
-  ACCESS_TOKEN_EXPIRY_SECONDS,
-  JWT_SECRET,
-  REFRESH_TOKEN_EXPIRY_MS,
-} from '@/lib/backend/constants.ts'
+import { REFRESH_TOKEN_EXPIRY_MS } from '@/lib/backend/constants.ts'
 import * as crypto from 'node:crypto'
 
 export const ServerRoute = createServerFileRoute(
@@ -41,13 +41,7 @@ export const ServerRoute = createServerFileRoute(
       clientProof,
     )
 
-    const accessToken = await new SignJWT({ sub: userId })
-      .setProtectedHeader({ alg: 'HS256' })
-      .setIssuedAt()
-      .setExpirationTime(
-        Math.floor(Date.now() / 1000) + ACCESS_TOKEN_EXPIRY_SECONDS,
-      )
-      .sign(JWT_SECRET)
+    const accessToken = await generateAccessToken({ userId })
 
     const refreshToken = crypto.randomBytes(32).toString('hex')
     refreshTokens.set(refreshToken, {
