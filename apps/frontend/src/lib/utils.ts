@@ -1,13 +1,10 @@
-import { clsx, type ClassValue } from 'clsx'
+import { type ClassValue, clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 import { nanoid } from 'nanoid'
 import { faker } from '@faker-js/faker/locale/en'
 import { TimeEntry } from './schema/timeEntries.ts'
-import { z } from 'zod'
-import { ApiErrorResponseSchema } from './schema/error.ts'
-import { ApiError } from './error.ts'
-import { MaybeFunction } from './types.ts'
-import { isError, isFunction } from './guards.ts'
+import { MaybeFunction } from '@time-app-test/shared/types.ts'
+import { isError, isFunction } from '@time-app-test/shared/guards.ts'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -55,38 +52,6 @@ export function createData(start: Date, end: Date): TimeEntry[] {
   }
 
   return entries
-}
-
-export function wait(ms: number, signal?: AbortSignal): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const timeoutId = setTimeout(() => resolve(), ms)
-    signal?.addEventListener('abort', () => {
-      clearTimeout(timeoutId)
-      reject(new Error('Operation aborted'))
-    })
-  })
-}
-
-export async function getResponseBody<T extends z.ZodTypeAny>({
-  response,
-  schema,
-}: {
-  response: Response
-  schema: T
-}): Promise<z.infer<T>> {
-  const data = await response.json()
-  if (!response.ok) {
-    const apiError = ApiErrorResponseSchema.safeParse(data)
-    if (apiError.success) {
-      throw ApiError.from({
-        ...apiError.data,
-        statusCode: response.status,
-      })
-    } else {
-      throw new Error('Invalid API error response')
-    }
-  }
-  return schema.parse(data)
 }
 
 export function resolve<TRes, TArgs extends any[] = any[]>(

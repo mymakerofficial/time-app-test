@@ -10,19 +10,8 @@ import {
 } from '@tanstack/start-server-core'
 import { ApiError, ApiErrorProps } from '../error.ts'
 import { JWTPayload, jwtVerify, SignJWT } from 'jose'
-import {
-  ACCESS_TOKEN_EXPIRY_SECONDS,
-  JWT_SECRET,
-} from './constants.ts'
+import { ACCESS_TOKEN_EXPIRY_SECONDS, JWT_SECRET } from './constants.ts'
 import { Optional } from '../optional.ts'
-
-export function drizzleQueryStream<T extends { toSQL: PgSelect['toSQL'] }>(
-  client: PoolClient,
-  query: T,
-) {
-  const sql = query.toSQL()
-  return client.query(new QueryStream(sql.sql, sql.params))
-}
 
 export function getParams<T extends z.ZodObject>({
   request,
@@ -184,14 +173,4 @@ export function routeHandler<
       })
     }
   }
-}
-
-export function generateAccessToken({ userId }: { userId: string }) {
-  return new SignJWT({ sub: userId })
-    .setProtectedHeader({ alg: 'HS256' })
-    .setIssuedAt()
-    .setExpirationTime(
-      Math.floor(Date.now() / 1000) + ACCESS_TOKEN_EXPIRY_SECONDS,
-    )
-    .sign(JWT_SECRET)
 }

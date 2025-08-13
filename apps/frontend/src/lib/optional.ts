@@ -1,6 +1,6 @@
-import { MaybeFunction } from './types.ts'
+import { MaybeFunction } from '@time-app-test/shared/types.ts'
 import { resolve, toError } from './utils.ts'
-import { isDefined, isUndefined } from './guards.ts'
+import { isDefined, isUndefined } from '@time-app-test/shared/guards.ts'
 
 export class Optional<TValue> {
   readonly #value: TValue | undefined
