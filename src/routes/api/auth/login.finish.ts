@@ -1,6 +1,6 @@
 import { createServerFileRoute } from '@tanstack/react-start/server'
 import {
-  error,
+  apiError,
   generateAccessToken,
   getRequestBody,
   routeHandler,
@@ -26,8 +26,8 @@ export const ServerRoute = createServerFileRoute(
     const pending = pendingLogins.get(userId)
 
     if (!pending) {
-      error({
-        code: 'INVALID_LOGIN',
+      throw apiError({
+        errorCode: 'INVALID_LOGIN',
         message: 'User login not found or invalid',
       })
     }

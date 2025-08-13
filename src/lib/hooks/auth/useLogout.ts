@@ -5,6 +5,7 @@ export function useLogout() {
   const setAccessToken = useSetAccessToken()
 
   return useMutation({
+    mutationKey: ['logout'],
     mutationFn: async () => {
       await fetch('/api/auth/logout', {
         method: 'POST',

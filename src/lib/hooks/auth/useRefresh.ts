@@ -2,7 +2,7 @@ import { useMutation } from '@tanstack/react-query'
 import { AuthRefreshResponseSchema } from '@/lib/schema/auth.ts'
 import { getResponseBody } from '@/lib/utils.ts'
 import { useSetAccessToken } from '@/lib/authStore.ts'
-import { ApiError } from '@/lib/backend/error.ts'
+import { ApiError } from '@/lib/error.ts'
 import { useNavigate } from '@tanstack/react-router'
 import { useLogout } from '@/lib/hooks/auth/useLogout.ts'
 
@@ -12,6 +12,7 @@ export function useRefresh() {
   const { mutateAsync: logout } = useLogout()
 
   return useMutation({
+    mutationKey: ['refresh'],
     retry: () => false,
     mutationFn: async () => {
       const response = await fetch('/api/auth/refresh', {

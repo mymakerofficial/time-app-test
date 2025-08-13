@@ -5,7 +5,9 @@ import { faker } from '@faker-js/faker/locale/en'
 import { TimeEntry } from '@/lib/schema/timeEntries.ts'
 import { z } from 'zod'
 import { ApiErrorResponseSchema } from '@/lib/schema/error.ts'
-import { ApiError } from '@/lib/backend/error.ts'
+import { ApiError } from '@/lib/error.ts'
+import { MaybeFunction } from '@/lib/types.ts'
+import { isError, isFunction } from '@/lib/guards.ts'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -76,7 +78,7 @@ export async function getResponseBody<T extends z.ZodTypeAny>({
   if (!response.ok) {
     const apiError = ApiErrorResponseSchema.safeParse(data)
     if (apiError.success) {
-      throw ApiError.fromApiErrorResponse({
+      throw ApiError.from({
         ...apiError.data,
         statusCode: response.status,
       })
@@ -85,4 +87,21 @@ export async function getResponseBody<T extends z.ZodTypeAny>({
     }
   }
   return schema.parse(data)
+}
+
+export function resolve<TRes, TArgs extends any[] = any[]>(
+  maybeFn: MaybeFunction<TRes>,
+  ...args: TArgs
+): TRes {
+  return isFunction(maybeFn) ? maybeFn(...args) : maybeFn
+}
+
+export function toError<
+  TError extends Error,
+  TErrorVal = TError | any,
+  TRes = TError extends TError ? TError : Error,
+>(maybeError: TErrorVal) {
+  return (
+    isError(maybeError) ? maybeError : new Error(String(maybeError))
+  ) as TRes
 }

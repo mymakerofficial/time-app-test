@@ -8,12 +8,13 @@ import {
   ServerRouteMethodHandlerCtx,
   ServerRouteMethodHandlerFn,
 } from '@tanstack/start-server-core'
-import { ApiError, ApiErrorParams } from '@/lib/backend/error.ts'
+import { ApiError, ApiErrorProps } from '@/lib/error.ts'
 import { JWTPayload, jwtVerify, SignJWT } from 'jose'
 import {
   ACCESS_TOKEN_EXPIRY_SECONDS,
   JWT_SECRET,
 } from '@/lib/backend/constants.ts'
+import { Optional } from '@/lib/optional.ts'
 
 export function drizzleQueryStream<T extends { toSQL: PgSelect['toSQL'] }>(
   client: PoolClient,
@@ -83,17 +84,19 @@ export function createEncodedStream<T extends z.ZodTypeAny>({
 export function getAuthHeader(request: Request): string {
   const authHeader = request.headers.get('Authorization')
   if (!authHeader) {
-    throw new ApiError('Authorization header is missing', {
+    throw apiError({
       statusCode: 401,
       errorCode: 'MISSING_AUTHORIZATION',
+      message: 'Authorization header is missing',
     })
   }
 
   const parts = authHeader.split(' ')
   if (parts.length !== 2 || parts[0] !== 'Bearer') {
-    throw new ApiError('Invalid Authorization header format', {
+    throw apiError({
       statusCode: 401,
       errorCode: 'INVALID_AUTHORIZATION_FORMAT',
+      message: 'Invalid Authorization header format',
     })
   }
 
@@ -108,9 +111,10 @@ export async function validateAuthHeader(request: Request) {
   })
 
   if (!payload || typeof payload !== 'object' || !('sub' in payload)) {
-    throw new ApiError('Invalid JWT payload', {
+    throw apiError({
       statusCode: 401,
       errorCode: 'INVALID_JWT_PAYLOAD',
+      message: 'Invalid JWT payload',
     })
   }
 
@@ -133,19 +137,11 @@ export function getCookies(request: Request): Record<string, string> {
 
 export function getRefreshTokenCookie(request: Request) {
   const cookies = getCookies(request)
-
-  if (!cookies.refreshToken) {
-    throw new ApiError('Refresh token cookie is missing', {
-      statusCode: 401,
-      errorCode: 'MISSING_REFRESH_TOKEN',
-    })
-  }
-
-  return cookies.refreshToken
+  return Optional.of(cookies.refreshToken)
 }
 
-export function error(err: ApiErrorParams): never {
-  throw ApiError.fromApiErrorResponse(err)
+export function apiError(err: ApiErrorProps): ApiError {
+  return ApiError.from(err)
 }
 
 export function routeHandler<

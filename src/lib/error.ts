@@ -1,10 +1,10 @@
 import { ApiErrorResponse, ApiErrorResponseSchema } from '@/lib/schema/error.ts'
 
-export type ApiErrorParams = ApiErrorResponse & {
+export type ApiErrorProps = ApiErrorResponse & {
   statusCode?: number
 }
 
-export class ApiError extends Error {
+export class ApiError extends Error implements ApiErrorProps {
   errorCode: string
   statusCode: number
 
@@ -24,6 +24,14 @@ export class ApiError extends Error {
     this.statusCode = options?.statusCode ?? 500
   }
 
+  static from(props: ApiErrorProps): ApiError {
+    return new ApiError(props.message, {
+      cause: props.cause,
+      errorCode: props.errorCode,
+      statusCode: props.statusCode ?? 500,
+    })
+  }
+
   static fromError(error: Error) {
     return new ApiError(error.message, {
       cause: error,
@@ -40,21 +48,26 @@ export class ApiError extends Error {
     }
   }
 
-  static fromApiErrorResponse(response: ApiErrorParams): ApiError {
-    return new ApiError(response.message, {
-      cause: response.cause,
-      errorCode: response.code,
-      statusCode: response.statusCode ?? 500,
-    })
-  }
-
   toJSON() {
     return JSON.stringify(
       ApiErrorResponseSchema.parse({
-        code: this.errorCode,
+        errorCode: this.errorCode,
         message: this.message,
         cause: this.cause,
       }),
     )
+  }
+
+  toProps() {
+    return {
+      statusCode: this.statusCode,
+      errorCode: this.errorCode,
+      message: this.message,
+      cause: this.cause,
+    }
+  }
+
+  map(mapFn: (originalErr: ApiError) => Partial<ApiErrorProps>) {
+    return ApiError.from({ ...this.toProps(), ...mapFn(this) })
   }
 }

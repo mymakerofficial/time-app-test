@@ -48,6 +48,7 @@ export function useRegister({
   })
 
   return useMutation({
+    mutationKey: ['register'],
     mutationFn: async ({ username, password }: RegisterFormValues) => {
       const { userId } = await startRegistration({ username })
 

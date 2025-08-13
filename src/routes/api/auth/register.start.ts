@@ -1,5 +1,5 @@
 import { createServerFileRoute } from '@tanstack/react-start/server'
-import { error, getRequestBody, routeHandler } from '@/lib/backend/utils.ts'
+import { apiError, getRequestBody, routeHandler } from '@/lib/backend/utils.ts'
 import {
   PostAuthRegisterStartRequestSchema,
   PostAuthRegisterStartResponseSchema,
@@ -29,8 +29,8 @@ export const ServerRoute = createServerFileRoute(
     )
 
     if (existing > 0) {
-      error({
-        code: 'USER_EXISTS',
+      throw apiError({
+        errorCode: 'USER_EXISTS',
         message: 'User with this username or ID already exists',
       })
     }

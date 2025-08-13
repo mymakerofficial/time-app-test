@@ -1,7 +1,7 @@
 import z from 'zod'
 
 export const ApiErrorResponseSchema = z.object({
-  code: z.string(),
+  errorCode: z.string(),
   message: z.string(),
   cause: z.any().optional(),
 })

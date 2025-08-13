@@ -1,5 +1,5 @@
 import { createServerFileRoute } from '@tanstack/react-start/server'
-import { error, getRequestBody, routeHandler } from '@/lib/backend/utils.ts'
+import { apiError, getRequestBody, routeHandler } from '@/lib/backend/utils.ts'
 import {
   PostAuthLoginStartRequestSchema,
   PostAuthLoginStartResponseSchema,
@@ -30,8 +30,8 @@ export const ServerRoute = createServerFileRoute(
       .limit(1)
 
     if (!user) {
-      error({
-        code: 'USER_NOT_FOUND',
+      throw apiError({
+        errorCode: 'USER_NOT_FOUND',
         message: 'User with this username does not exist',
       })
     }

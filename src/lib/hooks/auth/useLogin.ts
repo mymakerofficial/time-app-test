@@ -48,6 +48,7 @@ export function useLogin({
   const setAccessToken = useSetAccessToken()
 
   return useMutation({
+    mutationKey: ['login'],
     mutationFn: async ({ username, password }: LoginFormValues) => {
       const clientEphemeral = srp.generateEphemeral()
 

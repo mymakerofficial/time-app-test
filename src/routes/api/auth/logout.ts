@@ -4,8 +4,9 @@ import { refreshTokens } from '@/lib/backend/auth.ts'
 
 export const ServerRoute = createServerFileRoute('/api/auth/logout').methods({
   POST: routeHandler(async ({ request }) => {
-    const refreshToken = getRefreshTokenCookie(request)
-    refreshTokens.delete(refreshToken)
+    getRefreshTokenCookie(request).with((it) => {
+      refreshTokens.delete(it)
+    })
 
     return new Response(undefined, {
       status: 200,
