@@ -1,6 +1,7 @@
 import { Elysia } from 'elysia'
 import { authController } from '@/modules/auth/controller.ts'
 import { ApiError } from '@time-app-test/shared/error/apiError.ts'
+import { usersController } from '@/modules/users/controller.ts'
 
 export const apiController = new Elysia({ prefix: '/api' })
   .error({
@@ -11,3 +12,4 @@ export const apiController = new Elysia({ prefix: '/api' })
     return new Response(ApiError.fromUnknown(error).toJSON())
   })
   .use(authController)
+  .use(usersController)

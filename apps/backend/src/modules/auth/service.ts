@@ -35,12 +35,12 @@ export class AuthService {
   >()
   private static readonly refreshTokens = new Map<string, RefreshTokens>()
 
-  private readonly db: DB
-  private readonly jwtService: JwtService
+  readonly #db: DB
+  readonly #jwtService: JwtService
 
   constructor(container: { db: DB; jwtService: JwtService }) {
-    this.db = container.db
-    this.jwtService = container.jwtService
+    this.#db = container.db
+    this.#jwtService = container.jwtService
   }
 
   async registerStart({
@@ -48,7 +48,7 @@ export class AuthService {
   }: AuthModel.RegisterStartBody): Promise<AuthModel.RegisterStartResponse> {
     const userId = nanoid()
 
-    const existing = await this.db.query.users.findFirst({
+    const existing = await this.#db.query.users.findFirst({
       where: or(eq(users.username, username), eq(users.id, userId)),
       columns: {
         id: true,
@@ -82,7 +82,7 @@ export class AuthService {
       })
     }
 
-    await this.db.insert(users).values({
+    await this.#db.insert(users).values({
       id: userId,
       username,
       salt,
@@ -96,7 +96,7 @@ export class AuthService {
     username,
     clientPublicEphemeral,
   }: AuthModel.LoginStartBody): Promise<AuthModel.LoginStartResponse> {
-    const user = await this.db.query.users.findFirst({
+    const user = await this.#db.query.users.findFirst({
       where: eq(users.username, username),
       columns: {
         id: true,
@@ -156,7 +156,7 @@ export class AuthService {
       clientProof,
     )
 
-    const accessToken = await this.jwtService.generateAccessToken({ userId })
+    const accessToken = await this.#jwtService.generateAccessToken({ userId })
 
     const refreshToken = crypto.randomBytes(32).toString('hex')
     AuthService.refreshTokens.set(refreshToken, {

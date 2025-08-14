@@ -7,7 +7,7 @@ export function useMe() {
   return useQuery({
     queryKey: ['me'],
     queryFn: async () => {
-      const response = await fetch('/api/me', {
+      const response = await fetch('/api/users/me', {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${getAccessToken()}`,

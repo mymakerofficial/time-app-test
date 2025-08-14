@@ -1,4 +1,4 @@
-import { SignJWT } from 'jose'
+import { jwtVerify, SignJWT } from 'jose'
 
 export class JwtService {
   private static readonly jwtSecret = new TextEncoder().encode(
@@ -14,5 +14,13 @@ export class JwtService {
         Math.floor(Date.now() / 1000) + JwtService.accessTokenExpirySeconds,
       )
       .sign(JwtService.jwtSecret)
+  }
+
+  async jwtVerify(jwt: string) {
+    const { payload } = await jwtVerify(jwt, JwtService.jwtSecret, {
+      algorithms: ['HS256'],
+    })
+
+    return payload
   }
 }
