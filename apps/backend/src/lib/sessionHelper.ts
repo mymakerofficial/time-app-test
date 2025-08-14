@@ -62,6 +62,6 @@ export const sessionHelper = new Elysia({ name: 'sessionHelper' })
   .use(services)
   .resolve({ as: 'scoped' }, ({ headers, jwtService }) => {
     return {
-      sessionHelper: new SessionHelper({ headers, jwtService }),
+      session: new SessionHelper({ headers, jwtService }),
     }
   })

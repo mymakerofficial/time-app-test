@@ -1,12 +1,10 @@
-import { Elysia } from 'elysia'
 import { AuthModel } from '@/modules/auth/model.ts'
-import { services } from '@/services.ts'
+import { createApiController } from '@/lib/apiController.ts'
 
-export const authController = new Elysia({
+export const authController = createApiController({
   prefix: '/auth',
   detail: { tags: ['Auth'] },
 })
-  .use(services)
   .post(
     '/register/start',
     async ({ authService, body }) => {
