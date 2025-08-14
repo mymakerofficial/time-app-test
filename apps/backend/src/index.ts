@@ -5,6 +5,7 @@ import { apiController } from '@/modules/api.ts'
 import { Pool } from 'pg'
 import { drizzle } from 'drizzle-orm/node-postgres'
 import * as schema from '@/db/schema/schema.ts'
+import { ApiError } from '@time-app-test/shared/error/apiError.ts'
 
 export const pool = new Pool({
   connectionString:

@@ -2,31 +2,103 @@ import { Elysia } from 'elysia'
 import { db } from '@/index.ts'
 import { BaseServiceContext, Service } from '@/lib/service.ts'
 import { AuthModel } from '@/modules/auth/model.ts'
-import { isUndefined } from '@time-app-test/shared/guards.ts'
+import { isDefined, isUndefined } from '@time-app-test/shared/guards.ts'
 import { apiError } from '@time-app-test/shared/error/apiError.ts'
 import * as srp from 'secure-remote-password/server'
+import { jwtService, JwtService } from '@/modules/jwt/service.ts'
+import * as crypto from 'node:crypto'
+import { users } from '@/db/schema/schema.ts'
+import { eq, or } from 'drizzle-orm'
+import { nanoid } from 'nanoid'
+
+interface PendingLogin {
+  serverSecretEphemeral: string
+  clientPublicEphemeral: string
+  salt: string
+  verifier: string
+}
+
+interface PendingRegistration {
+  username: string
+}
+
+interface RefreshTokens {
+  userId: string
+  expiresAt: number
+}
 
 export class AuthService extends Service {
-  private static pendingLogins = new Map<
-    string,
-    {
-      serverSecretEphemeral: string
-      clientPublicEphemeral: string
-      salt: string
-      verifier: string
-    }
-  >()
+  private static readonly refreshTokenExpiryMs = 1000 * 60 * 60 * 24 * 7 // 7 days
 
-  constructor(context: BaseServiceContext) {
+  private static readonly pendingLogins = new Map<string, PendingLogin>()
+  private static readonly pendingRegistrations = new Map<
+    string,
+    PendingRegistration
+  >()
+  private static readonly refreshTokens = new Map<string, RefreshTokens>()
+
+  private readonly jwtService: JwtService
+
+  constructor(context: BaseServiceContext & { jwtService: JwtService }) {
     super(context)
+    this.jwtService = context.jwtService
+  }
+
+  async registerStart({
+    username,
+  }: AuthModel.RegisterStartBody): Promise<AuthModel.RegisterStartResponse> {
+    const userId = nanoid()
+
+    const existing = await db.query.users.findFirst({
+      where: or(eq(users.username, username), eq(users.id, userId)),
+      columns: {
+        id: true,
+      },
+    })
+
+    if (isDefined(existing)) {
+      throw apiError({
+        message: `User with username "${username}" already exists`,
+        errorCode: 'USER_ALREADY_EXISTS',
+      })
+    }
+
+    AuthService.pendingRegistrations.set(userId, { username })
+
+    return { userId }
+  }
+
+  async registerFinish({
+    username,
+    userId,
+    salt,
+    verifier,
+  }: AuthModel.RegisterFinishBody) {
+    const pending = AuthService.pendingRegistrations.get(userId)
+
+    if (isUndefined(pending) || pending.username !== username) {
+      throw apiError({
+        errorCode: 'INVALID_REGISTRATION',
+        message: 'User registration not found or invalid',
+      })
+    }
+
+    await db.insert(users).values({
+      id: userId,
+      username,
+      salt,
+      verifier,
+    })
+
+    AuthService.pendingRegistrations.delete(userId)
   }
 
   async loginStart({
     username,
     clientPublicEphemeral,
-  }: AuthModel.loginStartBody): Promise<AuthModel.loginStartResponse> {
+  }: AuthModel.LoginStartBody): Promise<AuthModel.LoginStartResponse> {
     const user = await db.query.users.findFirst({
-      where: (users, { eq }) => eq(users.username, username),
+      where: eq(users.username, username),
       columns: {
         id: true,
         salt: true,
@@ -57,10 +129,60 @@ export class AuthService extends Service {
       serverPublicEphemeral: serverEphemeral.public,
     }
   }
+
+  async loginFinish({
+    userId,
+    clientProof,
+  }: AuthModel.LoginFinishBody): Promise<{
+    refreshToken: string
+    refreshTokenMaxAge: number
+    response: AuthModel.LoginFinishResponse
+  }> {
+    const pending = AuthService.pendingLogins.get(userId)
+
+    if (isUndefined(pending)) {
+      throw apiError({
+        message: `User with id "${userId}" does not have a pending login.`,
+        errorCode: 'INVALID_LOGIN',
+        statusCode: 401,
+      })
+    }
+
+    const serverSession = srp.deriveSession(
+      pending.serverSecretEphemeral,
+      pending.clientPublicEphemeral,
+      pending.salt,
+      userId,
+      pending.verifier,
+      clientProof,
+    )
+
+    const accessToken = await this.jwtService.generateAccessToken({ userId })
+
+    const refreshToken = crypto.randomBytes(32).toString('hex')
+    AuthService.refreshTokens.set(refreshToken, {
+      userId,
+      expiresAt: Date.now() + AuthService.refreshTokenExpiryMs,
+    })
+
+    AuthService.pendingLogins.delete(userId)
+
+    return {
+      refreshToken,
+      refreshTokenMaxAge: AuthService.refreshTokenExpiryMs,
+      response: {
+        serverProof: serverSession.proof,
+        accessToken,
+      },
+    }
+  }
 }
 
 export const authService = new Elysia({
   name: 'authService',
-}).derive({ as: 'global' }, (context) => ({
-  authService: new AuthService(context),
-}))
+})
+  .use(jwtService)
+  .derive({ as: 'global' }, (context) => ({
+    // TODO: using derive a new service gets instantiated on every request
+    authService: new AuthService(context),
+  }))
