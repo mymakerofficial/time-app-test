@@ -1,6 +1,6 @@
-@import '../../../node_modules/.pnpm/tailwindcss@4.1.11/node_modules/tailwindcss/dist/lib.d.mts';
+@import 'tailwindcss';
 
-@import '../../../node_modules/tw-animate-css';
+@import 'tw-animate-css';
 
 @custom-variant dark (&:is(.dark *));
 
