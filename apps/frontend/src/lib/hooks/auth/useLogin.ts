@@ -11,7 +11,6 @@ import {
 } from '@/lib/schema/auth.ts'
 import { getResponseBody } from '@time-app-test/shared/fetch/response.ts'
 import { useSetAccessToken } from '@/lib/authStore.ts'
-import { app } from '@time-app-test/shared/api/treaty.ts'
 
 async function startLogin(data: PostAuthLoginStartRequest) {
   const response = await fetch('/api/auth/login/start', {

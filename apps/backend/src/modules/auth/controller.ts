@@ -2,15 +2,52 @@ import { Elysia } from 'elysia'
 import { authService } from '@/modules/auth/service.ts'
 import { AuthModel } from '@/modules/auth/model.ts'
 
-export const authController = new Elysia({ prefix: '/auth' })
+export const authController = new Elysia({
+  prefix: '/auth',
+  detail: { tags: ['Auth'] },
+})
   .use(authService)
+  .post(
+    '/register/start',
+    async ({ authService, body }) => {
+      return await authService.registerStart(body)
+    },
+    {
+      body: AuthModel.RegisterStartBody,
+      response: AuthModel.RegisterStartResponse,
+    },
+  )
+  .post(
+    '/register/finish',
+    async ({ authService, body }) => {
+      await authService.registerFinish(body)
+    },
+    {
+      body: AuthModel.RegisterFinishBody,
+    },
+  )
   .post(
     '/login/start',
     async ({ authService, body }) => {
       return await authService.loginStart(body)
     },
     {
-      body: AuthModel.loginStartBody,
-      response: AuthModel.loginStartResponse,
+      body: AuthModel.LoginStartBody,
+      response: AuthModel.LoginStartResponse,
+    },
+  )
+  .post(
+    '/login/finish',
+    async ({ authService, body, set }) => {
+      const { response, refreshToken, refreshTokenMaxAge } =
+        await authService.loginFinish(body)
+
+      set.headers['set-cookie'] =
+        `refreshToken=${refreshToken}; HttpOnly; Path=/; Max-Age=${refreshTokenMaxAge}; SameSite=Strict; Secure`
+      return response
+    },
+    {
+      body: AuthModel.LoginFinishBody,
+      response: AuthModel.LoginFinishResponse,
     },
   )
