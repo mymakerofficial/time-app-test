@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query'
-import { LoginFormValues } from '../../schema/form.ts'
+import { LoginFormValues } from '@/lib/schema/form.ts'
 import * as srp from 'secure-remote-password/client'
 import {
   PostAuthLoginFinishRequest,
@@ -8,9 +8,10 @@ import {
   PostAuthLoginStartRequest,
   PostAuthLoginStartRequestSchema,
   PostAuthLoginStartResponseSchema,
-} from '../../schema/auth.ts'
-import { getResponseBody } from '../../utils.ts'
-import { useSetAccessToken } from '../../authStore.ts'
+} from '@/lib/schema/auth.ts'
+import { getResponseBody } from '@time-app-test/shared/fetch/response.ts'
+import { useSetAccessToken } from '@/lib/authStore.ts'
+import { app } from '@time-app-test/shared/api/treaty.ts'
 
 async function startLogin(data: PostAuthLoginStartRequest) {
   const response = await fetch('/api/auth/login/start', {

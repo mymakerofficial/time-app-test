@@ -1,5 +1,4 @@
 import { z } from 'zod'
-import { TimeEntriesSelectSchema } from '../db/schema/schema.ts'
 
 export const StreamingResponseRowType = {
   HEADER: 0,
@@ -34,7 +33,7 @@ export const GetTimeEntriesResponseSchema = z.discriminatedUnion('t', [
   }),
   z.object({
     t: z.literal(StreamingResponseRowType.ROW),
-    data: TimeEntriesSelectSchema,
+    data: z.object(),
   }),
 ])
 export type GetTimeEntriesResponse = z.infer<
