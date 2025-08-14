@@ -1,11 +1,9 @@
-import { Elysia } from 'elysia'
 import { db } from '@/index.ts'
-import { BaseServiceContext, Service } from '@/lib/service.ts'
 import { AuthModel } from '@/modules/auth/model.ts'
 import { isDefined, isUndefined } from '@time-app-test/shared/guards.ts'
 import { apiError } from '@time-app-test/shared/error/apiError.ts'
 import * as srp from 'secure-remote-password/server'
-import { jwtService, JwtService } from '@/modules/jwt/service.ts'
+import { JwtService } from '@/modules/jwt/service.ts'
 import * as crypto from 'node:crypto'
 import { users } from '@/db/schema/schema.ts'
 import { eq, or } from 'drizzle-orm'
@@ -27,7 +25,7 @@ interface RefreshTokens {
   expiresAt: number
 }
 
-export class AuthService extends Service {
+export class AuthService {
   private static readonly refreshTokenExpiryMs = 1000 * 60 * 60 * 24 * 7 // 7 days
 
   private static readonly pendingLogins = new Map<string, PendingLogin>()
@@ -39,9 +37,8 @@ export class AuthService extends Service {
 
   private readonly jwtService: JwtService
 
-  constructor(context: BaseServiceContext & { jwtService: JwtService }) {
-    super(context)
-    this.jwtService = context.jwtService
+  constructor(container: { jwtService: JwtService }) {
+    this.jwtService = container.jwtService
   }
 
   async registerStart({
@@ -177,12 +174,3 @@ export class AuthService extends Service {
     }
   }
 }
-
-export const authService = new Elysia({
-  name: 'authService',
-})
-  .use(jwtService)
-  .derive({ as: 'global' }, (context) => ({
-    // TODO: using derive a new service gets instantiated on every request
-    authService: new AuthService(context),
-  }))
