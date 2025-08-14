@@ -19,7 +19,7 @@ export const container = new Container()
   .add('jwtService', () => new JwtService())
   .add('authService', (container) => new AuthService(container))
 
-export const containerPlugin = new Elysia({ name: 'container' }).derive(
+export const services = new Elysia({ name: 'services' }).derive(
   { as: 'global' },
   () => container.build(),
 )

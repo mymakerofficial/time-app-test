@@ -1,12 +1,12 @@
 import { Elysia } from 'elysia'
 import { AuthModel } from '@/modules/auth/model.ts'
-import { containerPlugin } from '@/services.ts'
+import { services } from '@/services.ts'
 
 export const authController = new Elysia({
   prefix: '/auth',
   detail: { tags: ['Auth'] },
 })
-  .use(containerPlugin)
+  .use(services)
   .post(
     '/register/start',
     async ({ authService, body }) => {

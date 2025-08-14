@@ -19,7 +19,7 @@
 //       schema: PostAuthLoginStartRequestSchema,
 //     })
 //
-//     const [user] = await db
+//     const [users] = await db
 //       .select({
 //         id: users.id,
 //         salt: users.salt,
@@ -29,27 +29,27 @@
 //       .where(eq(users.username, username))
 //       .limit(1)
 //
-//     if (!user) {
+//     if (!users) {
 //       throw apiError({
 //         errorCode: 'USER_NOT_FOUND',
 //         message: 'User with this username does not exist',
 //       })
 //     }
 //
-//     const serverEphemeral = srp.generateEphemeral(user.verifier)
+//     const serverEphemeral = srp.generateEphemeral(users.verifier)
 //
-//     pendingLogins.set(user.id, {
+//     pendingLogins.set(users.id, {
 //       serverSecretEphemeral: serverEphemeral.secret,
 //       clientPublicEphemeral,
-//       salt: user.salt,
-//       verifier: user.verifier,
+//       salt: users.salt,
+//       verifier: users.verifier,
 //     })
 //
 //     return new Response(
 //       JSON.stringify(
 //         PostAuthLoginStartResponseSchema.parse({
-//           userId: user.id,
-//           salt: user.salt,
+//           userId: users.id,
+//           salt: users.salt,
 //           serverPublicEphemeral: serverEphemeral.public,
 //         }),
 //       ),

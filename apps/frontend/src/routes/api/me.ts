@@ -8,7 +8,7 @@
 //   GET: routeHandler(async ({ request }) => {
 //     const { sub } = await validateAuthHeader(request)
 //
-//     const [user] = await db
+//     const [users] = await db
 //       .select({
 //         id: users.id,
 //         username: users.username,
@@ -17,7 +17,7 @@
 //       .where(eq(users.id, sub))
 //       .limit(1)
 //
-//     return new Response(JSON.stringify(user), {
+//     return new Response(JSON.stringify(users), {
 //       status: 200,
 //       headers: {
 //         'Content-Type': 'application/json',
