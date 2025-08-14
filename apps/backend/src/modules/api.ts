@@ -1,7 +1,7 @@
 import { Elysia } from 'elysia'
 import { authController } from '@/modules/auth/controller.ts'
-import { ApiError } from '@time-app-test/shared/error/apiError.ts'
 import { usersController } from '@/modules/users/controller.ts'
+import { ApiError } from '@time-app-test/shared/error/apiError.ts'
 
 export const apiController = new Elysia({ prefix: '/api' })
   .error({
