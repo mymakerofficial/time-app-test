@@ -45,7 +45,7 @@ class Session {
   }
 
   getRawRefreshTokenCookie() {
-    return this.#cookie.refreshToken?.cookie
+    return this.#cookie.refreshToken
   }
 
   getRefreshToken() {
@@ -58,13 +58,25 @@ class Session {
     return value
   }
 
+  setRefreshToken({ value, maxAge }: { value: string; maxAge: number }) {
+    this.#cookie.refreshToken.set({
+      httpOnly: true,
+      path: '/',
+      sameSite: 'strict',
+      secure: true,
+      value,
+      maxAge,
+    })
+  }
+
   async validateSession() {
-    const jwtPayload = await this.#tokenService.validateSession({
+    const { jwtPayload, deviceId } = await this.#tokenService.validateSession({
       accessToken: this.getAccessToken(),
       refreshToken: this.getRefreshToken(),
     })
     return new ValidatedSession({
       jwtPayload,
+      deviceId,
       headers: this.#headers,
       cookie: this.#cookie,
       tokenService: this.#tokenService,
@@ -74,14 +86,17 @@ class Session {
 
 class ValidatedSession extends Session {
   readonly #jwtPayload: CustomJwtPayload
+  readonly #deviceId: string
 
   constructor({
     jwtPayload,
+    deviceId,
     headers,
     cookie,
     tokenService,
   }: {
     jwtPayload: CustomJwtPayload
+    deviceId: string
     headers: Record<string, string | undefined>
     cookie: Record<string, Cookie<string | undefined>>
     tokenService: TokenService
@@ -92,10 +107,15 @@ class ValidatedSession extends Session {
       tokenService,
     })
     this.#jwtPayload = jwtPayload
+    this.#deviceId = deviceId
   }
 
   getCurrentUserId() {
     return this.#jwtPayload.sub
+  }
+
+  getDeviceId() {
+    return this.#deviceId
   }
 }
 
@@ -105,4 +125,14 @@ export const session = new Elysia({ name: 'session' })
     return {
       session: new Session({ headers, cookie, tokenService }),
     }
+  })
+  .macro({
+    validateSession: (enabled: true) => ({
+      resolve: async ({ session }) => {
+        if (!enabled || !session) {
+          return
+        }
+        return { session: await session.validateSession() }
+      },
+    }),
   })
