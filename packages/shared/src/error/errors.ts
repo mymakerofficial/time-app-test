@@ -154,7 +154,7 @@ export const MissingAuthorizationHeader = createError(
     message: 'Access denied because authorization header was missing.',
   },
 )
-export const InvalidJwt = createError('INVALID_JWT', {
+export const InvalidAccessToken = createError('INVALID_ACCESS_TOKEN', {
   statusCode: HttpStatusCode.FORBIDDEN,
   message: 'Access denied because access token was invalid or expired.',
 })
