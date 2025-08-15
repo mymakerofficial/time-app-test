@@ -5,6 +5,7 @@ import { Container } from '@/lib/container.ts'
 import { Pool } from 'pg'
 import { drizzle } from '@/lib/drizzle.ts'
 import * as schema from '@/db/schema/schema.ts'
+import { TimeEntriesService } from '@/modules/timeEntries/service.ts'
 
 const pool = new Pool({
   connectionString:
@@ -18,6 +19,7 @@ export const container = new Container()
   .add('db', () => db)
   .add('jwtService', () => new JwtService())
   .add('authService', (container) => new AuthService(container))
+  .add('timeEntriesService', (container) => new TimeEntriesService(container))
 
 export const services = new Elysia({ name: 'services' }).derive(
   { as: 'global' },

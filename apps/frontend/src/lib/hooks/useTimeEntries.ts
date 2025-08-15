@@ -1,18 +1,14 @@
 import { timeEntriesCollection } from '../collections'
-import {
-  TimeEntriesSelect,
-  TimeEntriesSelectSchema,
-} from '../db/schema/schema.ts'
 import { useEffect, useState } from 'react'
-import { CryptoManager, uInt8Array2ab } from '../crypt.ts'
+import { CryptoManager } from '../crypt.ts'
 import { createData } from '../utils.ts'
-import { z } from 'zod'
 import msgpack from '@ygoe/msgpack'
 import {
-  StreamingResponseRowType,
   GetTimeEntriesResponseSchema,
+  StreamingResponseRowType,
   TimeEntry,
 } from '../schema/timeEntries.ts'
+import { uInt8Array2ab } from '@time-app-test/shared/helper/binary.ts'
 
 const crypto = new CryptoManager()
 
@@ -28,9 +24,7 @@ async function loadKey() {
   }
 }
 
-async function decryptData(
-  encryptedData: z.Infer<typeof TimeEntriesSelectSchema>,
-): Promise<TimeEntry> {
+async function decryptData(encryptedData: any): Promise<TimeEntry> {
   const createdAt = await crypto.decrypt(encryptedData.createdAt)
   const updatedAt = await crypto.decrypt(encryptedData.updatedAt)
   const startedAt = await crypto.decrypt(encryptedData.startedAt)
@@ -62,9 +56,12 @@ async function fetchStreaming({
   signal?: AbortSignal
   onProgress?: (progress: number) => void
 }) {
-  const response = await fetch(`/api/time-entries?start=${start}&end=${end}`, {
-    signal,
-  })
+  const response = await fetch(
+    `/api/time-entries/range?start=${start}&end=${end}`,
+    {
+      signal,
+    },
+  )
 
   if (!response.body) {
     throw new Error('No response body from API')
@@ -88,7 +85,7 @@ async function fetchStreaming({
     },
   })
 
-  const parseStream = new TransformStream<unknown, TimeEntriesSelect>({
+  const parseStream = new TransformStream<unknown, any>({
     transform: (chunk, controller) => {
       const parsed = GetTimeEntriesResponseSchema.parse(chunk)
 
@@ -101,7 +98,7 @@ async function fetchStreaming({
     },
   })
 
-  const decryptStream = new TransformStream<TimeEntriesSelect, TimeEntry>({
+  const decryptStream = new TransformStream<any, TimeEntry>({
     transform: async (entry, controller) => {
       const decryptedEntry = await decryptData(entry)
       controller.enqueue(decryptedEntry)
