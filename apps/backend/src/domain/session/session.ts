@@ -69,6 +69,10 @@ class Session {
     })
   }
 
+  clearRefreshToken() {
+    this.#cookie.refreshToken.remove()
+  }
+
   async validateSession() {
     const { jwtPayload, deviceId } = await this.#tokenService.validateSession({
       accessToken: this.getAccessToken(),

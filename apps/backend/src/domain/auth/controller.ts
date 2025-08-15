@@ -56,3 +56,13 @@ export const authController = createApiController({
       response: AuthModel.GetTokenResponse,
     },
   )
+  .post(
+    '/logout',
+    async ({ session }) => {
+      // TODO invalidate the jwt somehow
+      session.clearRefreshToken()
+    },
+    {
+      validateSession: true,
+    },
+  )
