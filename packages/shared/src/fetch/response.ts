@@ -13,7 +13,7 @@ export async function getResponseBody<
   response: Response
   schema?: T
 }): Promise<T extends undefined ? unknown : z.infer<T>> {
-  const data = await response.json()
+  const data = await response.json().catch(() => {})
   if (!response.ok) {
     const errorResponse = ApiErrorResponseSchema.safeParse(data)
     if (errorResponse.success) {
