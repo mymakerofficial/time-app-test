@@ -7,10 +7,13 @@ import {
   UnexpectedError,
   ValidationError,
 } from '@time-app-test/shared/error/errors.ts'
+import { timeEntriesController } from '@/modules/timeEntries/controller.ts'
+import { DrizzleQueryError } from 'drizzle-orm/errors'
 
 export const apiController = new Elysia({ prefix: '/api' })
   .error({
     API_ERROR: ApiError,
+    DRIZZLE_QUERY_ERROR: DrizzleQueryError,
   })
   .onError(({ code, error, path }) => {
     console.error(code, path, error)
@@ -63,3 +66,4 @@ export const apiController = new Elysia({ prefix: '/api' })
   })
   .use(authController)
   .use(usersController)
+  .use(timeEntriesController)

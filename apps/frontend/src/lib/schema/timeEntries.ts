@@ -33,7 +33,7 @@ export const GetTimeEntriesResponseSchema = z.discriminatedUnion('t', [
   }),
   z.object({
     t: z.literal(StreamingResponseRowType.ROW),
-    data: z.object(),
+    data: z.any(),
   }),
 ])
 export type GetTimeEntriesResponse = z.infer<
