@@ -1,6 +1,5 @@
 import { AuthModel } from '@/modules/auth/model.ts'
 import { isDefined, isUndefined } from '@time-app-test/shared/guards.ts'
-import { apiError } from '@time-app-test/shared/error/apiError.ts'
 import * as srp from 'secure-remote-password/server'
 import { JwtService } from '@/modules/jwt/service.ts'
 import * as crypto from 'node:crypto'
@@ -8,6 +7,12 @@ import { users } from '@/db/schema/schema.ts'
 import { eq, or } from 'drizzle-orm'
 import { nanoid } from 'nanoid'
 import { DB } from '@/services.ts'
+import {
+  InvalidLoginSession,
+  InvalidRegistrationSession,
+  UserAlreadyExists,
+  UserNotFoundByName,
+} from '@time-app-test/shared/error/errors.ts'
 
 interface PendingLogin {
   serverSecretEphemeral: string
@@ -56,10 +61,7 @@ export class AuthService {
     })
 
     if (isDefined(existing)) {
-      throw apiError({
-        message: `User with username "${username}" already exists`,
-        errorCode: 'USER_ALREADY_EXISTS',
-      })
+      throw UserAlreadyExists({ username })
     }
 
     AuthService.pendingRegistrations.set(userId, { username })
@@ -76,10 +78,7 @@ export class AuthService {
     const pending = AuthService.pendingRegistrations.get(userId)
 
     if (isUndefined(pending) || pending.username !== username) {
-      throw apiError({
-        errorCode: 'INVALID_REGISTRATION',
-        message: 'User registration not found or invalid',
-      })
+      throw InvalidRegistrationSession({ userId })
     }
 
     await this.#db.insert(users).values({
@@ -106,11 +105,7 @@ export class AuthService {
     })
 
     if (isUndefined(user)) {
-      throw apiError({
-        message: `User with username "${username}" does not exist`,
-        errorCode: 'USER_NOT_FOUND',
-        statusCode: 404,
-      })
+      throw UserNotFoundByName({ username })
     }
 
     const serverEphemeral = srp.generateEphemeral(user.verifier)
@@ -140,11 +135,7 @@ export class AuthService {
     const pending = AuthService.pendingLogins.get(userId)
 
     if (isUndefined(pending)) {
-      throw apiError({
-        message: `User with id "${userId}" does not have a pending login.`,
-        errorCode: 'INVALID_LOGIN',
-        statusCode: 401,
-      })
+      throw InvalidLoginSession({ userId })
     }
 
     const serverSession = srp.deriveSession(

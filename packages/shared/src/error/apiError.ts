@@ -1,67 +1,75 @@
 import { ApiErrorResponse } from '@/error/schema.ts'
-import { isError } from '@/guards.ts'
+import { HttpStatusCode } from '@/api/httpStatusCode.ts'
 
-type CreateApiErrorOptions = Partial<ApiErrorResponse> &
-  Pick<ApiErrorResponse, 'message'>
-
-export class ApiError extends Error implements ApiErrorResponse {
-  errorCode: string
-  statusCode: number
+type CreateApiErrorOptions<
+  TErrorCode extends string,
+  TStatusCode extends HttpStatusCode,
+  TParameters extends Record<string, unknown> = {},
+> = {
+  errorCode: TErrorCode
+  statusCode: TStatusCode
+  parameters?: TParameters
+  cause?: unknown
+  path?: string
+}
+export class ApiError<
+    TErrorCode extends string,
+    TStatusCode extends HttpStatusCode,
+    TParameters extends Record<string, unknown> = {},
+  >
+  extends Error
+  implements ApiErrorResponse
+{
+  errorCode: TErrorCode
+  statusCode: TStatusCode
+  parameters: TParameters
+  path: string | undefined
 
   constructor(
     public message: string,
-    options?: Omit<CreateApiErrorOptions, 'message'>,
+    options: CreateApiErrorOptions<TErrorCode, TStatusCode, TParameters>,
   ) {
     super(message, {
       cause: options?.cause,
     })
     this.name = 'ApiError'
-    this.errorCode = options?.errorCode ?? 'UNKNOWN_ERROR'
-    this.statusCode = options?.statusCode ?? 500
+    this.errorCode = options?.errorCode
+    this.statusCode = options?.statusCode
+    this.parameters = options?.parameters ?? ({} as TParameters)
+    this.path = options?.path
   }
 
-  static fromResponse(response: ApiErrorResponse): ApiError {
-    return new ApiError(response.message, {
-      cause: response.cause,
-      errorCode: response.errorCode,
-      statusCode: response.statusCode,
-    })
+  withPath(path: string) {
+    const { message, ...options } = this.getProps()
+    return new ApiError(message, { ...options, path })
   }
 
-  static fromError(error: Error) {
-    return new ApiError(error.message, {
-      cause: error,
-    })
+  withStatusCode(statusCode: HttpStatusCode) {
+    const { message, ...options } = this.getProps()
+    return new ApiError(message, { ...options, statusCode })
   }
 
-  static fromUnknown(error: unknown) {
-    if (isApiError(error)) {
-      return error
-    } else if (isError(error)) {
-      return ApiError.fromError(error)
-    } else {
-      return new ApiError(String(error))
-    }
-  }
-
-  toResponse() {
+  getProps(): ApiErrorResponse {
     return {
+      message: this.message,
       errorCode: this.errorCode,
       statusCode: this.statusCode,
-      message: this.message,
+      parameters: this.parameters,
+      path: this.path,
       cause: this.cause,
     }
   }
 
   toJSON() {
-    return JSON.stringify(this.toResponse())
+    return JSON.stringify(this.getProps())
   }
-}
 
-export function isApiError(value: unknown): value is ApiError {
-  return value instanceof ApiError
-}
-
-export function apiError({ message, ...options }: CreateApiErrorOptions) {
-  return new ApiError(message, options)
+  toFetchResponse() {
+    return new Response(this.toJSON(), {
+      status: this.statusCode,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+  }
 }

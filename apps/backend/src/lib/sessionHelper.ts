@@ -1,9 +1,8 @@
 import { Elysia } from 'elysia'
 import { services } from '@/services.ts'
 import { JwtService } from '@/modules/jwt/service.ts'
-import { apiError } from '@time-app-test/shared/error/apiError.ts'
-import { JWTPayload } from 'jose'
 import { isUndefined } from '@time-app-test/shared/guards.ts'
+import { MissingAuthorizationHeader } from '@time-app-test/shared/error/errors.ts'
 
 class SessionHelper {
   readonly #headers: Record<string, string | undefined>
@@ -32,24 +31,10 @@ class SessionHelper {
     const authHeader = this.getRawAuthHeader()
 
     if (isUndefined(authHeader)) {
-      throw apiError({
-        statusCode: 401,
-        errorCode: 'MISSING_AUTHORIZATION_HEADER',
-        message: 'Authorization header is missing',
-      })
+      throw MissingAuthorizationHeader()
     }
 
-    const payload = await this.#jwtService.jwtVerify(authHeader)
-
-    if (!('sub' in payload)) {
-      throw apiError({
-        statusCode: 401,
-        errorCode: 'INVALID_JWT_PAYLOAD',
-        message: 'Invalid JWT payload',
-      })
-    }
-
-    return payload as JWTPayload & { sub: string }
+    return await this.#jwtService.jwtVerify(authHeader)
   }
 
   async getCurrentUserId() {
