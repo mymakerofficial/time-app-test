@@ -1,7 +1,7 @@
 import { t } from 'elysia'
 import { isUndefined } from '@time-app-test/shared/guards.ts'
-import { apiError } from '@time-app-test/shared/error/apiError.ts'
 import { createApiController } from '@/lib/apiController.ts'
+import { UserNotFoundById } from '@time-app-test/shared/error/errors.ts'
 
 export const usersController = createApiController({
   prefix: '/users',
@@ -10,6 +10,7 @@ export const usersController = createApiController({
   '/me',
   async ({ session, db }) => {
     const userId = await session.getCurrentUserId()
+
     const user = await db.query.users.findFirst({
       where: (users, { eq }) => eq(users.id, userId),
       columns: {
@@ -19,11 +20,7 @@ export const usersController = createApiController({
     })
 
     if (isUndefined(user)) {
-      throw apiError({
-        message: `User with id "${userId}" does not exist`,
-        errorCode: 'USER_NOT_FOUND',
-        statusCode: 404,
-      })
+      throw UserNotFoundById({ id: userId })
     }
 
     return user

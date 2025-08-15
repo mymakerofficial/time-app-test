@@ -1,6 +1,8 @@
 import { z } from 'zod'
 import { ApiErrorResponseSchema } from '@/error/schema.ts'
-import { apiError } from '@/error/apiError.ts'
+import { ApiError } from '@/error/apiError.ts'
+import { HttpStatusCode } from '@/api/httpStatusCode.ts'
+import { UnexpectedError } from '@/error/errors.ts'
 
 export async function getResponseBody<T extends z.ZodTypeAny>({
   response,
@@ -13,15 +15,18 @@ export async function getResponseBody<T extends z.ZodTypeAny>({
   if (!response.ok) {
     const errorResponse = ApiErrorResponseSchema.safeParse(data)
     if (errorResponse.success) {
-      throw apiError({
-        ...errorResponse.data,
-        statusCode: response.status,
+      throw new ApiError(errorResponse.data.message, {
+        errorCode: errorResponse.data.errorCode,
+        statusCode: errorResponse.data.statusCode,
+        parameters: errorResponse.data.parameters,
+        cause: errorResponse.data.cause,
+        path: errorResponse.data.path,
       })
     } else {
-      throw apiError({
-        message: 'Something went wrong.',
-        statusCode: response.status,
-      })
+      throw UnexpectedError({
+        cause: errorResponse.data,
+        path: response.url,
+      }).withStatusCode(response.status as HttpStatusCode)
     }
   }
   return schema.parse(data)
