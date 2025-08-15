@@ -1,5 +1,5 @@
 import { DB } from '@/services.ts'
-import { TimeEntriesModel } from '@/modules/timeEntries/model.ts'
+import { TimeEntriesModel } from '@/domain/timeEntries/model.ts'
 import { createEncodedStream } from '@/lib/streams.ts'
 import { timeEntries } from '@/db/schema/schema'
 import { and, gt, lt } from 'drizzle-orm'

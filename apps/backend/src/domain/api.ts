@@ -1,13 +1,13 @@
 import { Elysia, t, ValidationError as ElysiaValidationError } from 'elysia'
-import { authController } from '@/modules/auth/controller.ts'
-import { usersController } from '@/modules/users/controller.ts'
+import { authController } from '@/domain/auth/controller.ts'
+import { usersController } from '@/domain/users/controller.ts'
 import { ApiError } from '@time-app-test/shared/error/apiError.ts'
 import {
   PathNotFound,
   UnexpectedError,
   ValidationError,
 } from '@time-app-test/shared/error/errors.ts'
-import { timeEntriesController } from '@/modules/timeEntries/controller.ts'
+import { timeEntriesController } from '@/domain/timeEntries/controller.ts'
 import { DrizzleQueryError } from 'drizzle-orm/errors'
 
 export const apiController = new Elysia({ prefix: '/api' })
@@ -19,6 +19,9 @@ export const apiController = new Elysia({ prefix: '/api' })
     console.error(code, path, error)
 
     if (code === 'API_ERROR') {
+      // if (error.statusCode === HttpStatusCode.FORBIDDEN) {
+      //   return AccessDenied().toFetchResponse()
+      // }
       return error.withPath(path).toFetchResponse()
     } else if (code === 404) {
       return PathNotFound({ path }).toFetchResponse()

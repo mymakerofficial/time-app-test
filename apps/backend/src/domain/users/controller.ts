@@ -8,8 +8,8 @@ export const usersController = createApiController({
   detail: { tags: ['Users'] },
 }).get(
   '/me',
-  async ({ session, db }) => {
-    const userId = await session.getCurrentUserId()
+  async ({ db, session }) => {
+    const userId = session.getCurrentUserId()
 
     const user = await db.query.users.findFirst({
       where: (users, { eq }) => eq(users.id, userId),
@@ -30,5 +30,6 @@ export const usersController = createApiController({
       id: t.String(),
       username: t.String(),
     }),
+    validateSession: true,
   },
 )

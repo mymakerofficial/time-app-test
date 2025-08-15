@@ -1,8 +1,6 @@
-import { AuthModel } from '@/modules/auth/model.ts'
+import { AuthModel } from '@/domain/auth/model.ts'
 import { isDefined, isUndefined } from '@time-app-test/shared/guards.ts'
 import * as srp from 'secure-remote-password/server'
-import { JwtService } from '@/modules/jwt/service.ts'
-import * as crypto from 'node:crypto'
 import { users } from '@/db/schema/schema.ts'
 import { eq, or } from 'drizzle-orm'
 import { nanoid } from 'nanoid'
@@ -14,6 +12,7 @@ import {
   UserAlreadyExists,
   UserNotFoundByName,
 } from '@time-app-test/shared/error/errors.ts'
+import { TokenService } from '@/domain/token/service.ts'
 
 interface PendingLogin {
   serverSecretEphemeral: string
@@ -42,11 +41,11 @@ export class AuthService {
   private static readonly refreshTokens = new Map<string, RefreshTokens>()
 
   readonly #db: DB
-  readonly #jwtService: JwtService
+  readonly #tokenService: TokenService
 
-  constructor(container: { db: DB; jwtService: JwtService }) {
+  constructor(container: { db: DB; tokenService: TokenService }) {
     this.#db = container.db
-    this.#jwtService = container.jwtService
+    this.#tokenService = container.tokenService
   }
 
   async registerStart({
@@ -148,9 +147,12 @@ export class AuthService {
       clientProof,
     )
 
-    const accessToken = await this.#jwtService.generateAccessToken({ userId })
+    const refreshToken = this.#tokenService.generateRefreshToken()
+    const accessToken = await this.#tokenService.generateAccessToken({
+      userId,
+      deviceId: await this.#tokenService.deriveDeviceId(refreshToken),
+    })
 
-    const refreshToken = crypto.randomBytes(32).toString('hex')
     AuthService.refreshTokens.set(refreshToken, {
       userId,
       expiresAt: Date.now() + AuthService.refreshTokenExpiryMs,
@@ -179,8 +181,9 @@ export class AuthService {
       throw InvalidRefreshToken()
     }
 
-    const accessToken = await this.#jwtService.generateAccessToken({
+    const accessToken = await this.#tokenService.generateAccessToken({
       userId: stored.userId,
+      deviceId: await this.#tokenService.deriveDeviceId(refreshToken),
     })
 
     return { accessToken }

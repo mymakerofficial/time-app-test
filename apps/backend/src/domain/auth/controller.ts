@@ -1,4 +1,4 @@
-import { AuthModel } from '@/modules/auth/model.ts'
+import { AuthModel } from '@/domain/auth/model.ts'
 import { createApiController } from '@/lib/apiController.ts'
 
 export const authController = createApiController({
