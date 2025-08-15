@@ -1,4 +1,4 @@
-import { Elysia, ValidationError as ElysiaValidationError } from 'elysia'
+import { Elysia, t, ValidationError as ElysiaValidationError } from 'elysia'
 import { authController } from '@/modules/auth/controller.ts'
 import { usersController } from '@/modules/users/controller.ts'
 import { ApiError } from '@time-app-test/shared/error/apiError.ts'
@@ -35,6 +35,31 @@ export const apiController = new Elysia({ prefix: '/api' })
     }
 
     return UnexpectedError({ cause: error }).withPath(path).toFetchResponse()
+  })
+  .model({
+    error: t.Object({
+      errorCode: t.String({
+        default: UnexpectedError.errorCode,
+      }),
+      statusCode: t.Number({
+        default: UnexpectedError.statusCode,
+      }),
+      parameters: t.Record(t.String(), t.Any(), {
+        default: {},
+      }),
+      message: t.String(),
+      cause: t.Optional(t.Any()),
+      path: t.Optional(
+        t.String({
+          default: '/api/foo',
+        }),
+      ),
+    }),
+  })
+  .guard({
+    response: {
+      500: 'error',
+    },
   })
   .use(authController)
   .use(usersController)

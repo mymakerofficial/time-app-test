@@ -28,6 +28,14 @@ type ErrorConstructorOptions = {
   path?: string | undefined
 }
 
+type ErrorConstructorExtension<
+  TErrorCode extends string,
+  TStatusCode extends HttpStatusCode,
+> = {
+  errorCode: TErrorCode
+  statusCode: TStatusCode
+}
+
 function createError<
   TErrorCode extends string,
   TStatusCode extends HttpStatusCode,
@@ -35,41 +43,45 @@ function createError<
 >(
   errorCode: TErrorCode,
   config: CreateErrorConfigWithParameters<TStatusCode, TParameters>,
-): (
+): ((
   parameters: z.infer<TParameters>,
   options?: ErrorConstructorOptions,
-) => ApiError<TErrorCode, TStatusCode, z.Infer<TParameters>>
+) => ApiError<TErrorCode, TStatusCode, z.Infer<TParameters>>) &
+  ErrorConstructorExtension<TErrorCode, TStatusCode>
 function createError<
   TErrorCode extends string,
   TStatusCode extends HttpStatusCode,
 >(
   errorCode: TErrorCode,
   config: CreateErrorConfigWithoutParameters<TStatusCode>,
-): (options?: ErrorConstructorOptions) => ApiError<TErrorCode, TStatusCode>
+): ((options?: ErrorConstructorOptions) => ApiError<TErrorCode, TStatusCode>) &
+  ErrorConstructorExtension<TErrorCode, TStatusCode>
 function createError<
   TErrorCode extends string,
   TStatusCode extends HttpStatusCode,
   TParameters extends z.ZodObject,
 >(errorCode: TErrorCode, config: CreateErrorConfig<TStatusCode, TParameters>) {
   if ('parameters' in config) {
-    return (
+    const constructor = (
       parameters: z.infer<TParameters>,
       options?: ErrorConstructorOptions,
     ) => {
-      return new ApiError<TErrorCode, TStatusCode, z.Infer<TParameters>>(
-        config.message(parameters),
-        {
-          errorCode,
-          statusCode: config.statusCode,
-          parameters,
-          cause: options?.cause,
-          path: options?.path,
-        },
-      )
+      return new ApiError(config.message(parameters), {
+        errorCode,
+        statusCode: config.statusCode,
+        parameters,
+        cause: options?.cause,
+        path: options?.path,
+      })
     }
+
+    return Object.assign(constructor, {
+      errorCode,
+      statusCode: config.statusCode,
+    })
   }
 
-  return (options?: ErrorConstructorOptions) => {
+  const constructor = (options?: ErrorConstructorOptions) => {
     return new ApiError(config.message, {
       errorCode,
       statusCode: config.statusCode,
@@ -77,6 +89,10 @@ function createError<
       path: options?.path,
     })
   }
+  return Object.assign(constructor, {
+    errorCode,
+    statusCode: config.statusCode,
+  })
 }
 
 export const UnexpectedError = createError('UNEXPECTED_ERROR', {
