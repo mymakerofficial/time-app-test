@@ -13,39 +13,23 @@ import {
   UserNotFoundByName,
 } from '@time-app-test/shared/error/errors.ts'
 import { TokenService } from '@/domain/token/service.ts'
-
-interface PendingLogin {
-  serverSecretEphemeral: string
-  clientPublicEphemeral: string
-  salt: string
-  verifier: string
-}
-
-interface PendingRegistration {
-  username: string
-}
-
-interface RefreshTokens {
-  userId: string
-  expiresAt: number
-}
+import { AuthRepository } from '@/domain/auth/repository.ts'
 
 export class AuthService {
   private static readonly refreshTokenExpiryMs = 1000 * 60 * 60 * 24 * 7 // 7 days
 
-  private static readonly pendingLogins = new Map<string, PendingLogin>()
-  private static readonly pendingRegistrations = new Map<
-    string,
-    PendingRegistration
-  >()
-  private static readonly refreshTokens = new Map<string, RefreshTokens>()
-
   readonly #db: DB
   readonly #tokenService: TokenService
+  readonly #authRepository: AuthRepository
 
-  constructor(container: { db: DB; tokenService: TokenService }) {
+  constructor(container: {
+    db: DB
+    tokenService: TokenService
+    authRepository: AuthRepository
+  }) {
     this.#db = container.db
     this.#tokenService = container.tokenService
+    this.#authRepository = container.authRepository
   }
 
   async registerStart({
@@ -64,7 +48,11 @@ export class AuthService {
       throw UserAlreadyExists({ username })
     }
 
-    AuthService.pendingRegistrations.set(userId, { username })
+    await this.#authRepository.setPendingRegistration({
+      userId,
+      username,
+      expirySec: 60,
+    })
 
     return { userId }
   }
@@ -75,9 +63,10 @@ export class AuthService {
     salt,
     verifier,
   }: AuthModel.RegisterFinishBody) {
-    const pending = AuthService.pendingRegistrations.get(userId)
+    const pendingUsername =
+      await this.#authRepository.getPendingRegistration(userId)
 
-    if (isUndefined(pending) || pending.username !== username) {
+    if (pendingUsername !== username) {
       throw InvalidRegistrationSession({ userId })
     }
 
@@ -88,7 +77,7 @@ export class AuthService {
       verifier,
     })
 
-    AuthService.pendingRegistrations.delete(userId)
+    await this.#authRepository.deletePendingRegistration(userId)
   }
 
   async loginStart({
@@ -110,11 +99,13 @@ export class AuthService {
 
     const serverEphemeral = srp.generateEphemeral(user.verifier)
 
-    AuthService.pendingLogins.set(user.id, {
+    await this.#authRepository.setPendingLogin({
+      userId: user.id,
       serverSecretEphemeral: serverEphemeral.secret,
       clientPublicEphemeral,
       salt: user.salt,
       verifier: user.verifier,
+      expirySec: 60,
     })
 
     return {
@@ -134,7 +125,7 @@ export class AuthService {
     }
     response: AuthModel.LoginFinishResponse
   }> {
-    const pending = AuthService.pendingLogins.get(userId)
+    const pending = await this.#authRepository.getPendingLogin(userId)
 
     if (isUndefined(pending)) {
       throw InvalidLoginSession({ userId })
@@ -154,13 +145,13 @@ export class AuthService {
       userId,
       deviceId: await this.#tokenService.deriveDeviceId(refreshToken),
     })
-
-    AuthService.refreshTokens.set(refreshToken, {
+    await this.#authRepository.setRefreshToken({
+      refreshToken,
       userId,
-      expiresAt: Date.now() + AuthService.refreshTokenExpiryMs,
+      expirySec: AuthService.refreshTokenExpiryMs / 1000,
     })
 
-    AuthService.pendingLogins.delete(userId)
+    await this.#authRepository.deletePendingLogin(userId)
 
     return {
       cookie: {
@@ -179,14 +170,14 @@ export class AuthService {
   }: {
     refreshToken: string
   }): Promise<AuthModel.GetTokenResponse> {
-    const stored = AuthService.refreshTokens.get(refreshToken)
+    const userId = await this.#authRepository.getRefreshToken(refreshToken)
 
-    if (isUndefined(stored) || stored.expiresAt < Date.now()) {
+    if (isUndefined(userId)) {
       throw InvalidRefreshToken()
     }
 
     const accessToken = await this.#tokenService.generateAccessToken({
-      userId: stored.userId,
+      userId,
       deviceId: await this.#tokenService.deriveDeviceId(refreshToken),
     })
 
