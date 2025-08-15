@@ -4,13 +4,15 @@ import { ApiError } from '@/error/apiError.ts'
 import { HttpStatusCode } from '@/api/httpStatusCode.ts'
 import { UnexpectedError } from '@/error/errors.ts'
 
-export async function getResponseBody<T extends z.ZodTypeAny>({
+export async function getResponseBody<
+  T extends z.ZodTypeAny | undefined = undefined,
+>({
   response,
   schema,
 }: {
   response: Response
-  schema: T
-}): Promise<z.infer<T>> {
+  schema?: T
+}): Promise<T extends undefined ? unknown : z.infer<T>> {
   const data = await response.json()
   if (!response.ok) {
     const errorResponse = ApiErrorResponseSchema.safeParse(data)
@@ -29,5 +31,9 @@ export async function getResponseBody<T extends z.ZodTypeAny>({
       }).withStatusCode(response.status as HttpStatusCode)
     }
   }
-  return schema.parse(data)
+  if (schema) {
+    // @ts-expect-error
+    return schema.parse(data)
+  }
+  return data
 }
