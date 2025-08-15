@@ -8,8 +8,8 @@ import {
   PostAuthRegisterStartResponseSchema,
 } from '../../schema/auth.ts'
 import { RegisterFormValues } from '../../schema/form.ts'
-import { getResponseBody } from '../../utils.ts'
 import { useLogin } from './useLogin.ts'
+import { getResponseBody } from '@time-app-test/shared/fetch/response.js'
 
 async function startRegistration(data: PostAuthRegisterStartRequest) {
   const response = await fetch('/api/auth/register/start', {
@@ -33,9 +33,9 @@ async function finishRegistration(data: PostAuthRegisterFinishRequest) {
       'Content-Type': 'application/json',
     },
   })
-  if (!response.ok) {
-    throw new Error('Registration failed')
-  }
+  await getResponseBody({
+    response,
+  })
 }
 
 export function useRegister({
