@@ -23,3 +23,7 @@ export function isUndefined(value: unknown): value is undefined {
 export function isDefined<T>(value: T | undefined): value is T {
   return value !== undefined
 }
+
+export function isString(value: unknown): value is string {
+  return typeof value === 'string'
+}

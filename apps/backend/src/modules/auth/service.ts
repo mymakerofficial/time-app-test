@@ -9,6 +9,7 @@ import { nanoid } from 'nanoid'
 import { DB } from '@/services.ts'
 import {
   InvalidLoginSession,
+  InvalidRefreshToken,
   InvalidRegistrationSession,
   UserAlreadyExists,
   UserNotFoundByName,
@@ -165,5 +166,23 @@ export class AuthService {
         accessToken,
       },
     }
+  }
+
+  async getAccessTokenWithRefreshToken({
+    refreshToken,
+  }: {
+    refreshToken: string
+  }): Promise<AuthModel.GetTokenResponse> {
+    const stored = AuthService.refreshTokens.get(refreshToken)
+
+    if (isUndefined(stored) || stored.expiresAt < Date.now()) {
+      throw InvalidRefreshToken()
+    }
+
+    const accessToken = await this.#jwtService.generateAccessToken({
+      userId: stored.userId,
+    })
+
+    return { accessToken }
   }
 }

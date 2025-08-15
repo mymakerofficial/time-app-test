@@ -49,3 +49,13 @@ export const authController = createApiController({
       response: AuthModel.LoginFinishResponse,
     },
   )
+  .post(
+    '/get-token',
+    async ({ authService, session }) => {
+      const refreshToken = session.getRefreshToken()
+      return await authService.getAccessTokenWithRefreshToken({ refreshToken })
+    },
+    {
+      response: AuthModel.GetTokenResponse,
+    },
+  )
