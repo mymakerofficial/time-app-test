@@ -58,8 +58,9 @@ export const authController = createApiController({
   )
   .post(
     '/logout',
-    async ({ session }) => {
-      // TODO invalidate the jwt somehow
+    async ({ session, authRepository }) => {
+      const refreshToken = session.getRefreshToken()
+      authRepository.deleteRefreshToken(refreshToken)
       session.clearRefreshToken()
     },
     {

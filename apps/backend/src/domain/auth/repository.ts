@@ -30,6 +30,7 @@ export interface AuthRepository {
     expirySec: number
   }): Promise<void>
   getRefreshToken(refreshToken: string): Promise<string | undefined>
+  deleteRefreshToken(refreshToken: string): Promise<void>
 }
 
 export class RedisAuthRepository implements AuthRepository {
@@ -132,5 +133,9 @@ export class RedisAuthRepository implements AuthRepository {
   async getRefreshToken(refreshToken: string): Promise<string | undefined> {
     const res = await this.#redis.get(`refresh-token:${refreshToken}`)
     return res ?? undefined
+  }
+
+  async deleteRefreshToken(refreshToken: string) {
+    await this.#redis.del(`refresh-token:${refreshToken}`)
   }
 }
