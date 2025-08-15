@@ -88,6 +88,6 @@ export class TokenService {
       throw InvalidAccessToken()
     }
 
-    return jwtPayload
+    return { jwtPayload, deviceId }
   }
 }

@@ -128,8 +128,10 @@ export class AuthService {
     userId,
     clientProof,
   }: AuthModel.LoginFinishBody): Promise<{
-    refreshToken: string
-    refreshTokenMaxAge: number
+    cookie: {
+      value: string
+      maxAge: number
+    }
     response: AuthModel.LoginFinishResponse
   }> {
     const pending = AuthService.pendingLogins.get(userId)
@@ -161,8 +163,10 @@ export class AuthService {
     AuthService.pendingLogins.delete(userId)
 
     return {
-      refreshToken,
-      refreshTokenMaxAge: AuthService.refreshTokenExpiryMs,
+      cookie: {
+        value: refreshToken,
+        maxAge: AuthService.refreshTokenExpiryMs,
+      },
       response: {
         serverProof: serverSession.proof,
         accessToken,

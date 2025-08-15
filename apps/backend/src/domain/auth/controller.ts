@@ -36,12 +36,9 @@ export const authController = createApiController({
   )
   .post(
     '/login/finish',
-    async ({ authService, body, set }) => {
-      const { response, refreshToken, refreshTokenMaxAge } =
-        await authService.loginFinish(body)
-
-      set.headers['set-cookie'] =
-        `refreshToken=${refreshToken}; HttpOnly; Path=/; Max-Age=${refreshTokenMaxAge}; SameSite=Strict; Secure`
+    async ({ authService, session, body }) => {
+      const { response, cookie } = await authService.loginFinish(body)
+      session.setRefreshToken(cookie)
       return response
     },
     {
