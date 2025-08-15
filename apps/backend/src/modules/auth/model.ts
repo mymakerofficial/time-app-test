@@ -73,4 +73,11 @@ export namespace AuthModel {
     }),
   })
   export type LoginFinishResponse = typeof LoginFinishResponse.static
+
+  export const GetTokenResponse = t.Object({
+    accessToken: t.String({
+      minLength: 1,
+    }),
+  })
+  export type GetTokenResponse = typeof GetTokenResponse.static
 }

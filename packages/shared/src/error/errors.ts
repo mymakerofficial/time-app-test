@@ -156,5 +156,13 @@ export const MissingAuthorizationHeader = createError(
 )
 export const InvalidJwt = createError('INVALID_JWT', {
   statusCode: HttpStatusCode.FORBIDDEN,
-  message: 'Access denied because access token was invalid.',
+  message: 'Access denied because access token was invalid or expired.',
+})
+export const MissingRefreshToken = createError('MISSING_REFRESH_TOKEN', {
+  statusCode: HttpStatusCode.FORBIDDEN,
+  message: 'Access denied because refresh token cookie was missing.',
+})
+export const InvalidRefreshToken = createError('INVALID_REFRESH_TOKEN', {
+  statusCode: HttpStatusCode.FORBIDDEN,
+  message: 'Access denied because refresh token was invalid or expired.',
 })
