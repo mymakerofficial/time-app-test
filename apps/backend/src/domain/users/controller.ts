@@ -2,6 +2,8 @@ import { t } from 'elysia'
 import { isUndefined } from '@time-app-test/shared/guards.ts'
 import { createApiController } from '@/lib/apiController.ts'
 import { UserNotFoundById } from '@time-app-test/shared/error/errors.ts'
+import { eq } from 'drizzle-orm'
+import { users } from '@/db/schema/schema.ts'
 
 export const usersController = createApiController({
   prefix: '/users',
@@ -12,7 +14,7 @@ export const usersController = createApiController({
     const userId = session.getCurrentUserId()
 
     const user = await db.query.users.findFirst({
-      where: (users, { eq }) => eq(users.id, userId),
+      where: eq(users.id, userId),
       columns: {
         id: true,
         username: true,
