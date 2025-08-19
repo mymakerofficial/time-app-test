@@ -1,54 +1,44 @@
-import { AuthModel } from '@/domain/auth/model.ts'
-import { isDefined, isUndefined } from '@time-app-test/shared/guards.ts'
+import { AuthModel } from '@/adapter/rest/auth/model.ts'
+import { isUndefined } from '@time-app-test/shared/guards.ts'
 import * as srp from 'secure-remote-password/server'
-import { users } from '@/db/schema/schema.ts'
-import { eq, or } from 'drizzle-orm'
 import { nanoid } from 'nanoid'
-import { DB } from '@/services.ts'
 import {
   InvalidLoginSession,
   InvalidRefreshToken,
   InvalidRegistrationSession,
   UserAlreadyExists,
-  UserNotFoundByName,
 } from '@time-app-test/shared/error/errors.ts'
-import { TokenService } from '@/domain/token/service.ts'
-import { AuthRepository } from '@/domain/auth/repository.ts'
+import { TokenService } from '@/application/service/tokenService.ts'
+import { UserPersistencePort } from '@/application/port/userPersistencePort.ts'
+import { AuthCachePort } from '@/application/port/authCachePort.ts'
 
 export class AuthService {
   private static readonly refreshTokenExpiryMs = 1000 * 60 * 60 * 24 * 7 // 7 days
 
-  readonly #db: DB
   readonly #tokenService: TokenService
-  readonly #authRepository: AuthRepository
+  readonly #authCache: AuthCachePort
+  readonly #userPersistence: UserPersistencePort
 
   constructor(container: {
-    db: DB
     tokenService: TokenService
-    authRepository: AuthRepository
+    authCache: AuthCachePort
+    userPersistence: UserPersistencePort
   }) {
-    this.#db = container.db
     this.#tokenService = container.tokenService
-    this.#authRepository = container.authRepository
+    this.#authCache = container.authCache
+    this.#userPersistence = container.userPersistence
   }
 
   async registerStart({
     username,
   }: AuthModel.RegisterStartBody): Promise<AuthModel.RegisterStartResponse> {
-    const userId = nanoid()
-
-    const existing = await this.#db.query.users.findFirst({
-      where: or(eq(users.username, username), eq(users.id, userId)),
-      columns: {
-        id: true,
-      },
-    })
-
-    if (isDefined(existing)) {
+    if (await this.#userPersistence.existsByName(username)) {
       throw UserAlreadyExists({ username })
     }
 
-    await this.#authRepository.setPendingRegistration({
+    const userId = nanoid()
+
+    await this.#authCache.setPendingRegistration({
       userId,
       username,
       expirySec: 60,
@@ -63,43 +53,31 @@ export class AuthService {
     salt,
     verifier,
   }: AuthModel.RegisterFinishBody) {
-    const pendingUsername =
-      await this.#authRepository.getPendingRegistration(userId)
+    const pendingUsername = await this.#authCache.getPendingRegistration(userId)
 
     if (pendingUsername !== username) {
       throw InvalidRegistrationSession({ userId })
     }
 
-    await this.#db.insert(users).values({
+    await this.#userPersistence.createUser({
       id: userId,
       username,
       salt,
       verifier,
     })
 
-    await this.#authRepository.deletePendingRegistration(userId)
+    await this.#authCache.deletePendingRegistration(userId)
   }
 
   async loginStart({
     username,
     clientPublicEphemeral,
   }: AuthModel.LoginStartBody): Promise<AuthModel.LoginStartResponse> {
-    const user = await this.#db.query.users.findFirst({
-      where: eq(users.username, username),
-      columns: {
-        id: true,
-        salt: true,
-        verifier: true,
-      },
-    })
-
-    if (isUndefined(user)) {
-      throw UserNotFoundByName({ username })
-    }
+    const user = await this.#userPersistence.getUserAuthMetaByName(username)
 
     const serverEphemeral = srp.generateEphemeral(user.verifier)
 
-    await this.#authRepository.setPendingLogin({
+    await this.#authCache.setPendingLogin({
       userId: user.id,
       serverSecretEphemeral: serverEphemeral.secret,
       clientPublicEphemeral,
@@ -125,7 +103,7 @@ export class AuthService {
     }
     response: AuthModel.LoginFinishResponse
   }> {
-    const pending = await this.#authRepository.getPendingLogin(userId)
+    const pending = await this.#authCache.getPendingLogin(userId)
 
     if (isUndefined(pending)) {
       throw InvalidLoginSession({ userId })
@@ -145,13 +123,12 @@ export class AuthService {
       userId,
       deviceId: await this.#tokenService.deriveDeviceId(refreshToken),
     })
-    await this.#authRepository.setRefreshToken({
+    await this.#authCache.setRefreshToken({
       refreshToken,
       userId,
       expirySec: AuthService.refreshTokenExpiryMs / 1000,
     })
-
-    await this.#authRepository.deletePendingLogin(userId)
+    await this.#authCache.deletePendingLogin(userId)
 
     return {
       cookie: {
@@ -170,7 +147,7 @@ export class AuthService {
   }: {
     refreshToken: string
   }): Promise<AuthModel.GetTokenResponse> {
-    const userId = await this.#authRepository.getRefreshToken(refreshToken)
+    const userId = await this.#authCache.getRefreshToken(refreshToken)
 
     if (isUndefined(userId)) {
       throw InvalidRefreshToken()

@@ -1,5 +1,5 @@
-import { createApiController } from '@/lib/apiController.ts'
-import { TimeEntriesModel } from '@/domain/timeEntries/model.ts'
+import { createApiController } from '@/adapter/rest/utils/apiController.ts'
+import { TimeEntriesModel } from '@/adapter/rest/timeEntries/model.ts'
 import { t } from 'elysia'
 
 export const timeEntriesController = createApiController({
@@ -7,9 +7,8 @@ export const timeEntriesController = createApiController({
   detail: { tags: ['Time Entries'] },
 }).get(
   '/range',
-  ({ timeEntriesService, query: { start, end } }) => {
-    const stream = timeEntriesService.getRange({ start, end })
-
+  ({ timeEntriesService, query: range }) => {
+    const stream = timeEntriesService.getRangeStream(range)
     return new Response(stream, {
       headers: {
         'Content-Type': 'application/msgpack',

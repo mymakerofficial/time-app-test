@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { apiController } from '@/domain/api.ts'
+import { apiController } from '@/adapter/rest/api.ts'
 
 describe('Elysia', () => {
   it('returns a response', async () => {

@@ -1,43 +1,15 @@
 import { RedisClientType } from 'redis'
 import { isNull } from '@time-app-test/shared/guards.ts'
+import {
+  AuthCachePort,
+  PendingLogin,
+} from '@/application/port/authCachePort.ts'
 
-interface PendingLogin {
-  serverSecretEphemeral: string
-  clientPublicEphemeral: string
-  salt: string
-  verifier: string
-}
-
-export interface AuthRepository {
-  setPendingLogin(
-    options: {
-      userId: string
-      expirySec: number
-    } & PendingLogin,
-  ): Promise<void>
-  getPendingLogin(userId: string): Promise<PendingLogin | undefined>
-  deletePendingLogin(userId: string): Promise<void>
-  setPendingRegistration(options: {
-    userId: string
-    username: string
-    expirySec: number
-  }): Promise<void>
-  getPendingRegistration(userId: string): Promise<string | undefined>
-  deletePendingRegistration(userId: string): Promise<void>
-  setRefreshToken(options: {
-    refreshToken: string
-    userId: string
-    expirySec: number
-  }): Promise<void>
-  getRefreshToken(refreshToken: string): Promise<string | undefined>
-  deleteRefreshToken(refreshToken: string): Promise<void>
-}
-
-export class RedisAuthRepository implements AuthRepository {
+export class RedisAuthCache implements AuthCachePort {
   readonly #redis: RedisClientType
 
-  constructor({ redis }: { redis: RedisClientType }) {
-    this.#redis = redis
+  constructor(container: { redis: RedisClientType }) {
+    this.#redis = container.redis
   }
 
   async setPendingLogin({
@@ -51,34 +23,41 @@ export class RedisAuthRepository implements AuthRepository {
     userId: string
     expirySec: number
   } & PendingLogin): Promise<void> {
-    await this.#redis.hSetEx(
-      `pending-login:${userId}`,
-      {
-        sse: serverSecretEphemeral,
-        cpe: clientPublicEphemeral,
-        slt: salt,
-        ver: verifier,
-      },
-      {
-        expiration: { type: 'EX', value: expirySec },
-      },
-    )
+    await this.#redis.hSet(`pending-login:${userId}`, {
+      sse: serverSecretEphemeral,
+      cpe: clientPublicEphemeral,
+      slt: salt,
+      ver: verifier,
+      ex: Date.now() + expirySec * 1000,
+    })
   }
 
   async getPendingLogin(userId: string) {
-    const [serverSecretEphemeral, clientPublicEphemeral, salt, verifier] =
+    const [serverSecretEphemeral, clientPublicEphemeral, salt, verifier, ex] =
       await this.#redis.hmGet(`pending-login:${userId}`, [
         'sse',
         'cpe',
         'slt',
         'ver',
+        'ex',
       ])
     if (
       isNull(serverSecretEphemeral) ||
       isNull(clientPublicEphemeral) ||
       isNull(salt) ||
-      isNull(verifier)
+      isNull(verifier) ||
+      isNull(ex)
     ) {
+      return undefined
+    }
+    if (Date.now() > Number(ex)) {
+      await this.#redis.hDel(`pending-login:${userId}`, [
+        'sse',
+        'cpe',
+        'slt',
+        'ver',
+        'ex',
+      ])
       return undefined
     }
     return {

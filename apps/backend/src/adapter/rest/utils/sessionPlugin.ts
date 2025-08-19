@@ -1,11 +1,14 @@
 import { Cookie, Elysia } from 'elysia'
-import { services } from '@/services.ts'
+import { servicesPlugin } from '@/config/services.ts'
 import { isString, isUndefined } from '@time-app-test/shared/guards.ts'
 import {
   MissingAuthorizationHeader,
   MissingRefreshToken,
 } from '@time-app-test/shared/error/errors.ts'
-import { CustomJwtPayload, TokenService } from '@/domain/token/service.ts'
+import {
+  CustomJwtPayload,
+  TokenService,
+} from '@/application/service/tokenService.ts'
 
 class Session {
   readonly #headers: Record<string, string | undefined>
@@ -123,8 +126,8 @@ class ValidatedSession extends Session {
   }
 }
 
-export const session = new Elysia({ name: 'session' })
-  .use(services)
+export const sessionPlugin = new Elysia({ name: 'session' })
+  .use(servicesPlugin)
   .resolve({ as: 'scoped' }, ({ headers, cookie, tokenService }) => {
     return {
       session: new Session({ headers, cookie, tokenService }),

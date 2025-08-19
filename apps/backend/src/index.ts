@@ -1,7 +1,7 @@
 import { Elysia } from 'elysia'
 import { node } from '@elysiajs/node'
 import { swagger } from '@elysiajs/swagger'
-import { apiController } from '@/domain/api.ts'
+import { apiController } from '@/adapter/rest/api.ts'
 
 export const app = new Elysia({ adapter: node() })
   .use(swagger())
