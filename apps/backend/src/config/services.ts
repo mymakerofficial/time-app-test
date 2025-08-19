@@ -1,13 +1,15 @@
-import { AuthService } from '@/domain/auth/service.ts'
+import { AuthService } from '@/application/service/authService.ts'
 import { Elysia } from 'elysia'
 import { Container } from '@/lib/container.ts'
 import { Pool } from 'pg'
 import { drizzle } from '@/lib/drizzle.ts'
-import * as schema from '@/db/schema/schema.ts'
-import { TimeEntriesService } from '@/domain/timeEntries/service.ts'
-import { TokenService } from '@/domain/token/service.ts'
+import * as schema from '@/adapter/db/schema/schema.ts'
+import { TimeEntriesService } from '@/application/service/timeEntriesService.ts'
+import { TokenService } from '@/application/service/tokenService.ts'
 import { createClient, RedisClientType } from 'redis'
-import { RedisAuthRepository } from '@/domain/auth/repository.ts'
+import { RedisAuthCache } from '@/adapter/redis/auth/authCache.ts'
+import { UserPersistence } from '@/adapter/db/users/userPersistence.ts'
+import { TimeEntriesPersistence } from '@/adapter/db/timeEntries/timeEntriesPersistence.ts'
 
 const pgPool = new Pool({
   connectionString:
@@ -25,11 +27,16 @@ export const container = new Container()
   .add('db', () => db)
   .add('redis', () => redisClient)
   .add('tokenService', () => new TokenService())
-  .add('authRepository', (container) => new RedisAuthRepository(container))
+  .add('authCache', (container) => new RedisAuthCache(container))
+  .add('userPersistence', (container) => new UserPersistence(container))
+  .add(
+    'timeEntriesPersistence',
+    (container) => new TimeEntriesPersistence(container),
+  )
   .add('authService', (container) => new AuthService(container))
   .add('timeEntriesService', (container) => new TimeEntriesService(container))
 
-export const services = new Elysia({ name: 'services' }).derive(
+export const servicesPlugin = new Elysia({ name: 'services' }).derive(
   { as: 'global' },
   () => container.build(),
 )

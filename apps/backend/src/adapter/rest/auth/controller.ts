@@ -1,5 +1,5 @@
-import { AuthModel } from '@/domain/auth/model.ts'
-import { createApiController } from '@/lib/apiController.ts'
+import { AuthModel } from '@/adapter/rest/auth/model.ts'
+import { createApiController } from '@/adapter/rest/utils/apiController.ts'
 
 export const authController = createApiController({
   prefix: '/auth',
@@ -58,9 +58,9 @@ export const authController = createApiController({
   )
   .post(
     '/logout',
-    async ({ session, authRepository }) => {
+    async ({ session, authCache }) => {
       const refreshToken = session.getRefreshToken()
-      authRepository.deleteRefreshToken(refreshToken)
+      authCache.deleteRefreshToken(refreshToken)
       session.clearRefreshToken()
     },
     {
