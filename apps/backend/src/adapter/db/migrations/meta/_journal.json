@@ -15,6 +15,13 @@
       "when": 1756235892188,
       "tag": "0001_careless_enchantress",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1756237667750,
+      "tag": "0002_conscious_bushwacker",
+      "breakpoints": true
     }
   ]
 }

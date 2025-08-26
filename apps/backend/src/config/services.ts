@@ -11,6 +11,8 @@ import { RedisAuthCache } from '@/adapter/redis/auth/authCache.ts'
 import { UserPersistence } from '@/adapter/db/persistence/userPersistence.ts'
 import { TimeEntriesPersistence } from '@/adapter/db/persistence/timeEntriesPersistence.ts'
 import { AuthPersistence } from '@/adapter/db/persistence/authPersistence.ts'
+import { NotesPersistence } from '@/adapter/db/persistence/notesPersistence.ts'
+import { NotesService } from '@/application/service/notesService.ts'
 
 const pgPool = new Pool({
   connectionString:
@@ -35,8 +37,10 @@ export const container = new Container()
     'timeEntriesPersistence',
     (container) => new TimeEntriesPersistence(container),
   )
+  .add('notesPersistence', (container) => new NotesPersistence(container))
   .add('authService', (container) => new AuthService(container))
   .add('timeEntriesService', (container) => new TimeEntriesService(container))
+  .add('notesService', (container) => new NotesService(container))
 
 export const servicesPlugin = new Elysia({ name: 'services' }).derive(
   { as: 'global' },

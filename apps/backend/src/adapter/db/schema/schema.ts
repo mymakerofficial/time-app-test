@@ -23,6 +23,16 @@ export const userPasswords = pgTable('user_passwords', {
   verifier: varchar().notNull(),
 })
 
+export const notes = pgTable('notes', {
+  id: varchar().primaryKey(),
+  userId: varchar()
+    .notNull()
+    .references(() => users.id),
+  createdAt: varchar('updated_at').notNull(),
+  updatedAt: varchar('updated_at').notNull(),
+  message: varchar().notNull(),
+})
+
 export const timeEntries = pgTable('time_entries', {
   id: varchar().primaryKey(),
   userId: varchar()
