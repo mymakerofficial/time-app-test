@@ -9,6 +9,7 @@ import {
 } from '@time-app-test/shared/error/errors.ts'
 import { timeEntriesController } from '@/adapter/rest/timeEntries/controller.ts'
 import { DrizzleQueryError } from 'drizzle-orm/errors'
+import { notesController } from '@/adapter/rest/notes/controller.ts'
 
 export const apiController = new Elysia({ prefix: '/api' })
   .error({
@@ -77,3 +78,4 @@ export const apiController = new Elysia({ prefix: '/api' })
   .use(authController)
   .use(usersController)
   .use(timeEntriesController)
+  .use(notesController)
