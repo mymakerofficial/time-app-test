@@ -1,5 +1,4 @@
 import { integer, pgTable, timestamp, varchar } from 'drizzle-orm/pg-core'
-import { bytea } from '@/lib/drizzle.ts'
 
 export const users = pgTable('users', {
   id: varchar().primaryKey(),
@@ -26,10 +25,13 @@ export const userPasswords = pgTable('user_passwords', {
 
 export const timeEntries = pgTable('time_entries', {
   id: varchar().primaryKey(),
-  createdAt: bytea('updated_at').notNull(),
-  updatedAt: bytea('updated_at').notNull(),
+  userId: varchar()
+    .notNull()
+    .references(() => users.id),
+  createdAt: varchar('updated_at').notNull(),
+  updatedAt: varchar('updated_at').notNull(),
   lookupKey: integer('lookup_key').notNull(),
-  startedAt: bytea('updated_at').notNull(),
-  endedAt: bytea('ended_at'),
-  message: bytea().notNull(),
+  startedAt: varchar('updated_at').notNull(),
+  endedAt: varchar('ended_at'),
+  message: varchar().notNull(),
 })
