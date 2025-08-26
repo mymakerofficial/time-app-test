@@ -123,6 +123,15 @@ export const UserNotFoundByName = createError('USER_NOT_FOUND_BY_NAME', {
   parameters: z.object({ username: z.string() }),
   message: ({ username }) => `User with username '${username}' does not exist.`,
 })
+export const AuthenticationMethodNotFound = createError(
+  'AUTHENTICATION_METHOD_NOT_FOUND',
+  {
+    statusCode: HttpStatusCode.UNAUTHORIZED,
+    parameters: z.object({ username: z.string() }),
+    message: ({ username }) =>
+      `User with username '${username}' does not have the requested authentication method setup.`,
+  },
+)
 export const UserAlreadyExists = createError('USER_ALREADY_EXISTS', {
   statusCode: HttpStatusCode.CONFLICT,
   parameters: z.object({ username: z.string() }),

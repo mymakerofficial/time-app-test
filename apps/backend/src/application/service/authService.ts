@@ -11,21 +11,25 @@ import {
 import { TokenService } from '@/application/service/tokenService.ts'
 import { UserPersistencePort } from '@/application/port/userPersistencePort.ts'
 import { AuthCachePort } from '@/application/port/authCachePort.ts'
+import { AuthPersistencePort } from '@/application/port/authPersistencePort.ts'
 
 export class AuthService {
   private static readonly refreshTokenExpiryMs = 1000 * 60 * 60 * 24 * 7 // 7 days
 
   readonly #tokenService: TokenService
   readonly #authCache: AuthCachePort
+  readonly #authPersistence: AuthPersistencePort
   readonly #userPersistence: UserPersistencePort
 
   constructor(container: {
     tokenService: TokenService
     authCache: AuthCachePort
+    authPersistence: AuthPersistencePort
     userPersistence: UserPersistencePort
   }) {
     this.#tokenService = container.tokenService
     this.#authCache = container.authCache
+    this.#authPersistence = container.authPersistence
     this.#userPersistence = container.userPersistence
   }
 
@@ -62,6 +66,10 @@ export class AuthService {
     await this.#userPersistence.createUser({
       id: userId,
       username,
+    })
+
+    await this.#authPersistence.createPasswordData({
+      userId,
       salt,
       verifier,
     })
@@ -73,12 +81,12 @@ export class AuthService {
     username,
     clientPublicEphemeral,
   }: AuthModel.LoginStartBody): Promise<AuthModel.LoginStartResponse> {
-    const user = await this.#userPersistence.getUserAuthMetaByName(username)
+    const user = await this.#authPersistence.getPasswordDataByUsername(username)
 
     const serverEphemeral = srp.generateEphemeral(user.verifier)
 
     await this.#authCache.setPendingLogin({
-      userId: user.id,
+      userId: user.userId,
       serverSecretEphemeral: serverEphemeral.secret,
       clientPublicEphemeral,
       salt: user.salt,
@@ -87,7 +95,7 @@ export class AuthService {
     })
 
     return {
-      userId: user.id,
+      userId: user.userId,
       salt: user.salt,
       serverPublicEphemeral: serverEphemeral.public,
     }
