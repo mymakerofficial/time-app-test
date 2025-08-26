@@ -56,24 +56,6 @@ export class UserPersistence implements UserPersistencePort {
     return user
   }
 
-  async getUserAuthMetaByName(username: string) {
-    const user = await this.#db.query.users.findFirst({
-      where: eq(users.username, username),
-      columns: {
-        id: true,
-        username: true,
-        salt: true,
-        verifier: true,
-      },
-    })
-
-    if (isUndefined(user)) {
-      throw UserNotFoundByName({ username })
-    }
-
-    return user
-  }
-
   async existsByName(username: string) {
     const user = await this.#db.query.users.findFirst({
       where: eq(users.username, username),

@@ -10,6 +10,7 @@ import { createClient, RedisClientType } from 'redis'
 import { RedisAuthCache } from '@/adapter/redis/auth/authCache.ts'
 import { UserPersistence } from '@/adapter/db/users/userPersistence.ts'
 import { TimeEntriesPersistence } from '@/adapter/db/timeEntries/timeEntriesPersistence.ts'
+import { AuthPersistence } from '@/adapter/db/auth/authPersistence.ts'
 
 const pgPool = new Pool({
   connectionString:
@@ -28,6 +29,7 @@ export const container = new Container()
   .add('redis', () => redisClient)
   .add('tokenService', () => new TokenService())
   .add('authCache', (container) => new RedisAuthCache(container))
+  .add('authPersistence', (container) => new AuthPersistence(container))
   .add('userPersistence', (container) => new UserPersistence(container))
   .add(
     'timeEntriesPersistence',
