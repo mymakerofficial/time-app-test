@@ -24,7 +24,7 @@ export class TimeEntriesPersistence implements TimeEntriesPersistencePort {
     return await this.#db.$count(this.#getRangeQuery(range))
   }
 
-  getRange(range: Range) {
+  getRangeStreaming(range: Range) {
     return this.#db.queryStream(this.#getRangeQuery(range))
   }
 }

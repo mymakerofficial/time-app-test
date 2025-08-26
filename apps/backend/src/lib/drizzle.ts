@@ -5,6 +5,7 @@ import { Pool } from 'pg'
 import type { DrizzleConfig } from 'drizzle-orm/utils'
 import QueryStream from 'pg-query-stream'
 import type { SQLWrapper } from 'drizzle-orm/sql/sql'
+import { Readable } from 'node:stream'
 
 export const bytea = customType<{ data: Uint8Array }>({
   dataType() {
@@ -13,7 +14,10 @@ export const bytea = customType<{ data: Uint8Array }>({
 })
 
 const pgDialect = new PgDialect()
-function drizzleQueryStream<T extends SQLWrapper>(client: Pool, query: T) {
+function drizzleQueryStream<T extends SQLWrapper>(
+  client: Pool,
+  query: T,
+): Readable {
   const sql = pgDialect.sqlToQuery(query.getSQL())
   return client.query(new QueryStream(sql.sql, sql.params))
 }
