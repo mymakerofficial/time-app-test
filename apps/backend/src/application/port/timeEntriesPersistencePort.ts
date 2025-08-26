@@ -1,7 +1,6 @@
-import { Range } from '@/domain/model/timeEntries.ts'
-import { Readable } from 'node:stream'
+import { EncryptedTimeEntry, Range } from '@/domain/model/timeEntries.ts'
 
 export interface TimeEntriesPersistencePort {
-  countRange(range: Range): Promise<number>
-  getRangeStreaming(range: Range): Readable
+  countRange(range: Range, userId: string): Promise<number>
+  getAllInRange(range: Range, userId: string): Promise<EncryptedTimeEntry[]>
 }

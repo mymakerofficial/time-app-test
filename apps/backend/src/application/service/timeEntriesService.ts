@@ -10,11 +10,11 @@ export class TimeEntriesService {
     this.#timeEntriesPersistence = container.timeEntriesPersistence
   }
 
-  async countRange(range: Range) {
-    return this.#timeEntriesPersistence.countRange(range)
+  countRange(range: Range, userId: string) {
+    return this.#timeEntriesPersistence.countRange(range, userId)
   }
 
-  getRangeStreaming(range: Range) {
-    return this.#timeEntriesPersistence.getRangeStreaming(range)
+  getAllInRange(range: Range, userId: string) {
+    return this.#timeEntriesPersistence.getAllInRange(range, userId)
   }
 }

@@ -63,6 +63,13 @@ export const apiController = new Elysia({ prefix: '/api' })
     }),
   })
   .guard({
+    headers: t.Object({
+      authorization: t.Optional(
+        t.String({
+          pattern: '^Bearer .+$',
+        }),
+      ),
+    }),
     response: {
       500: 'error',
     },
