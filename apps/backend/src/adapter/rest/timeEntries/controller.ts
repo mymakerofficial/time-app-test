@@ -1,6 +1,7 @@
 import { createApiController } from '@/adapter/rest/utils/apiController.ts'
 import { TimeEntriesModel } from '@/adapter/rest/timeEntries/model.ts'
 import { t } from 'elysia'
+import { createEncodedStream } from '@/lib/streams.ts'
 
 export const timeEntriesController = createApiController({
   prefix: '/time-entries',
@@ -8,7 +9,30 @@ export const timeEntriesController = createApiController({
 }).get(
   '/range',
   ({ timeEntriesService, query: range }) => {
-    const stream = timeEntriesService.getRangeStream(range)
+    const stream = createEncodedStream({
+      handler: async (controller) => {
+        const count = await timeEntriesService.countRange(range)
+
+        controller.enqueue({
+          t: 0,
+          data: { count },
+        })
+
+        const queryStream = timeEntriesService.getRangeStreaming(range)
+
+        queryStream.on('data', (row) => {
+          controller.enqueue({
+            t: 1,
+            data: row,
+          })
+        })
+
+        queryStream.on('end', () => {
+          controller.close()
+        })
+      },
+    })
+
     return new Response(stream, {
       headers: {
         'Content-Type': 'application/msgpack',
