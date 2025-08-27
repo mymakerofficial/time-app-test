@@ -8,3 +8,11 @@ export const EncryptedNoteSchema = z.object({
   message: z.string(),
 })
 export type EncryptedNote = z.Infer<typeof EncryptedNoteSchema>
+
+export const NoteSchema = z.object({
+  id: z.nanoid(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+  message: z.string(),
+})
+export type Note = z.Infer<typeof NoteSchema>

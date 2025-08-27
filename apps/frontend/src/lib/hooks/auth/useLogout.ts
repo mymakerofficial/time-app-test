@@ -1,4 +1,4 @@
-import { useAccessToken, useSetAccessToken } from '../../authStore.ts'
+import { useAccessToken, useSetAccessToken } from '@/lib/authStore.ts'
 import { useMutation } from '@tanstack/react-query'
 
 export function useLogout() {
