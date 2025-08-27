@@ -35,3 +35,7 @@ export function isString(value: unknown): value is string {
 export function isNumber(value: unknown): value is number {
   return typeof value === 'number'
 }
+
+export function isArray<T>(value: unknown): value is T[] {
+  return Array.isArray(value)
+}

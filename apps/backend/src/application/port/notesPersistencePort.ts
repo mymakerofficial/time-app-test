@@ -1,4 +1,4 @@
-import { EncryptedNote } from '@time-app-test/shared/domain/model/notes'
+import { EncryptedNote } from '@time-app-test/shared/model/domain/notes.ts'
 
 export interface NotesPersistencePort {
   getAll(userId: string): Promise<EncryptedNote[]>

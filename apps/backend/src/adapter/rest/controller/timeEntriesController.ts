@@ -1,5 +1,7 @@
 import { createApiController } from '@/adapter/rest/utils/apiController.ts'
 import { t } from 'elysia'
+import { createLocalHook } from '@/adapter/rest/utils/zodAdapter.ts'
+import { GetTimeEntriesInRangeResponseSchema } from '@time-app-test/shared/model/rest/timeEntries.ts'
 
 export const timeEntriesController = createApiController({
   prefix: '/time-entries',
@@ -11,21 +13,14 @@ export const timeEntriesController = createApiController({
     return await timeEntriesService.getAllInRange(range, userId)
   },
   {
+    // TODO make query work with createLocalHook
     query: t.Object({
       start: t.Integer(),
       end: t.Integer(),
     }),
-    response: t.Array(
-      t.Object({
-        id: t.String(),
-        createdAt: t.String(),
-        updatedAt: t.String(),
-        lookupKey: t.Integer(),
-        startedAt: t.String(),
-        endedAt: t.Nullable(t.String()),
-        message: t.String(),
-      }),
-    ),
-    validateSession: true,
+    ...createLocalHook({
+      response: GetTimeEntriesInRangeResponseSchema,
+      validateSession: true,
+    }),
   },
 )

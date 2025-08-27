@@ -1,5 +1,6 @@
 import { createApiController } from '@/adapter/rest/utils/apiController.ts'
-import { t } from 'elysia'
+import { createLocalHook } from '@/adapter/rest/utils/zodAdapter.ts'
+import { GetAllNotesResponseSchema } from '@time-app-test/shared/model/rest/notes.ts'
 
 export const notesController = createApiController({
   prefix: '/notes',
@@ -10,15 +11,8 @@ export const notesController = createApiController({
     const userId = session.getCurrentUserId()
     return await notesService.getAll(userId)
   },
-  {
-    response: t.Array(
-      t.Object({
-        id: t.String(),
-        createdAt: t.String(),
-        updatedAt: t.String(),
-        message: t.String(),
-      }),
-    ),
+  createLocalHook({
+    response: GetAllNotesResponseSchema,
     validateSession: true,
-  },
+  }),
 )

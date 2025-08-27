@@ -3,8 +3,8 @@ import { useSetAccessToken } from '@/lib/authStore.ts'
 import { useNavigate } from '@tanstack/react-router'
 import { useLogout } from './useLogout.ts'
 import { getResponseBody } from '@time-app-test/shared/fetch/response.ts'
-import { z } from 'zod'
 import { ApiError } from '@time-app-test/shared/error/apiError.ts'
+import { GetTokenResponseSchema } from '@time-app-test/shared/model/rest/auth.ts'
 
 export function useGetToken() {
   const navigate = useNavigate()
@@ -20,9 +20,7 @@ export function useGetToken() {
       })
       const { accessToken } = await getResponseBody({
         response,
-        schema: z.object({
-          accessToken: z.string(),
-        }),
+        schema: GetTokenResponseSchema,
       })
 
       setAccessToken(accessToken)

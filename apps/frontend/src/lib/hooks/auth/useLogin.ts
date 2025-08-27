@@ -4,39 +4,39 @@ import * as srp from 'secure-remote-password/client'
 import { getResponseBody } from '@time-app-test/shared/fetch/response.ts'
 import { useSetAccessToken } from '@/lib/authStore.ts'
 import {
-  PasswordLoginFinishClientData,
-  PasswordLoginFinishClientDataSchema,
-  PasswordLoginFinishServerDataSchema,
-  PasswordLoginStartClientData,
-  PasswordLoginStartClientDataSchema,
-  PasswordLoginStartServerDataSchema,
-} from '@time-app-test/shared/domain/model/auth.ts'
+  LoginFinishBody,
+  LoginFinishBodySchema,
+  LoginFinishResponseSchema,
+  LoginStartBody,
+  LoginStartBodySchema,
+  LoginStartResponseSchema,
+} from '@time-app-test/shared/model/rest/auth.ts'
 
-async function startLogin(data: PasswordLoginStartClientData) {
+async function startLogin(data: LoginStartBody) {
   const response = await fetch('/api/auth/login/start', {
     method: 'POST',
-    body: JSON.stringify(PasswordLoginStartClientDataSchema.parse(data)),
+    body: JSON.stringify(LoginStartBodySchema.parse(data)),
     headers: {
       'Content-Type': 'application/json',
     },
   })
   return getResponseBody({
     response,
-    schema: PasswordLoginStartServerDataSchema,
+    schema: LoginStartResponseSchema,
   })
 }
 
-async function finishLogin(data: PasswordLoginFinishClientData) {
+async function finishLogin(data: LoginFinishBody) {
   const response = await fetch('/api/auth/login/finish', {
     method: 'POST',
-    body: JSON.stringify(PasswordLoginFinishClientDataSchema.parse(data)),
+    body: JSON.stringify(LoginFinishBodySchema.parse(data)),
     headers: {
       'Content-Type': 'application/json',
     },
   })
   return getResponseBody({
     response,
-    schema: PasswordLoginFinishServerDataSchema,
+    schema: LoginFinishResponseSchema,
   })
 }
 

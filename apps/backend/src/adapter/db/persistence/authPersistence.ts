@@ -10,7 +10,7 @@ import {
 import {
   CreateUserPasswordData,
   UserPasswordData,
-} from '@time-app-test/shared/domain/model/auth.ts'
+} from '@time-app-test/shared/model/domain/auth.ts'
 
 export class AuthPersistence implements AuthPersistencePort {
   readonly #db: DB

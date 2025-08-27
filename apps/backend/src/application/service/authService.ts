@@ -17,7 +17,7 @@ import {
   PasswordLoginStartClientData,
   PasswordLoginStartServerData,
   UserPasswordData,
-} from '@time-app-test/shared/domain/model/auth.ts'
+} from '@time-app-test/shared/model/domain/auth.ts'
 
 export class AuthService {
   private static readonly refreshTokenExpiryMs = 1000 * 60 * 60 * 24 * 7 // 7 days

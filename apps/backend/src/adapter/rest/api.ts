@@ -1,15 +1,16 @@
-import { Elysia, t, ValidationError as ElysiaValidationError } from 'elysia'
-import { authController } from '@/adapter/rest/auth/controller.ts'
-import { usersController } from '@/adapter/rest/users/controller.ts'
+import { Elysia, ValidationError as ElysiaValidationError } from 'elysia'
+import { authController } from '@/adapter/rest/controller/authController.ts'
+import { usersController } from '@/adapter/rest/controller/usersController.ts'
 import { ApiError } from '@time-app-test/shared/error/apiError.ts'
 import {
   PathNotFound,
   UnexpectedError,
   ValidationError,
 } from '@time-app-test/shared/error/errors.ts'
-import { timeEntriesController } from '@/adapter/rest/timeEntries/controller.ts'
+import { timeEntriesController } from '@/adapter/rest/controller/timeEntriesController.ts'
 import { DrizzleQueryError } from 'drizzle-orm/errors'
-import { notesController } from '@/adapter/rest/notes/controller.ts'
+import { notesController } from '@/adapter/rest/controller/notesController.ts'
+import { ZodError } from 'zod'
 
 export const apiController = new Elysia({ prefix: '/api' })
   .error({
@@ -26,6 +27,16 @@ export const apiController = new Elysia({ prefix: '/api' })
       return error.withPath(path).toFetchResponse()
     } else if (code === 404) {
       return PathNotFound({ path }).toFetchResponse()
+    } else if (code === 'UNKNOWN' && error instanceof ZodError) {
+      const issues = error.issues
+      const firstIssue = issues[0]
+      return ValidationError(
+        {
+          path: firstIssue.path.join('.'),
+          message: firstIssue.message,
+        },
+        { cause: issues, path },
+      ).toFetchResponse()
     } else if (
       code === 'VALIDATION' &&
       error instanceof ElysiaValidationError
@@ -42,38 +53,6 @@ export const apiController = new Elysia({ prefix: '/api' })
     }
 
     return UnexpectedError({ cause: error }).withPath(path).toFetchResponse()
-  })
-  .model({
-    error: t.Object({
-      errorCode: t.String({
-        default: UnexpectedError.errorCode,
-      }),
-      statusCode: t.Number({
-        default: UnexpectedError.statusCode,
-      }),
-      parameters: t.Record(t.String(), t.Any(), {
-        default: {},
-      }),
-      message: t.String(),
-      cause: t.Optional(t.Any()),
-      path: t.Optional(
-        t.String({
-          default: '/api/foo',
-        }),
-      ),
-    }),
-  })
-  .guard({
-    headers: t.Object({
-      authorization: t.Optional(
-        t.String({
-          pattern: '^Bearer .+$',
-        }),
-      ),
-    }),
-    response: {
-      500: 'error',
-    },
   })
   .use(authController)
   .use(usersController)
