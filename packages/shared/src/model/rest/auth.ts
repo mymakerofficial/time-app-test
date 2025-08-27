@@ -1,5 +1,15 @@
 import z from 'zod'
 import { UserIdSchema, UsernameSchema } from '@/model/domain/user.ts'
+import {
+  EncryptedDekSchema,
+  JwtAccessTokenSchema,
+  KekSaltSchema,
+  PasswordLoginStartServerDataSchema,
+  SrpClientProofSchema,
+  SrpClientPublicEphemeralSchema,
+  SrpServerProofSchema,
+  UserPasswordDataSchema,
+} from '@/model/domain/auth.ts'
 
 export const RegisterStartBodySchema = z.object({
   username: UsernameSchema,
@@ -10,37 +20,30 @@ export const RegisterStartResponseSchema = z.object({
   userId: UserIdSchema,
 })
 
-export const RegisterFinishBodySchema = z.object({
-  username: UsernameSchema,
-  userId: UserIdSchema,
-  salt: z.string(),
-  verifier: z.string(),
-})
+export const RegisterFinishBodySchema = UserPasswordDataSchema
 export type RegisterFinishBody = z.Infer<typeof RegisterFinishBodySchema>
 
 export const LoginStartBodySchema = z.object({
   username: UsernameSchema,
-  clientPublicEphemeral: z.string(),
+  clientPublicEphemeral: SrpClientPublicEphemeralSchema,
 })
 export type LoginStartBody = z.Infer<typeof LoginStartBodySchema>
 
-export const LoginStartResponseSchema = z.object({
-  userId: UserIdSchema,
-  salt: z.string(),
-  serverPublicEphemeral: z.string(),
-})
+export const LoginStartResponseSchema = PasswordLoginStartServerDataSchema
 
 export const LoginFinishBodySchema = z.object({
   userId: UserIdSchema,
-  clientProof: z.string(),
+  clientProof: SrpClientProofSchema,
 })
 export type LoginFinishBody = z.Infer<typeof LoginFinishBodySchema>
 
 export const LoginFinishResponseSchema = z.object({
-  serverProof: z.string(),
-  accessToken: z.string(),
+  serverProof: SrpServerProofSchema,
+  accessToken: JwtAccessTokenSchema,
+  kekSalt: KekSaltSchema,
+  encryptedDek: EncryptedDekSchema,
 })
 
 export const GetTokenResponseSchema = z.object({
-  accessToken: z.string(),
+  accessToken: JwtAccessTokenSchema,
 })

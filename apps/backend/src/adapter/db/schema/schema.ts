@@ -19,8 +19,10 @@ export const userPasswords = pgTable('user_passwords', {
     .notNull()
     .defaultNow()
     .$onUpdate(() => new Date()),
-  salt: varchar().notNull(),
-  verifier: varchar().notNull(),
+  authSalt: varchar('auth_salt').notNull(),
+  authVerifier: varchar('auth_verifier').notNull(),
+  kekSalt: varchar('kek_salt').notNull(),
+  dek: varchar().notNull(),
 })
 
 export const notes = pgTable('notes', {

@@ -17,8 +17,10 @@ export class RedisAuthCache implements AuthCachePort {
     expirySec,
     serverSecretEphemeral,
     clientPublicEphemeral,
-    salt,
-    verifier,
+    authSalt,
+    authVerifier,
+    kekSalt,
+    encryptedDek,
   }: {
     userId: string
     expirySec: number
@@ -26,26 +28,39 @@ export class RedisAuthCache implements AuthCachePort {
     await this.#redis.hSet(`pending-login:${userId}`, {
       sse: serverSecretEphemeral,
       cpe: clientPublicEphemeral,
-      slt: salt,
-      ver: verifier,
+      slt: authSalt,
+      ver: authVerifier,
+      kek: kekSalt,
+      dek: encryptedDek,
       ex: Date.now() + expirySec * 1000,
     })
   }
 
-  async getPendingLogin(userId: string) {
-    const [serverSecretEphemeral, clientPublicEphemeral, salt, verifier, ex] =
-      await this.#redis.hmGet(`pending-login:${userId}`, [
-        'sse',
-        'cpe',
-        'slt',
-        'ver',
-        'ex',
-      ])
+  async getPendingLogin(userId: string): Promise<PendingLogin | undefined> {
+    const [
+      serverSecretEphemeral,
+      clientPublicEphemeral,
+      authSalt,
+      authVerifier,
+      kekSalt,
+      encryptedDek,
+      ex,
+    ] = await this.#redis.hmGet(`pending-login:${userId}`, [
+      'sse',
+      'cpe',
+      'slt',
+      'ver',
+      'kek',
+      'dek',
+      'ex',
+    ])
     if (
       isNull(serverSecretEphemeral) ||
       isNull(clientPublicEphemeral) ||
-      isNull(salt) ||
-      isNull(verifier) ||
+      isNull(authSalt) ||
+      isNull(authVerifier) ||
+      isNull(kekSalt) ||
+      isNull(encryptedDek) ||
       isNull(ex)
     ) {
       return undefined
@@ -56,6 +71,8 @@ export class RedisAuthCache implements AuthCachePort {
         'cpe',
         'slt',
         'ver',
+        'kek',
+        'dek',
         'ex',
       ])
       return undefined
@@ -63,8 +80,10 @@ export class RedisAuthCache implements AuthCachePort {
     return {
       serverSecretEphemeral,
       clientPublicEphemeral,
-      salt,
-      verifier,
+      authSalt,
+      authVerifier,
+      kekSalt,
+      encryptedDek,
     }
   }
 

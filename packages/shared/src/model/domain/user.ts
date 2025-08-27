@@ -5,7 +5,7 @@ export const UserIdSchema = z
   .nanoid()
   .describe('the id of a user')
   .meta({
-    examples: [nanoid()],
+    examples: Array.from({ length: 4 }, () => nanoid()),
   })
 
 export const UsernameSchema = z

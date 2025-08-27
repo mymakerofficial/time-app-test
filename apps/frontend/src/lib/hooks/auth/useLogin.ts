@@ -11,6 +11,8 @@ import {
   LoginStartBodySchema,
   LoginStartResponseSchema,
 } from '@time-app-test/shared/model/rest/auth.ts'
+import { Crypt } from '@/lib/utils/crypt.ts'
+import { ab2str, hexToUint8 } from '@time-app-test/shared/helper/binary.ts'
 
 async function startLogin(data: LoginStartBody) {
   const response = await fetch('/api/auth/login/start', {
@@ -52,26 +54,33 @@ export function useLogin({
     mutationFn: async ({ username, password }: LoginFormValues) => {
       const clientEphemeral = srp.generateEphemeral()
 
-      const { userId, salt, serverPublicEphemeral } = await startLogin({
+      const { userId, authSalt, serverPublicEphemeral } = await startLogin({
         username,
         clientPublicEphemeral: clientEphemeral.public,
       })
 
-      const privateKey = srp.derivePrivateKey(salt, userId, password)
+      const privateKey = srp.derivePrivateKey(authSalt, userId, password)
       const clientSession = srp.deriveSession(
         clientEphemeral.secret,
         serverPublicEphemeral,
-        salt,
+        authSalt,
         userId,
         privateKey,
       )
 
-      const { serverProof, accessToken } = await finishLogin({
-        userId,
-        clientProof: clientSession.proof,
-      })
+      const { serverProof, accessToken, kekSalt, encryptedDek } =
+        await finishLogin({
+          userId,
+          clientProof: clientSession.proof,
+        })
 
       srp.verifySession(clientEphemeral.public, clientSession, serverProof)
+
+      const kek = await Crypt.deriveKey(password, hexToUint8(kekSalt))
+      const decryptedDek = await Crypt.decrypt(hexToUint8(encryptedDek), kek)
+
+      // TODO store
+      console.log('retrieved dek', ab2str(decryptedDek))
 
       setAccessToken(accessToken)
     },

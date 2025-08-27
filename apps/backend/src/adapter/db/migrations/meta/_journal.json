@@ -22,6 +22,13 @@
       "when": 1756237667750,
       "tag": "0002_conscious_bushwacker",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1756321171335,
+      "tag": "0003_bent_red_ghost",
+      "breakpoints": true
     }
   ]
 }

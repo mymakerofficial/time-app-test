@@ -1,7 +1,7 @@
 import { jwtVerify, SignJWT } from 'jose'
 import { InvalidAccessToken } from '@time-app-test/shared/error/errors.ts'
 import crypto from 'node:crypto'
-import { str2Uint8Array } from '@time-app-test/shared/helper/binary.ts'
+import { binaryStringToUint8 } from '@time-app-test/shared/helper/binary.ts'
 import z from 'zod'
 
 const CustomJwtPayloadSchema = z.object({
@@ -21,7 +21,7 @@ export class TokenService {
     return new Promise<string>((resolve, reject) => {
       crypto.hkdf(
         'sha512',
-        str2Uint8Array(key),
+        binaryStringToUint8(key),
         TokenService.deviceIdSalt,
         'info',
         32,
