@@ -1,4 +1,3 @@
-import { AuthModel } from '@/adapter/rest/auth/model.ts'
 import { isUndefined } from '@time-app-test/shared/guards.ts'
 import * as srp from 'secure-remote-password/server'
 import { nanoid } from 'nanoid'
@@ -12,6 +11,13 @@ import { TokenService } from '@/application/service/tokenService.ts'
 import { UserPersistencePort } from '@/application/port/userPersistencePort.ts'
 import { AuthCachePort } from '@/application/port/authCachePort.ts'
 import { AuthPersistencePort } from '@/application/port/authPersistencePort.ts'
+import {
+  PasswordLoginFinishClientData,
+  PasswordLoginFinishServerData,
+  PasswordLoginStartClientData,
+  PasswordLoginStartServerData,
+  UserPasswordData,
+} from '@time-app-test/shared/domain/model/auth.ts'
 
 export class AuthService {
   private static readonly refreshTokenExpiryMs = 1000 * 60 * 60 * 24 * 7 // 7 days
@@ -33,9 +39,9 @@ export class AuthService {
     this.#userPersistence = container.userPersistence
   }
 
-  async registerStart({
-    username,
-  }: AuthModel.RegisterStartBody): Promise<AuthModel.RegisterStartResponse> {
+  async registerStart({ username }: { username: string }): Promise<{
+    userId: string
+  }> {
     if (await this.#userPersistence.existsByName(username)) {
       throw UserAlreadyExists({ username })
     }
@@ -51,12 +57,7 @@ export class AuthService {
     return { userId }
   }
 
-  async registerFinish({
-    username,
-    userId,
-    salt,
-    verifier,
-  }: AuthModel.RegisterFinishBody) {
+  async registerFinish({ username, userId, salt, verifier }: UserPasswordData) {
     const pendingUsername = await this.#authCache.getPendingRegistration(userId)
 
     if (pendingUsername !== username) {
@@ -80,7 +81,7 @@ export class AuthService {
   async loginStart({
     username,
     clientPublicEphemeral,
-  }: AuthModel.LoginStartBody): Promise<AuthModel.LoginStartResponse> {
+  }: PasswordLoginStartClientData): Promise<PasswordLoginStartServerData> {
     const user = await this.#authPersistence.getPasswordDataByUsername(username)
 
     const serverEphemeral = srp.generateEphemeral(user.verifier)
@@ -104,13 +105,7 @@ export class AuthService {
   async loginFinish({
     userId,
     clientProof,
-  }: AuthModel.LoginFinishBody): Promise<{
-    cookie: {
-      value: string
-      maxAge: number
-    }
-    response: AuthModel.LoginFinishResponse
-  }> {
+  }: PasswordLoginFinishClientData): Promise<PasswordLoginFinishServerData> {
     const pending = await this.#authCache.getPendingLogin(userId)
 
     if (isUndefined(pending)) {
@@ -139,13 +134,11 @@ export class AuthService {
     await this.#authCache.deletePendingLogin(userId)
 
     return {
-      cookie: {
+      serverProof: serverSession.proof,
+      accessToken,
+      refreshToken: {
         value: refreshToken,
         maxAge: AuthService.refreshTokenExpiryMs,
-      },
-      response: {
-        serverProof: serverSession.proof,
-        accessToken,
       },
     }
   }
@@ -154,7 +147,9 @@ export class AuthService {
     refreshToken,
   }: {
     refreshToken: string
-  }): Promise<AuthModel.GetTokenResponse> {
+  }): Promise<{
+    accessToken: string
+  }> {
     const userId = await this.#authCache.getRefreshToken(refreshToken)
 
     if (isUndefined(userId)) {

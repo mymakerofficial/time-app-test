@@ -1,4 +1,4 @@
-import { CreateUser, User } from '@/domain/model/user.ts'
+import { CreateUser, User } from '@time-app-test/shared/domain/model/user.ts'
 
 export interface UserPersistencePort {
   createUser(user: CreateUser): Promise<void>

@@ -7,7 +7,7 @@ import {
   UserNotFoundByName,
 } from '@time-app-test/shared/error/errors.ts'
 import { UserPersistencePort } from '@/application/port/userPersistencePort.ts'
-import { CreateUser } from '@/domain/model/user.ts'
+import { CreateUser } from '@time-app-test/shared/domain/model/user.ts'
 
 export class UserPersistence implements UserPersistencePort {
   readonly #db: DB

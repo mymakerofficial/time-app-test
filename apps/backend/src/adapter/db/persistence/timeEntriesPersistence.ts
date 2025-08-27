@@ -2,7 +2,7 @@ import { TimeEntriesPersistencePort } from '@/application/port/timeEntriesPersis
 import { timeEntries } from '@/adapter/db/schema/schema.ts'
 import { and, eq, gt, lt } from 'drizzle-orm'
 import { DB } from '@/config/services.ts'
-import { Range } from '@/domain/model/timeEntries.ts'
+import { Range } from '@time-app-test/shared/domain/model/timeEntries.ts'
 
 export class TimeEntriesPersistence implements TimeEntriesPersistencePort {
   readonly #db: DB
