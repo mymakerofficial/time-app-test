@@ -1,5 +1,5 @@
 import { TimeEntriesPersistencePort } from '@/application/port/timeEntriesPersistencePort.ts'
-import { Range } from '@time-app-test/shared/domain/model/timeEntries.ts'
+import { Range } from '@time-app-test/shared/model/domain/timeEntries.ts'
 
 export class TimeEntriesService {
   readonly #timeEntriesPersistence: TimeEntriesPersistencePort

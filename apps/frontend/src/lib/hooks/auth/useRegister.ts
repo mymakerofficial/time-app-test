@@ -3,32 +3,32 @@ import * as srp from 'secure-remote-password/client'
 import { RegisterFormValues } from '@/lib/schema/form.ts'
 import { useLogin } from '@/lib/hooks/auth/useLogin.ts'
 import { getResponseBody } from '@time-app-test/shared/fetch/response.js'
-import z from 'zod'
 import {
-  UserPasswordData,
-  UserPasswordDataSchema,
-} from '@time-app-test/shared/domain/model/auth.ts'
+  RegisterFinishBody,
+  RegisterFinishBodySchema,
+  RegisterStartBody,
+  RegisterStartBodySchema,
+  RegisterStartResponseSchema,
+} from '@time-app-test/shared/model/rest/auth.ts'
 
-async function startRegistration(data: { username: string }) {
+async function startRegistration(data: RegisterStartBody) {
   const response = await fetch('/api/auth/register/start', {
     method: 'POST',
-    body: JSON.stringify(data),
+    body: JSON.stringify(RegisterStartBodySchema.parse(data)),
     headers: {
       'Content-Type': 'application/json',
     },
   })
   return getResponseBody({
     response,
-    schema: z.object({
-      userId: z.nanoid(),
-    }),
+    schema: RegisterStartResponseSchema,
   })
 }
 
-async function finishRegistration(data: UserPasswordData) {
+async function finishRegistration(data: RegisterFinishBody) {
   const response = await fetch('/api/auth/register/finish', {
     method: 'POST',
-    body: JSON.stringify(UserPasswordDataSchema.parse(data)),
+    body: JSON.stringify(RegisterFinishBodySchema.parse(data)),
     headers: {
       'Content-Type': 'application/json',
     },

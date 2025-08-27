@@ -1,5 +1,6 @@
 import { createApiController } from '@/adapter/rest/utils/apiController.ts'
-import { UsersModel } from '@/adapter/rest/users/model.ts'
+import { createLocalHook } from '@/adapter/rest/utils/zodAdapter.ts'
+import { GetUsersMeResponse } from '@time-app-test/shared/model/rest/user.ts'
 
 export const usersController = createApiController({
   prefix: '/users',
@@ -10,8 +11,8 @@ export const usersController = createApiController({
     const userId = session.getCurrentUserId()
     return await userPersistence.getUserById(userId)
   },
-  {
-    response: UsersModel.MeResponse,
+  createLocalHook({
+    response: GetUsersMeResponse,
     validateSession: true,
-  },
+  }),
 )

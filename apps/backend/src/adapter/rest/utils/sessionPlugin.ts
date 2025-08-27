@@ -9,36 +9,43 @@ import {
   CustomJwtPayload,
   TokenService,
 } from '@/application/service/tokenService.ts'
+import z from 'zod'
+
+export interface SessionContext {
+  request: Request
+  headers: Record<string, string | undefined>
+  cookie: Record<string, Cookie<string | undefined>>
+}
 
 class Session {
-  readonly #headers: Record<string, string | undefined>
-  readonly #cookie: Record<string, Cookie<string | undefined>>
+  readonly #context: SessionContext
   readonly #tokenService: TokenService
 
   constructor({
-    headers,
-    cookie,
     tokenService,
+    ...context
   }: {
-    headers: Record<string, string | undefined>
-    cookie: Record<string, Cookie<string | undefined>>
     tokenService: TokenService
-  }) {
-    this.#headers = headers
-    this.#cookie = cookie
+  } & SessionContext) {
+    this.#context = context
     this.#tokenService = tokenService
   }
 
-  getRawAuthHeader() {
-    if (!this.#headers.authorization?.startsWith('Bearer ')) {
+  async getBody<T extends z.ZodType>(schema: T): Promise<z.Infer<T>> {
+    const json = await this.#context.request.json()
+    return schema.parse(json)
+  }
+
+  #getRawAuthHeader() {
+    if (!this.#context.headers.authorization?.startsWith('Bearer ')) {
       return undefined
     }
 
-    return this.#headers.authorization.split(' ')[1]
+    return this.#context.headers.authorization.split(' ')[1]
   }
 
   getAccessToken() {
-    const authHeader = this.getRawAuthHeader()
+    const authHeader = this.#getRawAuthHeader()
 
     if (isUndefined(authHeader)) {
       throw MissingAuthorizationHeader()
@@ -47,12 +54,12 @@ class Session {
     return authHeader
   }
 
-  getRawRefreshTokenCookie() {
-    return this.#cookie.refreshToken
+  #getRawRefreshTokenCookie() {
+    return this.#context.cookie.refreshToken
   }
 
   getRefreshToken() {
-    const { value } = this.getRawRefreshTokenCookie()
+    const { value } = this.#getRawRefreshTokenCookie()
 
     if (isUndefined(value) || !isString(value)) {
       throw MissingRefreshToken()
@@ -62,7 +69,7 @@ class Session {
   }
 
   setRefreshToken({ value, maxAge }: { value: string; maxAge: number }) {
-    this.#cookie.refreshToken.set({
+    this.#context.cookie.refreshToken.set({
       httpOnly: true,
       path: '/',
       sameSite: 'strict',
@@ -73,7 +80,7 @@ class Session {
   }
 
   clearRefreshToken() {
-    this.#cookie.refreshToken.remove()
+    this.#context.cookie.refreshToken.remove()
   }
 
   async validateSession() {
@@ -84,8 +91,7 @@ class Session {
     return new ValidatedSession({
       jwtPayload,
       deviceId,
-      headers: this.#headers,
-      cookie: this.#cookie,
+      ...this.#context,
       tokenService: this.#tokenService,
     })
   }
@@ -98,19 +104,15 @@ class ValidatedSession extends Session {
   constructor({
     jwtPayload,
     deviceId,
-    headers,
-    cookie,
     tokenService,
+    ...context
   }: {
     jwtPayload: CustomJwtPayload
     deviceId: string
-    headers: Record<string, string | undefined>
-    cookie: Record<string, Cookie<string | undefined>>
     tokenService: TokenService
-  }) {
+  } & SessionContext) {
     super({
-      headers,
-      cookie,
+      ...context,
       tokenService,
     })
     this.#jwtPayload = jwtPayload
@@ -128,9 +130,9 @@ class ValidatedSession extends Session {
 
 export const sessionPlugin = new Elysia({ name: 'session' })
   .use(servicesPlugin)
-  .resolve({ as: 'scoped' }, ({ headers, cookie, tokenService }) => {
+  .resolve({ as: 'scoped' }, (context) => {
     return {
-      session: new Session({ headers, cookie, tokenService }),
+      session: new Session(context),
     }
   })
   .macro({

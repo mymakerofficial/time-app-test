@@ -1,7 +1,7 @@
 import {
   EncryptedTimeEntry,
   Range,
-} from '@time-app-test/shared/domain/model/timeEntries.ts'
+} from '@time-app-test/shared/model/domain/timeEntries.ts'
 
 export interface TimeEntriesPersistencePort {
   countRange(range: Range, userId: string): Promise<number>

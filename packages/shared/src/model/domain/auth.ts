@@ -1,5 +1,5 @@
 import z from 'zod'
-import { CookieSchema } from '@/domain/model/cookie.ts'
+import { CookieSchema } from '@/model/domain/cookie.ts'
 
 export const UserPasswordDataSchema = z.object({
   userId: z.nanoid(),

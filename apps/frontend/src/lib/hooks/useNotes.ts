@@ -1,9 +1,9 @@
 import { useAccessToken } from '@/lib/authStore.ts'
 import { useQuery } from '@tanstack/react-query'
 import { getResponseBody } from '@time-app-test/shared/fetch/response.ts'
-import { EncryptedNoteSchema } from '@time-app-test/shared/domain/model/notes.ts'
 import { useLiveQuery } from '@tanstack/react-db'
 import { notesCollection } from '@/lib/collections'
+import { GetAllNotesResponseSchema } from '@time-app-test/shared/model/rest/notes.ts'
 
 export function useNotes() {
   const getAccessToken = useAccessToken()
@@ -19,7 +19,7 @@ export function useNotes() {
       })
       const data = await getResponseBody({
         response,
-        schema: EncryptedNoteSchema.array(),
+        schema: GetAllNotesResponseSchema,
       })
       // TODO decrypt
       notesCollection.insert(data)
