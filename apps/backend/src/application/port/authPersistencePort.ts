@@ -1,7 +1,7 @@
 import {
   CreateUserPasswordData,
   UserPasswordData,
-} from '@/domain/model/auth.ts'
+} from '@time-app-test/shared/domain/model/auth.ts'
 
 export interface AuthPersistencePort {
   getPasswordDataByUsername(username: string): Promise<UserPasswordData>
