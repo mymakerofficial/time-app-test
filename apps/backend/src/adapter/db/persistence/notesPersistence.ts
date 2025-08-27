@@ -12,7 +12,12 @@ export class NotesPersistence implements NotesPersistencePort {
 
   async getAll(userId: string) {
     return await this.#db
-      .select()
+      .select({
+        id: notes.id,
+        createdAt: notes.createdAt,
+        updatedAt: notes.updatedAt,
+        message: notes.message,
+      })
       .from(notes)
       .where(and(eq(timeEntries.userId, userId)))
   }
