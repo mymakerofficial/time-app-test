@@ -24,8 +24,10 @@ export class AuthPersistence implements AuthPersistencePort {
       .select({
         userId: users.id,
         username: users.username,
-        salt: userPasswords.salt,
-        verifier: userPasswords.verifier,
+        authSalt: userPasswords.authSalt,
+        authVerifier: userPasswords.authVerifier,
+        kekSalt: userPasswords.kekSalt,
+        encryptedDek: userPasswords.dek,
       })
       .from(users)
       .leftJoin(userPasswords, eq(users.id, userPasswords.userId))
@@ -36,7 +38,7 @@ export class AuthPersistence implements AuthPersistencePort {
       throw UserNotFoundByName({ username })
     }
 
-    if (isUndefined(user.salt) || isUndefined(user.verifier)) {
+    if (isUndefined(user.authSalt) || isUndefined(user.authVerifier)) {
       throw AuthenticationMethodNotFound({ username })
     }
 
@@ -44,6 +46,12 @@ export class AuthPersistence implements AuthPersistencePort {
   }
 
   async createPasswordData(data: CreateUserPasswordData) {
-    await this.#db.insert(userPasswords).values(data)
+    await this.#db.insert(userPasswords).values({
+      userId: data.userId,
+      authSalt: data.authSalt,
+      authVerifier: data.authVerifier,
+      kekSalt: data.kekSalt,
+      dek: data.encryptedDek,
+    })
   }
 }

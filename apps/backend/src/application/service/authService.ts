@@ -57,7 +57,14 @@ export class AuthService {
     return { userId }
   }
 
-  async registerFinish({ username, userId, salt, verifier }: UserPasswordData) {
+  async registerFinish({
+    username,
+    userId,
+    authSalt,
+    authVerifier,
+    kekSalt,
+    encryptedDek,
+  }: UserPasswordData) {
     const pendingUsername = await this.#authCache.getPendingRegistration(userId)
 
     if (pendingUsername !== username) {
@@ -71,8 +78,10 @@ export class AuthService {
 
     await this.#authPersistence.createPasswordData({
       userId,
-      salt,
-      verifier,
+      authSalt,
+      authVerifier,
+      kekSalt,
+      encryptedDek,
     })
 
     await this.#authCache.deletePendingRegistration(userId)
@@ -84,20 +93,22 @@ export class AuthService {
   }: PasswordLoginStartClientData): Promise<PasswordLoginStartServerData> {
     const user = await this.#authPersistence.getPasswordDataByUsername(username)
 
-    const serverEphemeral = srp.generateEphemeral(user.verifier)
+    const serverEphemeral = srp.generateEphemeral(user.authVerifier)
 
     await this.#authCache.setPendingLogin({
       userId: user.userId,
       serverSecretEphemeral: serverEphemeral.secret,
       clientPublicEphemeral,
-      salt: user.salt,
-      verifier: user.verifier,
+      authSalt: user.authSalt,
+      authVerifier: user.authVerifier,
+      kekSalt: user.kekSalt,
+      encryptedDek: user.encryptedDek,
       expirySec: 60,
     })
 
     return {
       userId: user.userId,
-      salt: user.salt,
+      authSalt: user.authSalt,
       serverPublicEphemeral: serverEphemeral.public,
     }
   }
@@ -115,9 +126,9 @@ export class AuthService {
     const serverSession = srp.deriveSession(
       pending.serverSecretEphemeral,
       pending.clientPublicEphemeral,
-      pending.salt,
+      pending.authSalt,
       userId,
-      pending.verifier,
+      pending.authVerifier,
       clientProof,
     )
 
@@ -136,6 +147,8 @@ export class AuthService {
     return {
       serverProof: serverSession.proof,
       accessToken,
+      kekSalt: pending.kekSalt,
+      encryptedDek: pending.encryptedDek,
       refreshToken: {
         value: refreshToken,
         maxAge: AuthService.refreshTokenExpiryMs,

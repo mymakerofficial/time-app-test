@@ -10,6 +10,8 @@ import {
   RegisterStartBodySchema,
   RegisterStartResponseSchema,
 } from '@time-app-test/shared/model/rest/auth.ts'
+import { ab2str, uint8ToHex } from '@time-app-test/shared/helper/binary.ts'
+import { Crypt } from '@/lib/utils/crypt.ts'
 
 async function startRegistration(data: RegisterStartBody) {
   const response = await fetch('/api/auth/register/start', {
@@ -52,15 +54,25 @@ export function useRegister({
     mutationFn: async ({ username, password }: RegisterFormValues) => {
       const { userId } = await startRegistration({ username })
 
-      const salt = srp.generateSalt()
-      const privateKey = srp.derivePrivateKey(salt, userId, password)
-      const verifier = srp.deriveVerifier(privateKey)
+      const authSalt = srp.generateSalt()
+      const authPrivateKey = srp.derivePrivateKey(authSalt, userId, password)
+      const authVerifier = srp.deriveVerifier(authPrivateKey)
+
+      const dek = await Crypt.generatePrivateKey()
+      const kekSalt = crypto.getRandomValues(new Uint8Array(32))
+      const kek = await Crypt.deriveKey(password, kekSalt)
+      const exportedDek = await crypto.subtle.exportKey('raw', dek)
+      const encryptedDek = await Crypt.encrypt(exportedDek, kek)
+
+      console.log('generated dek', ab2str(exportedDek))
 
       await finishRegistration({
         username,
         userId,
-        salt,
-        verifier,
+        authSalt,
+        authVerifier,
+        kekSalt: uint8ToHex(kekSalt),
+        encryptedDek: uint8ToHex(encryptedDek),
       })
     },
     onSuccess: async (_, { username, password }) => {

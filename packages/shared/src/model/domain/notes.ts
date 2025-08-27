@@ -1,15 +1,20 @@
 import z from 'zod'
+import { nanoid } from 'nanoid'
+
+export const NoteIdSchema = z.nanoid().meta({
+  examples: Array.from({ length: 4 }, () => nanoid()),
+})
 
 export const EncryptedNoteSchema = z.object({
-  id: z.nanoid(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-  message: z.string(),
+  id: NoteIdSchema,
+  createdAt: z.hex(),
+  updatedAt: z.hex(),
+  message: z.hex(),
 })
 export type EncryptedNote = z.Infer<typeof EncryptedNoteSchema>
 
 export const NoteSchema = z.object({
-  id: z.nanoid(),
+  id: NoteIdSchema,
   createdAt: z.date(),
   updatedAt: z.date(),
   message: z.string(),

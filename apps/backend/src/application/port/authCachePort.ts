@@ -1,8 +1,10 @@
 export interface PendingLogin {
   serverSecretEphemeral: string
   clientPublicEphemeral: string
-  salt: string
-  verifier: string
+  authSalt: string
+  authVerifier: string
+  kekSalt: string
+  encryptedDek: string
 }
 
 export interface AuthCachePort {
