@@ -1,27 +1,28 @@
 import { useMutation } from '@tanstack/react-query'
-import { AuthRefreshResponseSchema } from '../../schema/auth.ts'
-import { getResponseBody } from '../../utils.ts'
-import { useSetAccessToken } from '../../authStore.ts'
-import { ApiError } from '../../error.ts'
+import { useSetAccessToken } from '@/lib/authStore.ts'
 import { useNavigate } from '@tanstack/react-router'
 import { useLogout } from './useLogout.ts'
+import { getResponseBody } from '@time-app-test/shared/fetch/response.ts'
+import { z } from 'zod'
+import { ApiError } from '@time-app-test/shared/error/apiError.ts'
 
-export function useRefresh() {
+export function useGetToken() {
   const navigate = useNavigate()
   const setAccessToken = useSetAccessToken()
   const { mutateAsync: logout } = useLogout()
 
   return useMutation({
-    mutationKey: ['refresh'],
+    mutationKey: ['get-token'],
     retry: () => false,
     mutationFn: async () => {
-      const response = await fetch('/api/auth/refresh', {
+      const response = await fetch('/api/auth/get-token', {
         method: 'POST',
       })
-
       const { accessToken } = await getResponseBody({
         response,
-        schema: AuthRefreshResponseSchema,
+        schema: z.object({
+          accessToken: z.string(),
+        }),
       })
 
       setAccessToken(accessToken)

@@ -1,34 +1,34 @@
 import { useMutation } from '@tanstack/react-query'
 import * as srp from 'secure-remote-password/client'
-import {
-  PostAuthRegisterFinishRequest,
-  PostAuthRegisterFinishRequestSchema,
-  PostAuthRegisterStartRequest,
-  PostAuthRegisterStartRequestSchema,
-  PostAuthRegisterStartResponseSchema,
-} from '../../schema/auth.ts'
-import { RegisterFormValues } from '../../schema/form.ts'
-import { useLogin } from './useLogin.ts'
+import { RegisterFormValues } from '@/lib/schema/form.ts'
+import { useLogin } from '@/lib/hooks/auth/useLogin.ts'
 import { getResponseBody } from '@time-app-test/shared/fetch/response.js'
+import z from 'zod'
+import {
+  UserPasswordData,
+  UserPasswordDataSchema,
+} from '@time-app-test/shared/domain/model/auth.ts'
 
-async function startRegistration(data: PostAuthRegisterStartRequest) {
+async function startRegistration(data: { username: string }) {
   const response = await fetch('/api/auth/register/start', {
     method: 'POST',
-    body: JSON.stringify(PostAuthRegisterStartRequestSchema.parse(data)),
+    body: JSON.stringify(data),
     headers: {
       'Content-Type': 'application/json',
     },
   })
   return getResponseBody({
     response,
-    schema: PostAuthRegisterStartResponseSchema,
+    schema: z.object({
+      userId: z.nanoid(),
+    }),
   })
 }
 
-async function finishRegistration(data: PostAuthRegisterFinishRequest) {
+async function finishRegistration(data: UserPasswordData) {
   const response = await fetch('/api/auth/register/finish', {
     method: 'POST',
-    body: JSON.stringify(PostAuthRegisterFinishRequestSchema.parse(data)),
+    body: JSON.stringify(UserPasswordDataSchema.parse(data)),
     headers: {
       'Content-Type': 'application/json',
     },

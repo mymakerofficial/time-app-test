@@ -1,42 +1,42 @@
 import { useMutation } from '@tanstack/react-query'
 import { LoginFormValues } from '@/lib/schema/form.ts'
 import * as srp from 'secure-remote-password/client'
-import {
-  PostAuthLoginFinishRequest,
-  PostAuthLoginFinishRequestSchema,
-  PostAuthLoginFinishResponseSchema,
-  PostAuthLoginStartRequest,
-  PostAuthLoginStartRequestSchema,
-  PostAuthLoginStartResponseSchema,
-} from '@/lib/schema/auth.ts'
 import { getResponseBody } from '@time-app-test/shared/fetch/response.ts'
 import { useSetAccessToken } from '@/lib/authStore.ts'
+import {
+  PasswordLoginFinishClientData,
+  PasswordLoginFinishClientDataSchema,
+  PasswordLoginFinishServerDataSchema,
+  PasswordLoginStartClientData,
+  PasswordLoginStartClientDataSchema,
+  PasswordLoginStartServerDataSchema,
+} from '@time-app-test/shared/domain/model/auth.ts'
 
-async function startLogin(data: PostAuthLoginStartRequest) {
+async function startLogin(data: PasswordLoginStartClientData) {
   const response = await fetch('/api/auth/login/start', {
     method: 'POST',
-    body: JSON.stringify(PostAuthLoginStartRequestSchema.parse(data)),
+    body: JSON.stringify(PasswordLoginStartClientDataSchema.parse(data)),
     headers: {
       'Content-Type': 'application/json',
     },
   })
   return getResponseBody({
     response,
-    schema: PostAuthLoginStartResponseSchema,
+    schema: PasswordLoginStartServerDataSchema,
   })
 }
 
-async function finishLogin(data: PostAuthLoginFinishRequest) {
+async function finishLogin(data: PasswordLoginFinishClientData) {
   const response = await fetch('/api/auth/login/finish', {
     method: 'POST',
-    body: JSON.stringify(PostAuthLoginFinishRequestSchema.parse(data)),
+    body: JSON.stringify(PasswordLoginFinishClientDataSchema.parse(data)),
     headers: {
       'Content-Type': 'application/json',
     },
   })
   return getResponseBody({
     response,
-    schema: PostAuthLoginFinishResponseSchema,
+    schema: PasswordLoginFinishServerDataSchema,
   })
 }
 
