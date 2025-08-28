@@ -9,7 +9,7 @@ export const Route = createFileRoute('/auth/login')({
 function RouteComponent() {
   const navigate = useNavigate()
   const { mutateAsync: login, error } = useLogin({
-    onSuccess: () => navigate({ to: '/me' }),
+    onSuccess: () => navigate({ to: '/' }),
   })
   const form = useLoginForm({
     onSubmit: login,

@@ -31,7 +31,7 @@ export const notes = pgTable('notes', {
     .notNull()
     .references(() => users.id),
   createdAt: varchar('updated_at').notNull(),
-  updatedAt: varchar('updated_at').notNull(),
+  updatedAt: varchar('created_at').notNull(),
   message: varchar().notNull(),
 })
 

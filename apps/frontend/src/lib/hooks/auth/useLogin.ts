@@ -2,7 +2,7 @@ import { useMutation } from '@tanstack/react-query'
 import { LoginFormValues } from '@/lib/schema/form.ts'
 import * as srp from 'secure-remote-password/client'
 import { getResponseBody } from '@time-app-test/shared/fetch/response.ts'
-import { useSetAccessToken } from '@/lib/authStore.ts'
+import { useSetSession } from '@/lib/authStore.ts'
 import {
   LoginFinishBody,
   LoginFinishBodySchema,
@@ -12,7 +12,7 @@ import {
   LoginStartResponseSchema,
 } from '@time-app-test/shared/model/rest/auth.ts'
 import { Crypt } from '@/lib/utils/crypt.ts'
-import { ab2str, hexToUint8 } from '@time-app-test/shared/helper/binary.ts'
+import { hexToUint8 } from '@time-app-test/shared/helper/binary.ts'
 
 async function startLogin(data: LoginStartBody) {
   const response = await fetch('/api/auth/login/start', {
@@ -47,7 +47,7 @@ export function useLogin({
 }: {
   onSuccess?: () => void | Promise<void>
 }) {
-  const setAccessToken = useSetAccessToken()
+  const setSession = useSetSession()
 
   return useMutation({
     mutationKey: ['login'],
@@ -76,13 +76,22 @@ export function useLogin({
 
       srp.verifySession(clientEphemeral.public, clientSession, serverProof)
 
-      const kek = await Crypt.deriveKey(password, hexToUint8(kekSalt))
+      const kek = await Crypt.deriveKey(
+        await Crypt.passwordToKey(password),
+        hexToUint8(kekSalt),
+      )
       const decryptedDek = await Crypt.decrypt(hexToUint8(encryptedDek), kek)
+      const dek = await crypto.subtle.importKey(
+        'raw',
+        decryptedDek,
+        {
+          name: 'AES-GCM',
+        },
+        true,
+        ['decrypt', 'encrypt'],
+      )
 
-      // TODO store
-      console.log('retrieved dek', ab2str(decryptedDek))
-
-      setAccessToken(accessToken)
+      setSession({ accessToken, encryptionKey: dek })
     },
     onSuccess: async () => {
       return onSuccess?.()

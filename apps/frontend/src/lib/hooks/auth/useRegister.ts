@@ -59,12 +59,13 @@ export function useRegister({
       const authVerifier = srp.deriveVerifier(authPrivateKey)
 
       const dek = await Crypt.generatePrivateKey()
-      const kekSalt = crypto.getRandomValues(new Uint8Array(32))
-      const kek = await Crypt.deriveKey(password, kekSalt)
+      const kekSalt = Crypt.generateSalt()
+      const kek = await Crypt.deriveKey(
+        await Crypt.passwordToKey(password),
+        kekSalt,
+      )
       const exportedDek = await crypto.subtle.exportKey('raw', dek)
       const encryptedDek = await Crypt.encrypt(exportedDek, kek)
-
-      console.log('generated dek', ab2str(exportedDek))
 
       await finishRegistration({
         username,

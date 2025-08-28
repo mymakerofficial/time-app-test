@@ -33,15 +33,20 @@ export abstract class Crypt {
     )
   }
 
-  static async deriveKey(password: string, salt: Uint8Array<ArrayBuffer>) {
-    const keyMaterial = await crypto.subtle.importKey(
+  static async passwordToKey(password: string) {
+    return await crypto.subtle.importKey(
       'raw',
       new TextEncoder().encode(password),
       'PBKDF2',
       false,
       ['deriveKey'],
     )
+  }
 
+  static async deriveKey(
+    keyMaterial: CryptoKey,
+    salt: Uint8Array<ArrayBuffer>,
+  ) {
     return await crypto.subtle.deriveKey(
       {
         name: 'PBKDF2',
@@ -65,5 +70,9 @@ export abstract class Crypt {
       true,
       ['encrypt', 'decrypt'],
     )
+  }
+
+  static generateSalt(length = 32) {
+    return crypto.getRandomValues(new Uint8Array(length))
   }
 }
