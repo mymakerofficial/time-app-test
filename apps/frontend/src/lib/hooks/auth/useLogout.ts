@@ -1,8 +1,8 @@
-import { useAccessToken, useSetAccessToken } from '@/lib/authStore.ts'
+import { useAccessToken, useSetSession } from '@/lib/authStore.ts'
 import { useMutation } from '@tanstack/react-query'
 
 export function useLogout() {
-  const setAccessToken = useSetAccessToken()
+  const setSession = useSetSession()
   const getAccessToken = useAccessToken()
 
   return useMutation({
@@ -16,7 +16,10 @@ export function useLogout() {
       })
     },
     onSuccess: async () => {
-      setAccessToken(null)
+      setSession({
+        accessToken: null,
+        encryptionKey: null,
+      })
     },
   })
 }

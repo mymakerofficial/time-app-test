@@ -1,18 +1,22 @@
 import { Store } from '@tanstack/store'
 
-const store = new Store({
-  accessToken: null as string | null,
-})
-
-export function setAccessToken(token: string | null) {
-  store.setState(() => ({
-    accessToken: token,
-  }))
+interface SessionStore {
+  accessToken: string | null
+  encryptionKey: CryptoKey | null
 }
 
-export function useSetAccessToken() {
+const store = new Store({
+  accessToken: null,
+  encryptionKey: null,
+} as SessionStore)
+
+export function setState(state: SessionStore) {
+  store.setState(() => state)
+}
+
+export function useSetSession() {
   // TODO the access token changed, queries should be rerun
-  return setAccessToken
+  return setState
 }
 
 export function getAccessToken() {
@@ -26,4 +30,16 @@ export function getAccessToken() {
 export function useAccessToken() {
   // TODO if access token is not set we need to refresh it
   return getAccessToken
+}
+
+export function getEncryptionKey() {
+  const encryptionKey = store.state.encryptionKey
+  if (!encryptionKey) {
+    throw new Error('Encryption key is not set')
+  }
+  return encryptionKey
+}
+
+export function useEncryptionKey() {
+  return getEncryptionKey
 }

@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useRegister } from '../../lib/hooks/auth/useRegister.ts'
-import { useRegisterForm } from '../../lib/hooks/form/useRegisterForm.ts'
+import { useRegister } from '@/lib/hooks/auth/useRegister.ts'
+import { useRegisterForm } from '@/lib/hooks/form/useRegisterForm.ts'
 
 export const Route = createFileRoute('/auth/register')({
   component: RouteComponent,
@@ -11,7 +11,7 @@ function RouteComponent() {
   const { mutateAsync: register, error } = useRegister({
     onSuccess: () =>
       navigate({
-        to: '/me',
+        to: '/',
       }),
   })
   const form = useRegisterForm({

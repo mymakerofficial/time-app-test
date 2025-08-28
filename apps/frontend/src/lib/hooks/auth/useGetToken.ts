@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query'
-import { useSetAccessToken } from '@/lib/authStore.ts'
+import { useSetSession } from '@/lib/authStore.ts'
 import { useNavigate } from '@tanstack/react-router'
 import { useLogout } from './useLogout.ts'
 import { getResponseBody } from '@time-app-test/shared/fetch/response.ts'
@@ -8,7 +8,7 @@ import { GetTokenResponseSchema } from '@time-app-test/shared/model/rest/auth.ts
 
 export function useGetToken() {
   const navigate = useNavigate()
-  const setAccessToken = useSetAccessToken()
+  const setAccessToken = useSetSession()
   const { mutateAsync: logout } = useLogout()
 
   return useMutation({
