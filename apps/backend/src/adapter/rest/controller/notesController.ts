@@ -13,7 +13,7 @@ export const notesController = createApiController({
     '/',
     async ({ session, notesService }) => {
       const userId = session.getCurrentUserId()
-      return GetAllNotesResponseSchema.encode(await notesService.getAll(userId))
+      return await notesService.getAll(userId)
     },
     createLocalHook({
       response: GetAllNotesResponseSchema,
@@ -22,10 +22,9 @@ export const notesController = createApiController({
   )
   .put(
     '/',
-    async ({ session, notesService }) => {
+    async ({ body, session, notesService }) => {
       const userId = session.getCurrentUserId()
-      const body = await session.getBody(CreateNoteBodySchema)
-      return await notesService.createNote({
+      await notesService.createNote({
         userId,
         ...body,
       })

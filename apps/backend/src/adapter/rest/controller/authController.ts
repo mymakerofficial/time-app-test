@@ -17,8 +17,7 @@ export const authController = createApiController({
 })
   .post(
     '/register/start',
-    async ({ session, authService }) => {
-      const body = await session.getBody(RegisterStartBodySchema)
+    async ({ body, authService }) => {
       return await authService.registerStart(body)
     },
     createLocalHook({
@@ -28,8 +27,7 @@ export const authController = createApiController({
   )
   .post(
     '/register/finish',
-    async ({ session, authService }) => {
-      const body = await session.getBody(RegisterFinishBodySchema)
+    async ({ body, authService }) => {
       await authService.registerFinish(body)
     },
     createLocalHook({
@@ -38,8 +36,7 @@ export const authController = createApiController({
   )
   .post(
     '/login/start',
-    async ({ session, authService }) => {
-      const body = await session.getBody(LoginStartBodySchema)
+    async ({ body, authService }) => {
       return await authService.loginStart(body)
     },
     createLocalHook({
@@ -49,8 +46,7 @@ export const authController = createApiController({
   )
   .post(
     '/login/finish',
-    async ({ authService, session }) => {
-      const body = await session.getBody(LoginFinishBodySchema)
+    async ({ body, authService, session }) => {
       const { refreshToken, ...response } = await authService.loginFinish(body)
       session.setRefreshToken(refreshToken)
       return response

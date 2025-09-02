@@ -9,12 +9,11 @@ import {
   CustomJwtPayload,
   TokenService,
 } from '@/application/service/tokenService.ts'
-import z from 'zod'
 
 export interface SessionContext {
   request: Request
   headers: Record<string, string | undefined>
-  cookie: Record<string, Cookie<string | undefined>>
+  cookie: Record<string, Cookie<unknown>>
 }
 
 class Session {
@@ -29,11 +28,6 @@ class Session {
   } & SessionContext) {
     this.#context = context
     this.#tokenService = tokenService
-  }
-
-  async getBody<T extends z.ZodType>(schema: T): Promise<z.Infer<T>> {
-    const json = await this.#context.request.json()
-    return schema.parse(json)
   }
 
   #getRawAuthHeader() {
@@ -130,18 +124,19 @@ class ValidatedSession extends Session {
 
 export const sessionPlugin = new Elysia({ name: 'session' })
   .use(servicesPlugin)
-  .resolve({ as: 'scoped' }, (context) => {
-    return {
-      session: new Session(context),
-    }
-  })
+  .resolve({ as: 'scoped' }, (context) => ({
+    session: new Session(context),
+  }))
   .macro({
     validateSession: (enabled: true) => ({
       resolve: async ({ session }) => {
         if (!enabled || !session) {
           return
         }
-        return { session: await session.validateSession() }
+        const validatedSession = await session.validateSession()
+        return {
+          session: validatedSession,
+        }
       },
     }),
   })
