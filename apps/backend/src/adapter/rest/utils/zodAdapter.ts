@@ -1,5 +1,4 @@
 import { z } from 'zod'
-import { DocumentDecoration } from 'elysia/types'
 import { ApiErrorResponseSchema } from '@time-app-test/shared/error/schema.ts'
 
 function toSchema(schema: z.ZodType) {
@@ -17,19 +16,22 @@ function toSchema(schema: z.ZodType) {
 }
 
 export function createLocalHook<
+  TBodySchema extends z.ZodType | undefined,
+  TResponseSchema extends z.ZodType | undefined,
   TValidateSession extends boolean = false,
 >(options: {
-  body?: z.ZodType
-  response?: z.ZodType
+  body?: TBodySchema
+  response?: TResponseSchema
   validateSession?: TValidateSession
 }): {
-  parse: 'none'
-  detail: DocumentDecoration
+  body: TBodySchema
+  response: TResponseSchema
   validateSession: TValidateSession extends true ? true : undefined
 } {
   return {
     ...(options.validateSession ? { validateSession: true } : {}),
-    parse: 'none',
+    body: options.body,
+    response: options.response,
     detail: {
       ...(options.body
         ? {
