@@ -1,3 +1,5 @@
+import { Prettify } from '@time-app-test/shared/types.ts'
+
 export class Container<T extends { [K: string]: unknown } = {}> {
   private items = {} as T
 
@@ -7,7 +9,7 @@ export class Container<T extends { [K: string]: unknown } = {}> {
   ) {
     // @ts-expect-error
     this.items[name] = fn(this.items)
-    return this as Container<T & { [K in TName]: TRet }>
+    return this as Container<Prettify<T & { [K in TName]: TRet }>>
   }
 
   build() {
