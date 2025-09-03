@@ -1,8 +1,8 @@
 import { jwtVerify, SignJWT } from 'jose'
 import { InvalidAccessToken } from '@time-app-test/shared/error/errors.ts'
-import crypto from 'node:crypto'
 import { binaryStringToUint8 } from '@time-app-test/shared/helper/binary.ts'
 import z from 'zod'
+import * as crypto from 'node:crypto'
 
 const CustomJwtPayloadSchema = z.object({
   sub: z.string(),
@@ -10,19 +10,18 @@ const CustomJwtPayloadSchema = z.object({
 })
 export type CustomJwtPayload = z.infer<typeof CustomJwtPayloadSchema>
 
-export class TokenService {
-  private static readonly jwtSecret = new TextEncoder().encode(
-    'super-secret-change-me',
-  )
-  private static readonly deviceIdSalt = new TextEncoder().encode('salty')
-  private static readonly accessTokenExpirySeconds = 60 * 15 // 15 minutes
+const JWT_SECRET = new TextEncoder().encode('super-secret-change-me')
+const DEVICE_ID_SALT = new TextEncoder().encode('salty')
+const ACCESS_TOKEN_EXPIRY_SEC = 60 * 15 // 15 minutes
 
+export class TokenService {
   async deriveDeviceId(key: string) {
+    // TODO migrate to WebCrypto API
     return new Promise<string>((resolve, reject) => {
       crypto.hkdf(
         'sha512',
         binaryStringToUint8(key),
-        TokenService.deviceIdSalt,
+        DEVICE_ID_SALT,
         'info',
         32,
         (err, derivedKey) => {
@@ -36,6 +35,7 @@ export class TokenService {
   }
 
   generateRefreshToken() {
+    // TODO migrate to WebCrypto API
     return crypto.randomBytes(32).toString('hex')
   }
 
@@ -50,19 +50,15 @@ export class TokenService {
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
       .setExpirationTime(
-        Math.floor(Date.now() / 1000) + TokenService.accessTokenExpirySeconds,
+        Math.floor(Date.now() / 1000) + ACCESS_TOKEN_EXPIRY_SEC,
       )
-      .sign(TokenService.jwtSecret)
+      .sign(JWT_SECRET)
   }
 
   async getJwtPayload(jwt: string) {
-    const { payload } = await jwtVerify<CustomJwtPayload>(
-      jwt,
-      TokenService.jwtSecret,
-      {
-        algorithms: ['HS256'],
-      },
-    ).catch(() => {
+    const { payload } = await jwtVerify<CustomJwtPayload>(jwt, JWT_SECRET, {
+      algorithms: ['HS256'],
+    }).catch(() => {
       throw InvalidAccessToken()
     })
 

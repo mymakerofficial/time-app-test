@@ -4,7 +4,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAccessToken, useEncryptionKey } from '@/lib/authStore.ts'
 import { CreateNoteBodySchema } from '@time-app-test/shared/model/rest/notes.ts'
 import { str2ab, uint8ToHex } from '@time-app-test/shared/helper/binary.ts'
-import { Crypt } from '@/lib/utils/crypt.ts'
+import { Crypt } from '@time-app-test/shared/helper/crypt.ts'
 import { getResponseBody } from '@time-app-test/shared/fetch/response.ts'
 
 export function useCreateNote() {

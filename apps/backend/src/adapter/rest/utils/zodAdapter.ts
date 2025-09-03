@@ -49,8 +49,8 @@ export function createLocalHook<
     ...(options.validateSession && {
       validateSession: true as TValidateSession extends true ? true : undefined,
     })!,
-    body: options.body!,
-    response: options.response!,
+    // body: options.body!,
+    // response: options.response!,
     ...(options.response &&
       encode && {
         afterHandle: (async ({ response }) => {
@@ -67,6 +67,7 @@ export function createLocalHook<
     detail: {
       ...(options.body && {
         requestBody: {
+          required: true,
           content: {
             'application/json': {
               schema: toSchema(options.body),

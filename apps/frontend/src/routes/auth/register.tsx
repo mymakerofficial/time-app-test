@@ -1,6 +1,8 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useRegister } from '@/lib/hooks/auth/useRegister.ts'
+import { useRegisterSrp } from '@/lib/hooks/auth/useRegister.ts'
 import { useRegisterForm } from '@/lib/hooks/form/useRegisterForm.ts'
+import { Button } from '@/lib/components/ui/button.tsx'
+import { AuthMethod } from '@time-app-test/shared/model/domain/auth.ts'
 
 export const Route = createFileRoute('/auth/register')({
   component: RouteComponent,
@@ -8,7 +10,7 @@ export const Route = createFileRoute('/auth/register')({
 
 function RouteComponent() {
   const navigate = useNavigate()
-  const { mutateAsync: register, error } = useRegister({
+  const { mutateAsync: register, error } = useRegisterSrp({
     onSuccess: () =>
       navigate({
         to: '/',
@@ -33,6 +35,23 @@ function RouteComponent() {
         </form.AppField>
         <form.AppField name="password">
           {(field) => <field.TextField label="Password" />}
+        </form.AppField>
+        <form.AppField name="method">
+          {(field) => (
+            <field.Select
+              label="Method"
+              values={[
+                {
+                  value: AuthMethod.Srp,
+                  label: 'Password',
+                },
+                {
+                  value: AuthMethod.Passkey,
+                  label: 'Passkey',
+                },
+              ]}
+            />
+          )}
         </form.AppField>
         <div className="flex items-center space-x-3">
           <form.AppForm>

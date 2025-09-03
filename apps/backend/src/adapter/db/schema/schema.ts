@@ -1,4 +1,16 @@
-import { integer, pgTable, timestamp, varchar } from 'drizzle-orm/pg-core'
+import {
+  integer,
+  jsonb,
+  pgEnum,
+  pgTable,
+  timestamp,
+  varchar,
+} from 'drizzle-orm/pg-core'
+import { nanoid } from 'nanoid'
+import {
+  AuthMethod,
+  UserAuthenticatorDto,
+} from '@time-app-test/shared/model/domain/auth.ts'
 
 export const users = pgTable('users', {
   id: varchar().primaryKey(),
@@ -10,17 +22,19 @@ export const users = pgTable('users', {
   username: varchar().notNull().unique(),
 })
 
-export const userPasswords = pgTable('user_passwords', {
-  userId: varchar('user_id')
+const authMethodEnum = pgEnum('auth_method', AuthMethod)
+export const userAuthenticators = pgTable('user_authenticators', {
+  id: varchar()
     .primaryKey()
-    .references(() => users.id),
+    .$defaultFn(() => nanoid()),
+  userId: varchar('user_id').references(() => users.id),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at')
     .notNull()
     .defaultNow()
     .$onUpdate(() => new Date()),
-  authSalt: varchar('auth_salt').notNull(),
-  authVerifier: varchar('auth_verifier').notNull(),
+  method: authMethodEnum().notNull(),
+  data: jsonb().$type<UserAuthenticatorDto>().notNull(),
   kekSalt: varchar('kek_salt').notNull(),
   dek: varchar().notNull(),
 })

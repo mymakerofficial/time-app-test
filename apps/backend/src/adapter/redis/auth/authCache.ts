@@ -4,6 +4,14 @@ import {
   AuthCachePort,
   PendingLogin,
 } from '@/application/port/authCachePort.ts'
+import {
+  RegistrationCacheDto,
+  RegistrationCacheDtoSchema,
+} from '@time-app-test/shared/model/domain/auth.ts'
+
+const PENDING_PASSWORD_LOGIN_PREFIX = 'pending-password-login'
+const PENDING_PASSWORD_REGISTRATION_PREFIX = 'pending-password-registration'
+const REFRESH_TOKEN_PREFIX = 'pending-password-registration'
 
 export class RedisAuthCache implements AuthCachePort {
   readonly #redis: RedisClientType
@@ -12,7 +20,7 @@ export class RedisAuthCache implements AuthCachePort {
     this.#redis = container.redis
   }
 
-  async setPendingLogin({
+  async setPendingPasswordLogin({
     userId,
     expirySec,
     serverSecretEphemeral,
@@ -25,7 +33,7 @@ export class RedisAuthCache implements AuthCachePort {
     userId: string
     expirySec: number
   } & PendingLogin): Promise<void> {
-    await this.#redis.hSet(`pending-login:${userId}`, {
+    await this.#redis.hSet(`${PENDING_PASSWORD_LOGIN_PREFIX}:${userId}`, {
       sse: serverSecretEphemeral,
       cpe: clientPublicEphemeral,
       slt: authSalt,
@@ -36,7 +44,9 @@ export class RedisAuthCache implements AuthCachePort {
     })
   }
 
-  async getPendingLogin(userId: string): Promise<PendingLogin | undefined> {
+  async getPendingPasswordLogin(
+    userId: string,
+  ): Promise<PendingLogin | undefined> {
     const [
       serverSecretEphemeral,
       clientPublicEphemeral,
@@ -45,7 +55,7 @@ export class RedisAuthCache implements AuthCachePort {
       kekSalt,
       encryptedDek,
       ex,
-    ] = await this.#redis.hmGet(`pending-login:${userId}`, [
+    ] = await this.#redis.hmGet(`${PENDING_PASSWORD_LOGIN_PREFIX}:${userId}`, [
       'sse',
       'cpe',
       'slt',
@@ -66,7 +76,7 @@ export class RedisAuthCache implements AuthCachePort {
       return undefined
     }
     if (Date.now() > Number(ex)) {
-      await this.#redis.hDel(`pending-login:${userId}`, [
+      await this.#redis.hDel(`${PENDING_PASSWORD_LOGIN_PREFIX}:${userId}`, [
         'sse',
         'cpe',
         'slt',
@@ -87,31 +97,35 @@ export class RedisAuthCache implements AuthCachePort {
     }
   }
 
-  async deletePendingLogin(userId: string) {
-    await this.#redis.del(`pending-login:${userId}`)
+  async deletePendingPasswordLogin(userId: string) {
+    await this.#redis.del(`${PENDING_PASSWORD_LOGIN_PREFIX}:${userId}`)
   }
 
-  async setPendingRegistration({
-    userId,
-    username,
-    expirySec,
-  }: {
-    userId: string
-    username: string
-    expirySec: number
-  }): Promise<void> {
-    await this.#redis.set(`pending-registration:${userId}`, username, {
-      expiration: { type: 'EX', value: expirySec },
-    })
+  async setPendingRegistration(
+    userId: string,
+    data: RegistrationCacheDto,
+    expirySec: number,
+  ): Promise<void> {
+    await this.#redis.set(
+      `${PENDING_PASSWORD_REGISTRATION_PREFIX}:${userId}`,
+      JSON.stringify(data),
+      {
+        expiration: { type: 'EX', value: expirySec },
+      },
+    )
   }
 
-  async getPendingRegistration(userId: string): Promise<string | undefined> {
-    const res = await this.#redis.get(`pending-registration:${userId}`)
-    return res ?? undefined
+  async getPendingRegistration(
+    userId: string,
+  ): Promise<RegistrationCacheDto | undefined> {
+    const res = await this.#redis.get(
+      `${PENDING_PASSWORD_REGISTRATION_PREFIX}:${userId}`,
+    )
+    return res ? RegistrationCacheDtoSchema.parse(JSON.parse(res)) : undefined
   }
 
   async deletePendingRegistration(userId: string): Promise<void> {
-    await this.#redis.del(`pending-registration:${userId}`)
+    await this.#redis.del(`${PENDING_PASSWORD_REGISTRATION_PREFIX}:${userId}`)
   }
 
   async setRefreshToken({
@@ -123,17 +137,17 @@ export class RedisAuthCache implements AuthCachePort {
     userId: string
     expirySec: number
   }): Promise<void> {
-    await this.#redis.set(`refresh-token:${refreshToken}`, userId, {
+    await this.#redis.set(`${REFRESH_TOKEN_PREFIX}:${refreshToken}`, userId, {
       expiration: { type: 'EX', value: expirySec },
     })
   }
 
   async getRefreshToken(refreshToken: string): Promise<string | undefined> {
-    const res = await this.#redis.get(`refresh-token:${refreshToken}`)
+    const res = await this.#redis.get(`${REFRESH_TOKEN_PREFIX}:${refreshToken}`)
     return res ?? undefined
   }
 
   async deleteRefreshToken(refreshToken: string) {
-    await this.#redis.del(`refresh-token:${refreshToken}`)
+    await this.#redis.del(`${REFRESH_TOKEN_PREFIX}:${refreshToken}`)
   }
 }

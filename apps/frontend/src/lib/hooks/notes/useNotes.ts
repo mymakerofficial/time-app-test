@@ -5,7 +5,7 @@ import { useLiveQuery } from '@tanstack/react-db'
 import { notesCollection } from '@/lib/collections'
 import { GetAllNotesResponseSchema } from '@time-app-test/shared/model/rest/notes.ts'
 import { ab2str, hexToUint8 } from '@time-app-test/shared/helper/binary.ts'
-import { Crypt } from '@/lib/utils/crypt.ts'
+import { Crypt } from '@time-app-test/shared/helper/crypt.ts'
 import { SyncStatus } from '@time-app-test/shared/model/domain/notes.ts'
 
 export function useNotes() {

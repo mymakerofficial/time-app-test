@@ -18,7 +18,7 @@ const config = defineConfig({
   ],
   server: {
     proxy: {
-      '/swagger': {
+      '/openapi': {
         target: 'http://localhost:3001',
         changeOrigin: true,
         secure: false,

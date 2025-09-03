@@ -11,11 +11,11 @@ import {
   LoginStartBodySchema,
   LoginStartResponseSchema,
 } from '@time-app-test/shared/model/rest/auth.ts'
-import { Crypt } from '@/lib/utils/crypt.ts'
+import { Crypt } from '@time-app-test/shared/helper/crypt.ts'
 import { hexToUint8 } from '@time-app-test/shared/helper/binary.ts'
 
 async function startLogin(data: LoginStartBody) {
-  const response = await fetch('/api/auth/login/start', {
+  const response = await fetch('/api/auth/password/login/start', {
     method: 'POST',
     body: JSON.stringify(LoginStartBodySchema.parse(data)),
     headers: {
@@ -29,7 +29,7 @@ async function startLogin(data: LoginStartBody) {
 }
 
 async function finishLogin(data: LoginFinishBody) {
-  const response = await fetch('/api/auth/login/finish', {
+  const response = await fetch('/api/auth/password/login/finish', {
     method: 'POST',
     body: JSON.stringify(LoginFinishBodySchema.parse(data)),
     headers: {
@@ -77,7 +77,7 @@ export function useLogin({
       srp.verifySession(clientEphemeral.public, clientSession, serverProof)
 
       const kek = await Crypt.deriveKey(
-        await Crypt.passwordToKey(password),
+        await Crypt.phraseToKey(password),
         hexToUint8(kekSalt),
       )
       const decryptedDek = await Crypt.decrypt(hexToUint8(encryptedDek), kek)
