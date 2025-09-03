@@ -1,15 +1,13 @@
 import { AuthPersistencePort } from '@/application/port/authPersistencePort.ts'
 import { DB } from '@/config/services.ts'
-import { eq } from 'drizzle-orm'
-import { userPasswords, users } from '@/adapter/db/schema/schema.ts'
+import { and, eq } from 'drizzle-orm'
+import { userAuthenticators, users } from '@/adapter/db/schema/schema.ts'
 import { isUndefined } from '@time-app-test/shared/guards.ts'
+import { UserNotFoundByName } from '@time-app-test/shared/error/errors.ts'
 import {
-  AuthenticationMethodNotFound,
-  UserNotFoundByName,
-} from '@time-app-test/shared/error/errors.ts'
-import {
-  CreateUserPasswordData,
-  UserPasswordData,
+  AuthMethod,
+  EncryptionPublicDto,
+  UserAuthenticatorDto,
 } from '@time-app-test/shared/model/domain/auth.ts'
 
 export class AuthPersistence implements AuthPersistencePort {
@@ -19,39 +17,49 @@ export class AuthPersistence implements AuthPersistencePort {
     this.#db = container.db
   }
 
-  async getPasswordDataByUsername(username: string) {
-    const [user] = await this.#db
+  async getAuthenticatorByUsername(username: string, method: AuthMethod) {
+    const [authenticator] = await this.#db
       .select({
         userId: users.id,
-        username: users.username,
-        authSalt: userPasswords.authSalt,
-        authVerifier: userPasswords.authVerifier,
-        kekSalt: userPasswords.kekSalt,
-        encryptedDek: userPasswords.dek,
+        data: userAuthenticators.data,
+        kekSalt: userAuthenticators.kekSalt,
+        encryptedDek: userAuthenticators.dek,
       })
       .from(users)
-      .leftJoin(userPasswords, eq(users.id, userPasswords.userId))
-      .where(eq(users.username, username))
+      .leftJoin(userAuthenticators, eq(users.id, userAuthenticators.userId))
+      .where(
+        and(
+          eq(users.username, username),
+          eq(userAuthenticators.method, method),
+        ),
+      )
       .limit(1)
 
-    if (isUndefined(user)) {
+    if (isUndefined(authenticator)) {
       throw UserNotFoundByName({ username })
     }
 
-    if (isUndefined(user.authSalt) || isUndefined(user.authVerifier)) {
-      throw AuthenticationMethodNotFound({ username })
+    return {
+      userId: authenticator.userId,
+      authenticator: authenticator.data,
+      encryption: {
+        kekSalt: authenticator.kekSalt,
+        encryptedDek: authenticator.encryptedDek,
+      },
     }
-
-    return user as UserPasswordData
   }
 
-  async createPasswordData(data: CreateUserPasswordData) {
-    await this.#db.insert(userPasswords).values({
-      userId: data.userId,
-      authSalt: data.authSalt,
-      authVerifier: data.authVerifier,
-      kekSalt: data.kekSalt,
-      dek: data.encryptedDek,
+  async createAuthenticator(
+    userId: string,
+    data: UserAuthenticatorDto,
+    encryption: EncryptionPublicDto,
+  ) {
+    await this.#db.insert(userAuthenticators).values({
+      userId: userId,
+      method: data.method,
+      data,
+      kekSalt: encryption.kekSalt,
+      dek: encryption.encryptedDek,
     })
   }
 }

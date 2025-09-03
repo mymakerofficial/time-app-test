@@ -95,6 +95,11 @@ function createError<
   })
 }
 
+export const NotImplemented = createError('NOT_IMPLEMENTED', {
+  statusCode: HttpStatusCode.NOT_IMPLEMENTED,
+  message: 'The requested action is not jet implemented.',
+})
+
 export const UnexpectedError = createError('UNEXPECTED_ERROR', {
   statusCode: HttpStatusCode.INTERNAL_SERVER_ERROR,
   message: 'Something went wrong.',
@@ -153,25 +158,32 @@ export const InvalidLoginSession = createError('INVALID_LOGIN_SESSION', {
     `User with id '${userId}' does not have a pending login.`,
 })
 export const AccessDenied = createError('ACCESS_DENIED', {
-  statusCode: HttpStatusCode.FORBIDDEN,
+  statusCode: HttpStatusCode.UNAUTHORIZED,
   message: 'Access denied.',
 })
 export const MissingAuthorizationHeader = createError(
   'MISSING_AUTHORIZATION_HEADER',
   {
-    statusCode: HttpStatusCode.FORBIDDEN,
+    statusCode: HttpStatusCode.UNAUTHORIZED,
     message: 'Access denied because authorization header was missing.',
   },
 )
 export const InvalidAccessToken = createError('INVALID_ACCESS_TOKEN', {
-  statusCode: HttpStatusCode.FORBIDDEN,
+  statusCode: HttpStatusCode.UNAUTHORIZED,
   message: 'Access denied because access token was invalid or expired.',
 })
 export const MissingRefreshToken = createError('MISSING_REFRESH_TOKEN', {
-  statusCode: HttpStatusCode.FORBIDDEN,
+  statusCode: HttpStatusCode.UNAUTHORIZED,
   message: 'Access denied because refresh token cookie was missing.',
 })
 export const InvalidRefreshToken = createError('INVALID_REFRESH_TOKEN', {
-  statusCode: HttpStatusCode.FORBIDDEN,
+  statusCode: HttpStatusCode.UNAUTHORIZED,
   message: 'Access denied because refresh token was invalid or expired.',
 })
+export const PasskeyRegistrationVerificationFailed = createError(
+  'PASSKEY_REGISTRATION_VERIFICATION_FAILED',
+  {
+    statusCode: HttpStatusCode.BAD_REQUEST,
+    message: 'Verification of provided passkey information failed.',
+  },
+)

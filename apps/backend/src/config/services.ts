@@ -15,6 +15,7 @@ import { NotesPersistence } from '@/adapter/db/persistence/notesPersistence.ts'
 import { NotesService } from '@/application/service/notesService.ts'
 import { NodePgDatabase } from 'drizzle-orm/node-postgres'
 import { Readable } from 'node:stream'
+import { UserService } from '@/application/service/userService.ts'
 
 export type DB = NodePgDatabase<typeof schema> & { $client: Pool } & {
   queryStream: <T>(query: T) => Readable
@@ -44,6 +45,7 @@ function createContainer() {
       (container) => new TimeEntriesPersistence(container),
     )
     .add('notesPersistence', (container) => new NotesPersistence(container))
+    .add('userService', (container) => new UserService(container))
     .add('authService', (container) => new AuthService(container))
     .add('timeEntriesService', (container) => new TimeEntriesService(container))
     .add('notesService', (container) => new NotesService(container))

@@ -35,9 +35,9 @@ export const authController = createApiController({
     }),
   )
   .post(
-    '/login/start',
+    '/password/login/start',
     async ({ body, authService }) => {
-      return await authService.loginStart(body)
+      return await authService.passwordLoginStart(body)
     },
     createLocalHook({
       body: LoginStartBodySchema,
@@ -45,9 +45,10 @@ export const authController = createApiController({
     }),
   )
   .post(
-    '/login/finish',
+    '/password/login/finish',
     async ({ body, authService, session }) => {
-      const { refreshToken, ...response } = await authService.loginFinish(body)
+      const { refreshToken, ...response } =
+        await authService.passwordLoginFinish(body)
       session.setRefreshToken(refreshToken)
       return response
     },

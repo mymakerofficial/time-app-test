@@ -33,10 +33,10 @@ export abstract class Crypt {
     )
   }
 
-  static async passwordToKey(password: string) {
+  static async phraseToKey(input: string) {
     return await crypto.subtle.importKey(
       'raw',
-      new TextEncoder().encode(password),
+      new TextEncoder().encode(input),
       'PBKDF2',
       false,
       ['deriveKey'],

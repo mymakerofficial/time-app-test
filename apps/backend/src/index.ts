@@ -1,10 +1,10 @@
 import { Elysia } from 'elysia'
 import { node } from '@elysiajs/node'
-import { swagger } from '@elysiajs/swagger'
 import { apiController } from '@/adapter/rest/api.ts'
+import openapi from '@elysiajs/openapi'
 
 export const app = new Elysia({ adapter: node() })
-  .use(swagger())
+  .use(openapi())
   .use(apiController)
   .listen(3001, ({ hostname, port }) => {
     console.log(`🦊 Elysia is running at ${hostname}:${port}`)
