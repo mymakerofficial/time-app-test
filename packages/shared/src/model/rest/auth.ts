@@ -1,26 +1,36 @@
 import z from 'zod'
 import { UserIdSchema, UsernameSchema } from '@/model/domain/user.ts'
 import {
+  AuthMethodSchema,
   EncryptedDekSchema,
+  EncryptionPublicDtoSchema,
   JwtAccessTokenSchema,
   KekSaltSchema,
   PasswordLoginStartServerDataSchema,
+  RegistrationStartClientRequestDtoSchema,
+  RegistrationStartClientResponseDtoSchema,
   SrpClientProofSchema,
   SrpClientPublicEphemeralSchema,
   SrpServerProofSchema,
-  UserPasswordDataSchema,
 } from '@/model/domain/auth.ts'
 
 export const RegisterStartBodySchema = z.object({
   username: UsernameSchema,
+  method: AuthMethodSchema,
 })
 export type RegisterStartBody = z.Infer<typeof RegisterStartBodySchema>
 
 export const RegisterStartResponseSchema = z.object({
   userId: UserIdSchema,
+  auth: RegistrationStartClientResponseDtoSchema,
 })
 
-export const RegisterFinishBodySchema = UserPasswordDataSchema
+export const RegisterFinishBodySchema = z.object({
+  userId: UserIdSchema,
+  username: UsernameSchema,
+  auth: RegistrationStartClientRequestDtoSchema,
+  encryption: EncryptionPublicDtoSchema,
+})
 export type RegisterFinishBody = z.Infer<typeof RegisterFinishBodySchema>
 
 export const LoginStartBodySchema = z.object({
