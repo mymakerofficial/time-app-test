@@ -1,22 +1,15 @@
-import {
-  RegistrationStartInput,
-  RegistrationStartSuccessDto,
-} from '@time-app-test/shared/model/domain/auth/registrationStart.ts'
-import {
-  RegistrationFinishInput,
-  RegistrationFinishSuccessDto,
-} from '@time-app-test/shared/model/domain/auth/registrationFinish.ts'
-import {
-  LoginStartInput,
-  LoginStartSuccessDto,
-} from '@time-app-test/shared/model/domain/loginStart.ts'
+import { LoginStart } from '@time-app-test/shared/model/domain/auth/loginStart.ts'
+import { RegistrationStart } from '@time-app-test/shared/model/domain/auth/registrationStart.ts'
+import { RegistrationFinish } from '@time-app-test/shared/model/domain/auth/registrationFinish.ts'
 
 export interface AuthStrategy {
   registerStart(
-    data: RegistrationStartInput,
-  ): Promise<RegistrationStartSuccessDto>
+    data: RegistrationStart.StrategyInputDto,
+  ): Promise<RegistrationStart.StrategyResultDto>
   registerFinish(
-    data: RegistrationFinishInput,
-  ): Promise<RegistrationFinishSuccessDto>
-  loginStart(data: LoginStartInput): Promise<LoginStartSuccessDto>
+    data: RegistrationFinish.StrategyInputDto,
+  ): Promise<RegistrationFinish.StrategyResultDto>
+  loginStart(
+    data: LoginStart.StrategyInputDto,
+  ): Promise<LoginStart.StrategyResultDto>
 }
