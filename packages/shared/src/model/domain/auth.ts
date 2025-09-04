@@ -59,31 +59,38 @@ export type CreateUserPasswordData = z.Infer<
   typeof CreateUserPasswordDataSchema
 >
 
+/** @deprecated */
 export const PasswordLoginStartClientDataSchema = z.object({
   username: UsernameSchema,
   clientPublicEphemeral: SrpClientPublicEphemeralSchema,
 })
+/** @deprecated */
 export type PasswordLoginStartClientData = z.Infer<
   typeof PasswordLoginStartClientDataSchema
 >
 
+/** @deprecated */
 export const PasswordLoginStartServerDataSchema = z.object({
   userId: UserIdSchema,
   authSalt: SrpSaltSchema,
   serverPublicEphemeral: SrpServerPublicEphemeralSchema,
 })
+/** @deprecated */
 export type PasswordLoginStartServerData = z.Infer<
   typeof PasswordLoginStartServerDataSchema
 >
 
+/** @deprecated */
 export const PasswordLoginFinishClientDataSchema = z.object({
   userId: UserIdSchema,
   clientProof: SrpClientProofSchema,
 })
+/** @deprecated */
 export type PasswordLoginFinishClientData = z.Infer<
   typeof PasswordLoginFinishClientDataSchema
 >
 
+/** @deprecated */
 export const PasswordLoginFinishServerDataSchema = z.object({
   serverProof: SrpServerProofSchema,
   accessToken: JwtAccessTokenSchema,
@@ -91,6 +98,7 @@ export const PasswordLoginFinishServerDataSchema = z.object({
   kekSalt: KekSaltSchema,
   encryptedDek: EncryptedDekSchema,
 })
+/** @deprecated */
 export type PasswordLoginFinishServerData = z.Infer<
   typeof PasswordLoginFinishServerDataSchema
 >

@@ -1,24 +1,14 @@
 import { AuthStrategy } from '@/application/service/auth/authStrategy.ts'
 import { AuthMethod } from '@time-app-test/shared/model/domain/auth.ts'
-import { NotImplemented } from '@time-app-test/shared/error/errors.ts'
 import * as srp from 'secure-remote-password/server'
-import {
-  RegistrationStartInput,
-  RegistrationStartSuccessDto,
-} from '@time-app-test/shared/model/domain/auth/registrationStart.ts'
-import {
-  RegistrationFinishInput,
-  RegistrationFinishSuccessDto,
-} from '@time-app-test/shared/model/domain/auth/registrationFinish.ts'
-import {
-  LoginStartInput,
-  LoginStartSuccessDto,
-} from '@time-app-test/shared/model/domain/loginStart.ts'
+import { RegistrationStart } from '@time-app-test/shared/model/domain/auth/registrationStart.ts'
+import { RegistrationFinish } from '@time-app-test/shared/model/domain/auth/registrationFinish.ts'
+import { LoginStart } from '@time-app-test/shared/model/domain/auth/loginStart.ts'
 
 export class SrpStrategy implements AuthStrategy {
   async registerStart(
-    _: RegistrationStartInput,
-  ): Promise<RegistrationStartSuccessDto> {
+    _: RegistrationStart.StrategyInputDto,
+  ): Promise<RegistrationStart.StrategyResultDto> {
     return {
       clientData: { method: AuthMethod.Srp },
       cacheData: { method: AuthMethod.Srp },
@@ -28,7 +18,7 @@ export class SrpStrategy implements AuthStrategy {
   async registerFinish({
     clientData,
     cacheData,
-  }: RegistrationFinishInput): Promise<RegistrationFinishSuccessDto> {
+  }: RegistrationFinish.StrategyInputDto): Promise<RegistrationFinish.StrategyResultDto> {
     if (
       clientData.method !== AuthMethod.Srp ||
       cacheData.method !== AuthMethod.Srp
@@ -48,7 +38,7 @@ export class SrpStrategy implements AuthStrategy {
   async loginStart({
     clientData,
     authenticator,
-  }: LoginStartInput): Promise<LoginStartSuccessDto> {
+  }: LoginStart.StrategyInputDto): Promise<LoginStart.StrategyResultDto> {
     if (
       clientData.method !== AuthMethod.Srp ||
       authenticator.method !== AuthMethod.Srp

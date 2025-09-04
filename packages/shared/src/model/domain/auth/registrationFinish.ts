@@ -10,39 +10,40 @@ import {
   PASSKEY_API_META,
   SRP_API_META,
 } from '@/model/domain/auth.ts'
+import { UserIdSchema, UsernameSchema } from '@/model/domain/user.ts'
+import { EncryptionPublicDtoSchema } from '@/model/domain/auth/encryption.ts'
 
-export const SrpRegistrationFinishClientRequestDtoSchema =
-  SrpUserAuthenticatorDtoSchema
-export const PasskeyRegistrationFinishClientRequestDtoSchema = z.object({
-  response: RegistrationResponseJSONSchema,
-})
+export namespace RegistrationFinish {
+  export const SrpClientRequestDtoSchema = SrpUserAuthenticatorDtoSchema
+  export const PasskeyClientRequestDtoSchema = z.object({
+    response: RegistrationResponseJSONSchema,
+  })
 
-export const RegistrationFinishClientRequestDtoSchema = z.discriminatedUnion(
-  'method',
-  [
-    SrpRegistrationFinishClientRequestDtoSchema.extend({
+  export const ClientRequestDtoSchema = z.discriminatedUnion('method', [
+    SrpClientRequestDtoSchema.extend({
       method: z.literal(AuthMethod.Srp),
     }).meta(SRP_API_META),
-    PasskeyRegistrationFinishClientRequestDtoSchema.extend({
+    PasskeyClientRequestDtoSchema.extend({
       method: z.literal(AuthMethod.Passkey),
     }).meta(PASSKEY_API_META),
-  ],
-)
-export type RegistrationFinishClientRequestDto = z.Infer<
-  typeof RegistrationFinishClientRequestDtoSchema
->
+  ])
 
-export const RegistrationFinishInputSchema = z.object({
-  clientData: RegistrationFinishClientRequestDtoSchema,
-  cacheData: RegistrationCacheDtoSchema,
-})
-export type RegistrationFinishInput = z.Infer<
-  typeof RegistrationFinishInputSchema
->
+  export const ConcreteInputDtoSchema = z.object({
+    username: UsernameSchema,
+    userId: UserIdSchema,
+    auth: ClientRequestDtoSchema,
+    encryption: EncryptionPublicDtoSchema,
+  })
+  export type ConcreteInputDto = z.Infer<typeof ConcreteInputDtoSchema>
 
-export const RegistrationFinishSuccessDtoSchema = z.object({
-  authenticatorData: UserAuthenticatorDtoSchema,
-})
-export type RegistrationFinishSuccessDto = z.Infer<
-  typeof RegistrationFinishSuccessDtoSchema
->
+  export const StrategyInputDtoSchema = z.object({
+    clientData: ClientRequestDtoSchema,
+    cacheData: RegistrationCacheDtoSchema,
+  })
+  export type StrategyInputDto = z.Infer<typeof StrategyInputDtoSchema>
+
+  export const StrategyResultDtoSchema = z.object({
+    authenticatorData: UserAuthenticatorDtoSchema,
+  })
+  export type StrategyResultDto = z.Infer<typeof StrategyResultDtoSchema>
+}
