@@ -97,7 +97,7 @@ function createError<
 
 export const NotImplemented = createError('NOT_IMPLEMENTED', {
   statusCode: HttpStatusCode.NOT_IMPLEMENTED,
-  message: 'The requested action is not jet implemented.',
+  message: 'The requested action is not yet implemented.',
 })
 
 export const UnexpectedError = createError('UNEXPECTED_ERROR', {
