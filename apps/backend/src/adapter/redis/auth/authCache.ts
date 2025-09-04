@@ -1,13 +1,13 @@
 import { RedisClientType } from 'redis'
-import { isNull } from '@time-app-test/shared/guards.ts'
-import {
-  AuthCachePort,
-  PendingLogin,
-} from '@/application/port/authCachePort.ts'
+import { AuthCachePort } from '@/application/port/authCachePort.ts'
 import {
   RegistrationCacheDto,
   RegistrationCacheDtoSchema,
-} from '@time-app-test/shared/model/domain/auth.ts'
+} from '@time-app-test/shared/model/domain/auth/registrationCache.ts'
+import {
+  LoginCacheDto,
+  LoginCacheDtoSchema,
+} from '@time-app-test/shared/model/domain/auth/loginCache.ts'
 
 const PENDING_PASSWORD_LOGIN_PREFIX = 'pending-password-login'
 const PENDING_PASSWORD_REGISTRATION_PREFIX = 'pending-password-registration'
@@ -20,81 +20,27 @@ export class RedisAuthCache implements AuthCachePort {
     this.#redis = container.redis
   }
 
-  async setPendingPasswordLogin({
-    userId,
-    expirySec,
-    serverSecretEphemeral,
-    clientPublicEphemeral,
-    authSalt,
-    authVerifier,
-    kekSalt,
-    encryptedDek,
-  }: {
-    userId: string
-    expirySec: number
-  } & PendingLogin): Promise<void> {
-    await this.#redis.hSet(`${PENDING_PASSWORD_LOGIN_PREFIX}:${userId}`, {
-      sse: serverSecretEphemeral,
-      cpe: clientPublicEphemeral,
-      slt: authSalt,
-      ver: authVerifier,
-      kek: kekSalt,
-      dek: encryptedDek,
-      ex: Date.now() + expirySec * 1000,
-    })
+  async setPendingPasswordLogin(
+    userId: string,
+    data: LoginCacheDto,
+    expirySec: number,
+  ): Promise<void> {
+    await this.#redis.set(
+      `${PENDING_PASSWORD_LOGIN_PREFIX}:${userId}`,
+      JSON.stringify(data),
+      {
+        expiration: { type: 'EX', value: expirySec },
+      },
+    )
   }
 
   async getPendingPasswordLogin(
     userId: string,
-  ): Promise<PendingLogin | undefined> {
-    const [
-      serverSecretEphemeral,
-      clientPublicEphemeral,
-      authSalt,
-      authVerifier,
-      kekSalt,
-      encryptedDek,
-      ex,
-    ] = await this.#redis.hmGet(`${PENDING_PASSWORD_LOGIN_PREFIX}:${userId}`, [
-      'sse',
-      'cpe',
-      'slt',
-      'ver',
-      'kek',
-      'dek',
-      'ex',
-    ])
-    if (
-      isNull(serverSecretEphemeral) ||
-      isNull(clientPublicEphemeral) ||
-      isNull(authSalt) ||
-      isNull(authVerifier) ||
-      isNull(kekSalt) ||
-      isNull(encryptedDek) ||
-      isNull(ex)
-    ) {
-      return undefined
-    }
-    if (Date.now() > Number(ex)) {
-      await this.#redis.hDel(`${PENDING_PASSWORD_LOGIN_PREFIX}:${userId}`, [
-        'sse',
-        'cpe',
-        'slt',
-        'ver',
-        'kek',
-        'dek',
-        'ex',
-      ])
-      return undefined
-    }
-    return {
-      serverSecretEphemeral,
-      clientPublicEphemeral,
-      authSalt,
-      authVerifier,
-      kekSalt,
-      encryptedDek,
-    }
+  ): Promise<LoginCacheDto | undefined> {
+    const res = await this.#redis.get(
+      `${PENDING_PASSWORD_LOGIN_PREFIX}:${userId}`,
+    )
+    return res ? LoginCacheDtoSchema.parse(JSON.parse(res)) : undefined
   }
 
   async deletePendingPasswordLogin(userId: string) {
