@@ -3,16 +3,16 @@ import { UserIdSchema, UsernameSchema } from '@/model/domain/user.ts'
 import {
   AuthMethodSchema,
   EncryptedDekSchema,
-  EncryptionPublicDtoSchema,
   JwtAccessTokenSchema,
   KekSaltSchema,
   PasswordLoginStartServerDataSchema,
   RegistrationStartClientRequestDtoSchema,
-  RegistrationStartClientResponseDtoSchema,
   SrpClientProofSchema,
   SrpClientPublicEphemeralSchema,
   SrpServerProofSchema,
 } from '@/model/domain/auth.ts'
+import { EncryptionPublicDtoSchema } from '@/model/domain/auth/encryption.ts'
+import { RegistrationStartClientResponseDtoSchema } from '@/model/domain/auth/registrationStart.ts'
 
 export const RegisterStartBodySchema = z.object({
   username: UsernameSchema,

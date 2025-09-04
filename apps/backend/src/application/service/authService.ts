@@ -6,7 +6,6 @@ import {
   InvalidRefreshToken,
   InvalidRegistrationSession,
   NotImplemented,
-  UserAlreadyExists,
 } from '@time-app-test/shared/error/errors.ts'
 import { TokenService } from '@/application/service/tokenService.ts'
 import { UserPersistencePort } from '@/application/port/userPersistencePort.ts'
@@ -14,17 +13,22 @@ import { AuthCachePort } from '@/application/port/authCachePort.ts'
 import { AuthPersistencePort } from '@/application/port/authPersistencePort.ts'
 import {
   AuthMethod,
-  EncryptionPublicDto,
   PasswordLoginFinishClientData,
   PasswordLoginFinishServerData,
   PasswordLoginStartClientData,
   PasswordLoginStartServerData,
-  RegistrationStartClientRequestDto,
-  UserPasswordData,
+
 } from '@time-app-test/shared/model/domain/auth.ts'
-import * as authn from '@simplewebauthn/server'
 import { AuthStrategyFactory } from '@/application/service/auth/factory.ts'
 import { UserService } from '@/application/service/userService.ts'
+import { EncryptionPublicDto } from '@time-app-test/shared/model/domain/auth/encryption.ts'
+import {
+  RegistrationFinishClientRequestDto
+} from '@time-app-test/shared/model/domain/auth/registrationFinish.ts'
+import {
+  LoginStartClientRequestDto,
+  LoginStartClientResponseDto,
+} from '@time-app-test/shared/model/domain/loginStart.ts'
 
 const REFRESH_TOKEN_MAX_AGE_SEC = 604800 // 7 days
 
@@ -80,7 +84,7 @@ export class AuthService {
   }: {
     username: string
     userId: string
-    auth: RegistrationStartClientRequestDto
+    auth: RegistrationFinishClientRequestDto
     encryption: EncryptionPublicDto
   }) {
     const cacheData = await this.#authCache.getPendingRegistration(userId)
@@ -112,39 +116,36 @@ export class AuthService {
 
   async loginStart({
     username,
-    clientPublicEphemeral,
-  }: PasswordLoginStartClientData): Promise<PasswordLoginStartServerData> {
-    const { userId, authenticator, encryption } =
+    auth,
+  }: {
+    username: string
+    auth: LoginStartClientRequestDto
+  }): Promise<{
+    userId: string
+    auth: LoginStartClientResponseDto
+  }> {
+    const { userId, authenticator } =
       await this.#authPersistence.getAuthenticatorByUsername(
         username,
-        AuthMethod.Srp,
+        auth.method,
       )
 
-    if (authenticator.method !== AuthMethod.Srp) {
-      throw NotImplemented()
-    }
-
-    const serverEphemeral = srp.generateEphemeral(authenticator.verifier)
-
-    await this.#authCache.setPendingPasswordLogin({
-      userId: user.userId,
-      serverSecretEphemeral: serverEphemeral.secret,
-      clientPublicEphemeral,
-      authSalt: user.authSalt,
-      authVerifier: user.authVerifier,
-      kekSalt: user.kekSalt,
-      encryptedDek: user.encryptedDek,
-      expirySec: 60,
+    const { cacheData, clientData } = await AuthStrategyFactory.create(
+      auth.method,
+    ).loginStart({
+      clientData: auth,
+      authenticator,
     })
+
+    await this.#authCache.setPendingPasswordLogin(userId, cacheData, 60)
 
     return {
       userId,
-      authSalt: authenticator.salt,
-      serverPublicEphemeral: serverEphemeral.public,
+      auth: clientData,
     }
   }
 
-  async passwordLoginFinish({
+  async loginFinish({
     userId,
     clientProof,
   }: PasswordLoginFinishClientData): Promise<PasswordLoginFinishServerData> {
@@ -154,12 +155,16 @@ export class AuthService {
       throw InvalidLoginSession({ userId })
     }
 
+    if (pending.method !== AuthMethod.Srp) {
+      throw NotImplemented()
+    }
+
     const serverSession = srp.deriveSession(
       pending.serverSecretEphemeral,
       pending.clientPublicEphemeral,
-      pending.authSalt,
+      pending.salt,
       userId,
-      pending.authVerifier,
+      pending.verifier,
       clientProof,
     )
 
@@ -175,11 +180,15 @@ export class AuthService {
     })
     await this.#authCache.deletePendingPasswordLogin(userId)
 
+    const encryption = await this.#authPersistence.getEncryptionByUserId(
+      userId,
+      AuthMethod.Srp,
+    )
+
     return {
       serverProof: serverSession.proof,
       accessToken,
-      kekSalt: pending.kekSalt,
-      encryptedDek: pending.encryptedDek,
+      encryption
       refreshToken: {
         value: refreshToken,
         maxAge: REFRESH_TOKEN_MAX_AGE_SEC,
