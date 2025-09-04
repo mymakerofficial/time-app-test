@@ -11,12 +11,19 @@ export const SrpUserAuthenticatorDtoSchema = z.object({
   salt: SrpSaltSchema,
   verifier: SrpVerifierSchema,
 })
+export type SrpUserAuthenticatorDto = z.Infer<
+  typeof SrpUserAuthenticatorDtoSchema
+>
+
 export const PasskeyUserAuthenticatorDtoSchema = z.object({
   id: z.base64url(),
   publicKey: z.hex(),
   counter: z.number(),
   transports: AuthenticatorTransportFutureSchema.array().optional(),
 })
+export type PasskeyUserAuthenticatorDto = z.Infer<
+  typeof PasskeyUserAuthenticatorDtoSchema
+>
 
 export const UserAuthenticatorDtoSchema = z.discriminatedUnion('method', [
   SrpUserAuthenticatorDtoSchema.extend({
@@ -32,6 +39,6 @@ export const UserAuthenticatorWithUserIdSchema = z.object({
   userId: UserIdSchema,
   authenticator: UserAuthenticatorDtoSchema,
 })
-export type UserAuthenticatorUserId = z.Infer<
+export type UserAuthenticatorWithUserId = z.Infer<
   typeof UserAuthenticatorWithUserIdSchema
 >

@@ -1,6 +1,7 @@
 import z from 'zod'
 import { ApiError } from '@/error/apiError.ts'
 import { HttpStatusCode } from '@/api/httpStatusCode.ts'
+import { AuthMethodSchema } from '@/model/domain/auth.ts'
 
 type CreateErrorConfigWithParameters<
   TStatusCode extends HttpStatusCode,
@@ -131,10 +132,10 @@ export const UserNotFoundByName = createError('USER_NOT_FOUND_BY_NAME', {
 export const AuthenticationMethodNotFound = createError(
   'AUTHENTICATION_METHOD_NOT_FOUND',
   {
-    statusCode: HttpStatusCode.UNAUTHORIZED,
-    parameters: z.object({ username: z.string() }),
-    message: ({ username }) =>
-      `User with username '${username}' does not have the requested authentication method setup.`,
+    statusCode: HttpStatusCode.BAD_REQUEST,
+    parameters: z.object({ userId: z.string(), method: AuthMethodSchema }),
+    message: ({ userId, method }) =>
+      `User '${userId}' does not have a authenticator of the type '${method}' setup.`,
   },
 )
 export const UserAlreadyExists = createError('USER_ALREADY_EXISTS', {
@@ -187,3 +188,9 @@ export const PasskeyRegistrationVerificationFailed = createError(
     message: 'Verification of provided passkey information failed.',
   },
 )
+export const AuthMethodDidNotMatch = createError('AUTH_METHOD_DID_NOT_MATCH', {
+  statusCode: HttpStatusCode.INTERNAL_SERVER_ERROR,
+  parameters: z.object({ expected: AuthMethodSchema }),
+  message: ({ expected }) =>
+    `Provided authorization method did not match expected of ${expected}.`,
+})

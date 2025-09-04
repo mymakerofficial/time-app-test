@@ -35,7 +35,7 @@ export const authController = createApiController({
     }),
   )
   .post(
-    '/password/login/start',
+    '/login/start',
     async ({ body, authService }) => {
       return await authService.loginStart(body)
     },
@@ -45,7 +45,7 @@ export const authController = createApiController({
     }),
   )
   .post(
-    '/password/login/finish',
+    '/login/finish',
     async ({ body, authService, session }) => {
       const { refreshToken, ...response } = await authService.loginFinish(body)
       session.setRefreshToken(refreshToken)

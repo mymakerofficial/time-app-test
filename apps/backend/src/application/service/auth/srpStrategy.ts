@@ -4,6 +4,7 @@ import * as srp from 'secure-remote-password/server'
 import { RegistrationStart } from '@time-app-test/shared/model/domain/auth/registrationStart.ts'
 import { RegistrationFinish } from '@time-app-test/shared/model/domain/auth/registrationFinish.ts'
 import { LoginStart } from '@time-app-test/shared/model/domain/auth/loginStart.ts'
+import { AuthMethodDidNotMatch } from '@time-app-test/shared/error/errors.ts'
 
 export class SrpStrategy implements AuthStrategy {
   async registerStart(
@@ -37,13 +38,13 @@ export class SrpStrategy implements AuthStrategy {
 
   async loginStart({
     clientData,
-    authenticator,
+    authenticators: [authenticator],
   }: LoginStart.StrategyInputDto): Promise<LoginStart.StrategyResultDto> {
     if (
       clientData.method !== AuthMethod.Srp ||
       authenticator.method !== AuthMethod.Srp
     ) {
-      throw new Error(`AuthMethod did not match, expected '${AuthMethod.Srp}'`)
+      throw AuthMethodDidNotMatch({ expected: AuthMethod.Srp })
     }
 
     const serverEphemeral = srp.generateEphemeral(authenticator.verifier)

@@ -10,7 +10,7 @@ export const SrpLoginCacheDtoSchema = SrpUserAuthenticatorDtoSchema.extend({
   clientPublicEphemeral: SrpClientPublicEphemeralSchema,
 })
 export const PasskeyLoginCacheDtoSchema = z.object({
-  // TODO
+  challenge: z.base64url(),
 })
 
 export const LoginCacheDtoSchema = z.discriminatedUnion('method', [

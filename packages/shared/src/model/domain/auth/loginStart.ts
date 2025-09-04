@@ -10,13 +10,14 @@ import {
   SrpServerPublicEphemeralSchema,
 } from '@/model/domain/auth.ts'
 import { UserIdSchema, UsernameSchema } from '@/model/domain/user.ts'
+import { PublicKeyCredentialRequestOptionsJSONSchema } from '@/model/domain/auth/passkey.ts'
 
 export namespace LoginStart {
   export const SrpClientRequestDtoSchema = z.object({
     clientPublicEphemeral: SrpClientPublicEphemeralSchema,
   })
   export const PasskeyClientRequestDtoSchema = z.object({
-    // TODO
+    // TODO probably empty
   })
 
   export const ClientRequestDtoSchema = z.discriminatedUnion('method', [
@@ -36,7 +37,7 @@ export namespace LoginStart {
 
   export const StrategyInputDtoSchema = z.object({
     clientData: ClientRequestDtoSchema,
-    authenticator: UserAuthenticatorDtoSchema,
+    authenticators: UserAuthenticatorDtoSchema.array(),
   })
   export type StrategyInputDto = z.Infer<typeof StrategyInputDtoSchema>
 
@@ -44,7 +45,9 @@ export namespace LoginStart {
     salt: SrpSaltSchema,
     serverPublicEphemeral: SrpServerPublicEphemeralSchema,
   })
-  export const PasskeyClientResponseDtoSchema = z.object({})
+  export const PasskeyClientResponseDtoSchema = z.object({
+    options: PublicKeyCredentialRequestOptionsJSONSchema,
+  })
 
   export const ClientResponseDtoSchema = z.discriminatedUnion('method', [
     SrpClientResponseDtoSchema.extend({
