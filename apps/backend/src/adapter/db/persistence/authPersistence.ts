@@ -1,9 +1,9 @@
 import { AuthPersistencePort } from '@/application/port/authPersistencePort.ts'
 import { DB } from '@/config/services.ts'
 import { and, eq } from 'drizzle-orm'
-import { userAuthenticators, users } from '@/adapter/db/schema/schema.ts'
+import { userAuthenticators } from '@/adapter/db/schema/schema.ts'
 import { isUndefined } from '@time-app-test/shared/guards.ts'
-import { UserNotFoundByName } from '@time-app-test/shared/error/errors.ts'
+import { AuthenticationMethodNotFound } from '@time-app-test/shared/error/errors.ts'
 import { AuthMethod } from '@time-app-test/shared/model/domain/auth.ts'
 import { UserAuthenticatorDto } from '@time-app-test/shared/model/domain/auth/authenticator.ts'
 import { EncryptionPublicDto } from '@time-app-test/shared/model/domain/auth/encryption.ts'
@@ -15,36 +15,24 @@ export class AuthPersistence implements AuthPersistencePort {
     this.#db = container.db
   }
 
-  async getAuthenticatorByUsername(username: string, method: AuthMethod) {
-    const [authenticator] = await this.#db
+  async getAuthenticators(userId: string, method: AuthMethod) {
+    const authenticators = await this.#db
       .select({
-        userId: users.id,
         data: userAuthenticators.data,
-        kekSalt: userAuthenticators.kekSalt,
-        encryptedDek: userAuthenticators.dek,
       })
-      .from(users)
-      .leftJoin(userAuthenticators, eq(users.id, userAuthenticators.userId))
+      .from(userAuthenticators)
       .where(
         and(
-          eq(users.username, username),
+          eq(userAuthenticators.userId, userId),
           eq(userAuthenticators.method, method),
         ),
       )
-      .limit(1)
 
-    if (isUndefined(authenticator)) {
-      throw UserNotFoundByName({ username })
+    if (authenticators.length === 0) {
+      throw AuthenticationMethodNotFound({ userId, method })
     }
 
-    return {
-      userId: authenticator.userId,
-      authenticator: authenticator.data,
-      encryption: {
-        kekSalt: authenticator.kekSalt,
-        encryptedDek: authenticator.encryptedDek,
-      },
-    }
+    return authenticators.map((it) => it.data)
   }
 
   async createAuthenticator(
@@ -59,5 +47,30 @@ export class AuthPersistence implements AuthPersistencePort {
       kekSalt: encryption.kekSalt,
       dek: encryption.encryptedDek,
     })
+  }
+
+  async getEncryptionByUserId(
+    userId: string,
+    method: AuthMethod,
+  ): Promise<EncryptionPublicDto> {
+    const [encryption] = await this.#db
+      .select({
+        kekSalt: userAuthenticators.kekSalt,
+        encryptedDek: userAuthenticators.dek,
+      })
+      .from(userAuthenticators)
+      .where(
+        and(
+          eq(userAuthenticators.userId, userId),
+          eq(userAuthenticators.method, method),
+        ),
+      )
+      .limit(1)
+
+    if (isUndefined(encryption)) {
+      throw AuthenticationMethodNotFound({ userId, method })
+    }
+
+    return encryption
   }
 }

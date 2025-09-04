@@ -14,6 +14,25 @@ const AuthenticatorAttachmentSchema = z.enum(['cross-platform', 'platform'])
 
 const PublicKeyCredentialTypeSchema = z.enum(['public-key'])
 
+const UserVerificationRequirementSchema = z.enum([
+  'discouraged',
+  'preferred',
+  'required',
+])
+
+const PublicKeyCredentialHintSchema = z.enum([
+  'hybrid',
+  'security-key',
+  'client-device',
+])
+
+const AuthenticationExtensionsClientInputsSchema = z.object({
+  appid: z.string().optional(),
+  credProps: z.boolean().optional(),
+  hmacCreateSecret: z.boolean().optional(),
+  minPinLength: z.boolean().optional(),
+})
+
 export const PublicKeyCredentialCreationOptionsJSONSchema = z
   .object({
     rp: z.object({
@@ -45,18 +64,11 @@ export const PublicKeyCredentialCreationOptionsJSONSchema = z
       .object({
         authenticatorAttachment: AuthenticatorAttachmentSchema.optional(),
         requireResidentKey: z.boolean().optional(),
-        residentKey: z
-          .enum(['discouraged', 'preferred', 'required'])
-          .optional(),
-        userVerification: z
-          .enum(['discouraged', 'preferred', 'required'])
-          .optional(),
+        residentKey: UserVerificationRequirementSchema.optional(),
+        userVerification: UserVerificationRequirementSchema.optional(),
       })
       .optional(),
-    hints: z
-      .enum(['hybrid', 'security-key', 'client-device'])
-      .array()
-      .optional(),
+    hints: PublicKeyCredentialHintSchema.array().optional(),
     attestation: z
       .enum(['direct', 'enterprise', 'indirect', 'none'])
       .optional(),
@@ -72,14 +84,7 @@ export const PublicKeyCredentialCreationOptionsJSONSchema = z
       ])
       .array()
       .optional(),
-    extensions: z
-      .object({
-        appid: z.string().optional(),
-        credProps: z.boolean().optional(),
-        hmacCreateSecret: z.boolean().optional(),
-        minPinLength: z.boolean().optional(),
-      })
-      .optional(),
+    extensions: AuthenticationExtensionsClientInputsSchema.optional(),
   })
   .meta({
     title: 'PublicKeyCredentialCreationOptionsJSON',
@@ -115,4 +120,25 @@ export const RegistrationResponseJSONSchema = z
   })
   .meta({
     title: 'RegistrationResponseJSON',
+  })
+
+const PublicKeyCredentialDescriptorJSONSchema = z.object({
+  id: z.base64url(),
+  type: PublicKeyCredentialTypeSchema,
+  transports: AuthenticatorTransportFutureSchema.array().optional(),
+})
+
+export const PublicKeyCredentialRequestOptionsJSONSchema = z
+  .object({
+    challenge: z.base64url(),
+    timeout: z.number().optional(),
+    rpId: z.string().optional(),
+    allowCredentials:
+      PublicKeyCredentialDescriptorJSONSchema.array().optional(),
+    userVerification: UserVerificationRequirementSchema.optional(),
+    hints: PublicKeyCredentialHintSchema.array().optional(),
+    extensions: AuthenticationExtensionsClientInputsSchema.optional(),
+  })
+  .meta({
+    title: 'PublicKeyCredentialRequestOptionsJSON',
   })
