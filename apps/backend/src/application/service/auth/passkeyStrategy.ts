@@ -2,7 +2,7 @@ import { AuthStrategy } from '@/application/service/auth/authStrategy.ts'
 import { AuthMethod } from '@time-app-test/shared/model/domain/auth.ts'
 import * as authn from '@simplewebauthn/server'
 import {
-  NotImplemented,
+  AuthMethodDidNotMatch,
   PasskeyRegistrationVerificationFailed,
 } from '@time-app-test/shared/error/errors.ts'
 import { isUndefined } from '@time-app-test/shared/guards.ts'
@@ -10,6 +10,10 @@ import { uint8ToHex } from '@time-app-test/shared/helper/binary.ts'
 import { RegistrationStart } from '@time-app-test/shared/model/domain/auth/registrationStart.ts'
 import { RegistrationFinish } from '@time-app-test/shared/model/domain/auth/registrationFinish.ts'
 import { LoginStart } from '@time-app-test/shared/model/domain/auth/loginStart.ts'
+import {
+  PasskeyUserAuthenticatorDto,
+  UserAuthenticatorDto,
+} from '@time-app-test/shared/model/domain/auth/authenticator.ts'
 
 // Passkey config
 // TODO make configurable
@@ -50,9 +54,7 @@ export class PasskeyStrategy implements AuthStrategy {
       clientData.method !== AuthMethod.Passkey ||
       cacheData.method !== AuthMethod.Passkey
     ) {
-      throw new Error(
-        `AuthMethod did not match, expected '${AuthMethod.Passkey}'`,
-      )
+      throw AuthMethodDidNotMatch({ expected: AuthMethod.Passkey })
     }
 
     const { verified, registrationInfo } =
@@ -79,9 +81,38 @@ export class PasskeyStrategy implements AuthStrategy {
     }
   }
 
-  async loginStart(
-    _: LoginStart.StrategyInputDto,
-  ): Promise<LoginStart.StrategyResultDto> {
-    throw NotImplemented()
+  async loginStart({
+    clientData,
+    authenticators,
+  }: LoginStart.StrategyInputDto): Promise<LoginStart.StrategyResultDto> {
+    if (
+      clientData.method !== AuthMethod.Passkey ||
+      !arePasskeyAuthenticators(authenticators)
+    ) {
+      throw AuthMethodDidNotMatch({ expected: AuthMethod.Passkey })
+    }
+
+    const options = await authn.generateAuthenticationOptions({
+      rpID: RP_ID,
+      allowCredentials: authenticators.map((auth) => ({
+        id: auth.id,
+        type: 'public-key',
+        transports: auth.transports,
+      })),
+      userVerification: 'preferred',
+    })
+
+    return {
+      clientData: { method: AuthMethod.Passkey, options },
+      cacheData: { method: AuthMethod.Passkey, challenge: options.challenge },
+    }
   }
+}
+
+function arePasskeyAuthenticators(
+  authenticators: UserAuthenticatorDto[],
+): authenticators is (PasskeyUserAuthenticatorDto & {
+  method: 'PASSKEY'
+})[] {
+  return !authenticators.some((it) => it.method !== AuthMethod.Passkey)
 }

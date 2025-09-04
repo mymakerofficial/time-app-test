@@ -102,23 +102,23 @@ export class AuthService {
     username,
     auth,
   }: LoginStart.ConcreteInputDto): Promise<LoginStart.ConcreteResultDto> {
-    const { userId, authenticator } =
-      await this.#authPersistence.getAuthenticatorByUsername(
-        username,
-        auth.method,
-      )
+    const user = await this.#userPersistence.getUserByName(username)
+    const authenticators = await this.#authPersistence.getAuthenticators(
+      user.id,
+      auth.method,
+    )
 
     const { cacheData, clientData } = await AuthStrategyFactory.create(
       auth.method,
     ).loginStart({
       clientData: auth,
-      authenticator,
+      authenticators,
     })
 
-    await this.#authCache.setPendingPasswordLogin(userId, cacheData, 60)
+    await this.#authCache.setPendingPasswordLogin(user.id, cacheData, 60)
 
     return {
-      userId,
+      userId: user.id,
       auth: clientData,
     }
   }
