@@ -1,45 +1,30 @@
 import z from 'zod'
-import { UserIdSchema, UsernameSchema } from '@/model/domain/user.ts'
+import { UserIdSchema } from '@/model/domain/user.ts'
 import {
-  AuthMethodSchema,
   EncryptedDekSchema,
   JwtAccessTokenSchema,
   KekSaltSchema,
-  PasswordLoginStartServerDataSchema,
-  RegistrationStartClientRequestDtoSchema,
   SrpClientProofSchema,
-  SrpClientPublicEphemeralSchema,
   SrpServerProofSchema,
 } from '@/model/domain/auth.ts'
-import { EncryptionPublicDtoSchema } from '@/model/domain/auth/encryption.ts'
-import { RegistrationStartClientResponseDtoSchema } from '@/model/domain/auth/registrationStart.ts'
+import { RegistrationStart } from '@/model/domain/auth/registrationStart.ts'
+import { RegistrationFinish } from '@/model/domain/auth/registrationFinish.ts'
+import { LoginStart } from '@/model/domain/auth/loginStart.ts'
 
-export const RegisterStartBodySchema = z.object({
-  username: UsernameSchema,
-  method: AuthMethodSchema,
-})
+export const RegisterStartBodySchema = RegistrationStart.ConcreteInputDtoSchema
 export type RegisterStartBody = z.Infer<typeof RegisterStartBodySchema>
 
-export const RegisterStartResponseSchema = z.object({
-  userId: UserIdSchema,
-  auth: RegistrationStartClientResponseDtoSchema,
-})
+export const RegisterStartResponseSchema =
+  RegistrationStart.ConcreteResultDtoSchema
 
-export const RegisterFinishBodySchema = z.object({
-  userId: UserIdSchema,
-  username: UsernameSchema,
-  auth: RegistrationStartClientRequestDtoSchema,
-  encryption: EncryptionPublicDtoSchema,
-})
+export const RegisterFinishBodySchema =
+  RegistrationFinish.ConcreteInputDtoSchema
 export type RegisterFinishBody = z.Infer<typeof RegisterFinishBodySchema>
 
-export const LoginStartBodySchema = z.object({
-  username: UsernameSchema,
-  clientPublicEphemeral: SrpClientPublicEphemeralSchema,
-})
+export const LoginStartBodySchema = LoginStart.ConcreteInputDtoSchema
 export type LoginStartBody = z.Infer<typeof LoginStartBodySchema>
 
-export const LoginStartResponseSchema = PasswordLoginStartServerDataSchema
+export const LoginStartResponseSchema = LoginStart.ConcreteResultDtoSchema
 
 export const LoginFinishBodySchema = z.object({
   userId: UserIdSchema,

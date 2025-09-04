@@ -15,20 +15,12 @@ import {
   AuthMethod,
   PasswordLoginFinishClientData,
   PasswordLoginFinishServerData,
-  PasswordLoginStartClientData,
-  PasswordLoginStartServerData,
-
 } from '@time-app-test/shared/model/domain/auth.ts'
 import { AuthStrategyFactory } from '@/application/service/auth/factory.ts'
 import { UserService } from '@/application/service/userService.ts'
-import { EncryptionPublicDto } from '@time-app-test/shared/model/domain/auth/encryption.ts'
-import {
-  RegistrationFinishClientRequestDto
-} from '@time-app-test/shared/model/domain/auth/registrationFinish.ts'
-import {
-  LoginStartClientRequestDto,
-  LoginStartClientResponseDto,
-} from '@time-app-test/shared/model/domain/loginStart.ts'
+import { LoginStart } from '@time-app-test/shared/model/domain/auth/loginStart.ts'
+import { RegistrationFinish } from '@time-app-test/shared/model/domain/auth/registrationFinish.ts'
+import { RegistrationStart } from '@time-app-test/shared/model/domain/auth/registrationStart.ts'
 
 const REFRESH_TOKEN_MAX_AGE_SEC = 604800 // 7 days
 
@@ -56,10 +48,7 @@ export class AuthService {
   async registerStart({
     username,
     method,
-  }: {
-    username: string
-    method: AuthMethod
-  }) {
+  }: RegistrationStart.ConcreteInputDto): Promise<RegistrationStart.ConcreteResultDto> {
     await this.#userService.ensureUsernameDoesNotExist(username)
 
     const userId = nanoid()
@@ -81,12 +70,7 @@ export class AuthService {
     userId,
     auth,
     encryption,
-  }: {
-    username: string
-    userId: string
-    auth: RegistrationFinishClientRequestDto
-    encryption: EncryptionPublicDto
-  }) {
+  }: RegistrationFinish.ConcreteInputDto) {
     const cacheData = await this.#authCache.getPendingRegistration(userId)
 
     if (isUndefined(cacheData) || cacheData.method !== auth.method) {
@@ -117,13 +101,7 @@ export class AuthService {
   async loginStart({
     username,
     auth,
-  }: {
-    username: string
-    auth: LoginStartClientRequestDto
-  }): Promise<{
-    userId: string
-    auth: LoginStartClientResponseDto
-  }> {
+  }: LoginStart.ConcreteInputDto): Promise<LoginStart.ConcreteResultDto> {
     const { userId, authenticator } =
       await this.#authPersistence.getAuthenticatorByUsername(
         username,
@@ -188,7 +166,7 @@ export class AuthService {
     return {
       serverProof: serverSession.proof,
       accessToken,
-      encryption
+      ...encryption,
       refreshToken: {
         value: refreshToken,
         maxAge: REFRESH_TOKEN_MAX_AGE_SEC,

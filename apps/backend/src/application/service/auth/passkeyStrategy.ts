@@ -7,18 +7,9 @@ import {
 } from '@time-app-test/shared/error/errors.ts'
 import { isUndefined } from '@time-app-test/shared/guards.ts'
 import { uint8ToHex } from '@time-app-test/shared/helper/binary.ts'
-import {
-  RegistrationStartInput,
-  RegistrationStartSuccessDto,
-} from '@time-app-test/shared/model/domain/auth/registrationStart.ts'
-import {
-  RegistrationFinishInput,
-  RegistrationFinishSuccessDto,
-} from '@time-app-test/shared/model/domain/auth/registrationFinish.ts'
-import {
-  LoginStartInput,
-  LoginStartSuccessDto,
-} from '@time-app-test/shared/model/domain/loginStart.ts'
+import { RegistrationStart } from '@time-app-test/shared/model/domain/auth/registrationStart.ts'
+import { RegistrationFinish } from '@time-app-test/shared/model/domain/auth/registrationFinish.ts'
+import { LoginStart } from '@time-app-test/shared/model/domain/auth/loginStart.ts'
 
 // Passkey config
 // TODO make configurable
@@ -31,7 +22,7 @@ export class PasskeyStrategy implements AuthStrategy {
   async registerStart({
     userId,
     username,
-  }: RegistrationStartInput): Promise<RegistrationStartSuccessDto> {
+  }: RegistrationStart.StrategyInputDto): Promise<RegistrationStart.StrategyResultDto> {
     const options = await authn.generateRegistrationOptions({
       rpName: RP_NAME,
       rpID: RP_ID,
@@ -54,7 +45,7 @@ export class PasskeyStrategy implements AuthStrategy {
   async registerFinish({
     clientData,
     cacheData,
-  }: RegistrationFinishInput): Promise<RegistrationFinishSuccessDto> {
+  }: RegistrationFinish.StrategyInputDto): Promise<RegistrationFinish.StrategyResultDto> {
     if (
       clientData.method !== AuthMethod.Passkey ||
       cacheData.method !== AuthMethod.Passkey
@@ -88,7 +79,9 @@ export class PasskeyStrategy implements AuthStrategy {
     }
   }
 
-  async loginStart(_: LoginStartInput): Promise<LoginStartSuccessDto> {
+  async loginStart(
+    _: LoginStart.StrategyInputDto,
+  ): Promise<LoginStart.StrategyResultDto> {
     throw NotImplemented()
   }
 }
