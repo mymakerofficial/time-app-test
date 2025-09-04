@@ -1,15 +1,24 @@
 import { AuthStrategy } from '@/application/service/auth/authStrategy.ts'
-import {
-  AuthMethod,
-  RegistrationFinishInput,
-  RegistrationFinishSuccessDto,
-  RegistrationStartInput,
-  RegistrationStartSuccessDto,
-} from '@time-app-test/shared/model/domain/auth.ts'
+import { AuthMethod } from '@time-app-test/shared/model/domain/auth.ts'
 import * as authn from '@simplewebauthn/server'
-import { PasskeyRegistrationVerificationFailed } from '@time-app-test/shared/error/errors.ts'
+import {
+  NotImplemented,
+  PasskeyRegistrationVerificationFailed,
+} from '@time-app-test/shared/error/errors.ts'
 import { isUndefined } from '@time-app-test/shared/guards.ts'
 import { uint8ToHex } from '@time-app-test/shared/helper/binary.ts'
+import {
+  RegistrationStartInput,
+  RegistrationStartSuccessDto,
+} from '@time-app-test/shared/model/domain/auth/registrationStart.ts'
+import {
+  RegistrationFinishInput,
+  RegistrationFinishSuccessDto,
+} from '@time-app-test/shared/model/domain/auth/registrationFinish.ts'
+import {
+  LoginStartInput,
+  LoginStartSuccessDto,
+} from '@time-app-test/shared/model/domain/loginStart.ts'
 
 // Passkey config
 // TODO make configurable
@@ -77,5 +86,9 @@ export class PasskeyStrategy implements AuthStrategy {
         transports: registrationInfo.credential.transports,
       },
     }
+  }
+
+  async loginStart(_: LoginStartInput): Promise<LoginStartSuccessDto> {
+    throw NotImplemented()
   }
 }

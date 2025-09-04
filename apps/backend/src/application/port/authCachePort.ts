@@ -1,24 +1,14 @@
-// TODO extract to shared model
-import { RegistrationCacheDto } from '@time-app-test/shared/model/domain/auth.ts'
-
-export interface PendingLogin {
-  serverSecretEphemeral: string
-  clientPublicEphemeral: string
-  authSalt: string
-  authVerifier: string
-  kekSalt: string
-  encryptedDek: string
-}
+import { RegistrationCacheDto } from '@time-app-test/shared/model/domain/auth/registrationCache.ts'
+import { LoginCacheDto } from '@time-app-test/shared/model/domain/auth/loginCache.ts'
 
 export interface AuthCachePort {
   setPendingPasswordLogin(
-    options: {
-      userId: string
-      expirySec: number
-    } & PendingLogin,
+    userId: string,
+    data: LoginCacheDto,
+    expirySec: number,
   ): Promise<void>
 
-  getPendingPasswordLogin(userId: string): Promise<PendingLogin | undefined>
+  getPendingPasswordLogin(userId: string): Promise<LoginCacheDto | undefined>
 
   deletePendingPasswordLogin(userId: string): Promise<void>
 

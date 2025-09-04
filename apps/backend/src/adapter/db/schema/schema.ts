@@ -7,10 +7,8 @@ import {
   varchar,
 } from 'drizzle-orm/pg-core'
 import { nanoid } from 'nanoid'
-import {
-  AuthMethod,
-  UserAuthenticatorDto,
-} from '@time-app-test/shared/model/domain/auth.ts'
+import { AuthMethod } from '@time-app-test/shared/model/domain/auth.ts'
+import { UserAuthenticatorDto } from '@time-app-test/shared/model/domain/auth/authenticator.ts'
 
 export const users = pgTable('users', {
   id: varchar().primaryKey(),

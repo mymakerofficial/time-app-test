@@ -4,11 +4,9 @@ import { and, eq } from 'drizzle-orm'
 import { userAuthenticators, users } from '@/adapter/db/schema/schema.ts'
 import { isUndefined } from '@time-app-test/shared/guards.ts'
 import { UserNotFoundByName } from '@time-app-test/shared/error/errors.ts'
-import {
-  AuthMethod,
-  EncryptionPublicDto,
-  UserAuthenticatorDto,
-} from '@time-app-test/shared/model/domain/auth.ts'
+import { AuthMethod } from '@time-app-test/shared/model/domain/auth.ts'
+import { UserAuthenticatorDto } from '@time-app-test/shared/model/domain/auth/authenticator.ts'
+import { EncryptionPublicDto } from '@time-app-test/shared/model/domain/auth/encryption.ts'
 
 export class AuthPersistence implements AuthPersistencePort {
   readonly #db: DB

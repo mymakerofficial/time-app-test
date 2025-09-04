@@ -14,6 +14,7 @@ import { uint8ToHex } from '@time-app-test/shared/helper/binary.ts'
 import { Crypt } from '@time-app-test/shared/helper/crypt.ts'
 import * as authn from '@simplewebauthn/browser'
 import { AuthMethod } from '@time-app-test/shared/model/domain/auth.ts'
+import { NotImplemented } from '@time-app-test/shared/error/errors.ts'
 
 async function startRegistration(data: RegisterStartBody) {
   const response = await fetch('/api/auth/register/start', {
@@ -85,14 +86,20 @@ async function registerPasskey({ username }: RegisterFormValues) {
     )
   }
 
-  const attestation = await authn.startRegistration({
+  const response = await authn.startRegistration({
     optionsJSON: auth.options,
   })
-  console.log(attestation)
+
+  // TODO get prf
+
+  throw NotImplemented()
 
   const dek = await Crypt.generatePrivateKey()
   const kekSalt = Crypt.generateSalt()
-  const kek = await Crypt.deriveKey(await Crypt.phraseToKey(password), kekSalt)
+  const kek = await Crypt.deriveKey(
+    await Crypt.phraseToKey('TODO CHANGE THIS'),
+    kekSalt,
+  )
   const exportedDek = await crypto.subtle.exportKey('raw', dek)
   const encryptedDek = await Crypt.encrypt(exportedDek, kek)
 
@@ -100,9 +107,8 @@ async function registerPasskey({ username }: RegisterFormValues) {
     username,
     userId,
     auth: {
-      salt: authSalt,
-      verifier: authVerifier,
-      method: AuthMethod.Srp,
+      response,
+      method: AuthMethod.Passkey,
     },
     encryption: {
       kekSalt: uint8ToHex(kekSalt),

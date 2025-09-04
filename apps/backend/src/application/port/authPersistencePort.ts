@@ -1,18 +1,22 @@
+import { AuthMethod } from '@time-app-test/shared/model/domain/auth.ts'
 import {
-  AuthMethod,
-  EncryptionPublicDto,
   UserAuthenticatorDto,
-  UserAuthenticatorWithEncryption,
-} from '@time-app-test/shared/model/domain/auth.ts'
+  UserAuthenticatorUserId,
+} from '@time-app-test/shared/model/domain/auth/authenticator.ts'
+import { EncryptionPublicDto } from '@time-app-test/shared/model/domain/auth/encryption.ts'
 
 export interface AuthPersistencePort {
   getAuthenticatorByUsername(
     username: string,
     method: AuthMethod,
-  ): Promise<UserAuthenticatorWithEncryption>
+  ): Promise<UserAuthenticatorUserId>
   createAuthenticator(
     userId: string,
     data: UserAuthenticatorDto,
     encryption: EncryptionPublicDto,
   ): Promise<void>
+  getEncryptionByUserId(
+    userId: string,
+    method: AuthMethod,
+  ): Promise<EncryptionPublicDto>
 }
