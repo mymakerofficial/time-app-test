@@ -9,9 +9,9 @@ import {
   LoginCacheDtoSchema,
 } from '@time-app-test/shared/model/domain/auth/loginCache.ts'
 
-const PENDING_PASSWORD_LOGIN_PREFIX = 'pending-password-login'
-const PENDING_PASSWORD_REGISTRATION_PREFIX = 'pending-password-registration'
-const REFRESH_TOKEN_PREFIX = 'pending-password-registration'
+const PENDING_LOGIN_PREFIX = 'pending-login'
+const PENDING_REGISTRATION_PREFIX = 'pending-registration'
+const REFRESH_TOKEN_PREFIX = 'refresh-token'
 
 export class RedisAuthCache implements AuthCachePort {
   readonly #redis: RedisClientType
@@ -26,7 +26,7 @@ export class RedisAuthCache implements AuthCachePort {
     expirySec: number,
   ): Promise<void> {
     await this.#redis.set(
-      `${PENDING_PASSWORD_LOGIN_PREFIX}:${userId}`,
+      `${PENDING_LOGIN_PREFIX}:${userId}`,
       JSON.stringify(data),
       {
         expiration: { type: 'EX', value: expirySec },
@@ -37,14 +37,12 @@ export class RedisAuthCache implements AuthCachePort {
   async getPendingPasswordLogin(
     userId: string,
   ): Promise<LoginCacheDto | undefined> {
-    const res = await this.#redis.get(
-      `${PENDING_PASSWORD_LOGIN_PREFIX}:${userId}`,
-    )
+    const res = await this.#redis.get(`${PENDING_LOGIN_PREFIX}:${userId}`)
     return res ? LoginCacheDtoSchema.parse(JSON.parse(res)) : undefined
   }
 
   async deletePendingPasswordLogin(userId: string) {
-    await this.#redis.del(`${PENDING_PASSWORD_LOGIN_PREFIX}:${userId}`)
+    await this.#redis.del(`${PENDING_LOGIN_PREFIX}:${userId}`)
   }
 
   async setPendingRegistration(
@@ -53,7 +51,7 @@ export class RedisAuthCache implements AuthCachePort {
     expirySec: number,
   ): Promise<void> {
     await this.#redis.set(
-      `${PENDING_PASSWORD_REGISTRATION_PREFIX}:${userId}`,
+      `${PENDING_REGISTRATION_PREFIX}:${userId}`,
       JSON.stringify(data),
       {
         expiration: { type: 'EX', value: expirySec },
@@ -65,13 +63,13 @@ export class RedisAuthCache implements AuthCachePort {
     userId: string,
   ): Promise<RegistrationCacheDto | undefined> {
     const res = await this.#redis.get(
-      `${PENDING_PASSWORD_REGISTRATION_PREFIX}:${userId}`,
+      `${PENDING_REGISTRATION_PREFIX}:${userId}`,
     )
     return res ? RegistrationCacheDtoSchema.parse(JSON.parse(res)) : undefined
   }
 
   async deletePendingRegistration(userId: string): Promise<void> {
-    await this.#redis.del(`${PENDING_PASSWORD_REGISTRATION_PREFIX}:${userId}`)
+    await this.#redis.del(`${PENDING_REGISTRATION_PREFIX}:${userId}`)
   }
 
   async setRefreshToken({
