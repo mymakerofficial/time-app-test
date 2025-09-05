@@ -9,6 +9,7 @@ import * as ShadcnSelect from './ui/select.tsx'
 import { Slider as ShadcnSlider } from './ui/slider.tsx'
 import { Switch as ShadcnSwitch } from './ui/switch.tsx'
 import { Label } from './ui/label.tsx'
+import { HTMLInputAutoCompleteAttribute } from 'react'
 
 export function SubscribeButton({ label }: { label: string }) {
   const form = useFormContext()
@@ -45,9 +46,11 @@ function ErrorMessages({
 export function TextField({
   label,
   placeholder,
+  autoComplete,
 }: {
   label: string
   placeholder?: string
+  autoComplete?: HTMLInputAutoCompleteAttribute
 }) {
   const field = useFieldContext<string>()
   const errors = useStore(field.store, (state) => state.meta.errors)
@@ -60,6 +63,7 @@ export function TextField({
       <Input
         value={field.state.value}
         placeholder={placeholder}
+        autoComplete={autoComplete}
         onBlur={field.handleBlur}
         onChange={(e) => field.handleChange(e.target.value)}
       />
