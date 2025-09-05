@@ -36,6 +36,13 @@
       "when": 1756386207192,
       "tag": "0004_amazing_scrambler",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1756992050306,
+      "tag": "0005_legal_king_bedlam",
+      "breakpoints": true
     }
   ]
 }

@@ -13,9 +13,11 @@ import {
 } from '@time-app-test/shared/model/rest/auth.ts'
 import { Crypt } from '@time-app-test/shared/helper/crypt.ts'
 import { hexToUint8 } from '@time-app-test/shared/helper/binary.ts'
+import { AuthMethod } from '@time-app-test/shared/model/domain/auth.ts'
+import { AuthMethodDidNotMatch } from '@time-app-test/shared/error/errors.ts'
 
 async function startLogin(data: LoginStartBody) {
-  const response = await fetch('/api/auth/password/login/start', {
+  const response = await fetch('/api/auth/login/start', {
     method: 'POST',
     body: JSON.stringify(LoginStartBodySchema.parse(data)),
     headers: {
@@ -29,7 +31,7 @@ async function startLogin(data: LoginStartBody) {
 }
 
 async function finishLogin(data: LoginFinishBody) {
-  const response = await fetch('/api/auth/password/login/finish', {
+  const response = await fetch('/api/auth/login/finish', {
     method: 'POST',
     body: JSON.stringify(LoginFinishBodySchema.parse(data)),
     headers: {
@@ -54,33 +56,57 @@ export function useLogin({
     mutationFn: async ({ username, password }: LoginFormValues) => {
       const clientEphemeral = srp.generateEphemeral()
 
-      const { userId, authSalt, serverPublicEphemeral } = await startLogin({
+      const { userId, auth: startAuth } = await startLogin({
         username,
-        clientPublicEphemeral: clientEphemeral.public,
+        auth: {
+          method: AuthMethod.Srp,
+          clientPublicEphemeral: clientEphemeral.public,
+        },
       })
 
-      const privateKey = srp.derivePrivateKey(authSalt, userId, password)
+      if (startAuth.method !== AuthMethod.Srp) {
+        throw AuthMethodDidNotMatch({ expected: AuthMethod.Srp })
+      }
+
+      const privateKey = srp.derivePrivateKey(startAuth.salt, userId, password)
       const clientSession = srp.deriveSession(
         clientEphemeral.secret,
-        serverPublicEphemeral,
-        authSalt,
+        startAuth.serverPublicEphemeral,
+        startAuth.salt,
         userId,
         privateKey,
       )
 
-      const { serverProof, accessToken, kekSalt, encryptedDek } =
-        await finishLogin({
-          userId,
+      const {
+        accessToken,
+        auth: finishAuth,
+        encryption,
+      } = await finishLogin({
+        userId,
+        auth: {
+          method: AuthMethod.Srp,
           clientProof: clientSession.proof,
-        })
+        },
+      })
 
-      srp.verifySession(clientEphemeral.public, clientSession, serverProof)
+      if (finishAuth.method !== AuthMethod.Srp) {
+        throw AuthMethodDidNotMatch({ expected: AuthMethod.Srp })
+      }
+
+      srp.verifySession(
+        clientEphemeral.public,
+        clientSession,
+        finishAuth.serverProof,
+      )
 
       const kek = await Crypt.deriveKey(
         await Crypt.phraseToKey(password),
-        hexToUint8(kekSalt),
+        hexToUint8(encryption.kekSalt),
       )
-      const decryptedDek = await Crypt.decrypt(hexToUint8(encryptedDek), kek)
+      const decryptedDek = await Crypt.decrypt(
+        hexToUint8(encryption.encryptedDek),
+        kek,
+      )
       const dek = await crypto.subtle.importKey(
         'raw',
         decryptedDek,

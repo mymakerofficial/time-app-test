@@ -2,15 +2,15 @@ import { RegistrationCacheDto } from '@time-app-test/shared/model/domain/auth/re
 import { LoginCacheDto } from '@time-app-test/shared/model/domain/auth/loginCache.ts'
 
 export interface AuthCachePort {
-  setPendingPasswordLogin(
+  setPendingLogin(
     userId: string,
     data: LoginCacheDto,
     expirySec: number,
   ): Promise<void>
 
-  getPendingPasswordLogin(userId: string): Promise<LoginCacheDto | undefined>
+  getPendingLogin(userId: string): Promise<LoginCacheDto | undefined>
 
-  deletePendingPasswordLogin(userId: string): Promise<void>
+  deletePendingLogin(userId: string): Promise<void>
 
   setPendingRegistration(
     userId: string,

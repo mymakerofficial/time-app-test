@@ -1,26 +1,21 @@
 import { isUndefined } from '@time-app-test/shared/guards.ts'
-import * as srp from 'secure-remote-password/server'
 import { nanoid } from 'nanoid'
 import {
   InvalidLoginSession,
   InvalidRefreshToken,
   InvalidRegistrationSession,
-  NotImplemented,
 } from '@time-app-test/shared/error/errors.ts'
 import { TokenService } from '@/application/service/tokenService.ts'
 import { UserPersistencePort } from '@/application/port/userPersistencePort.ts'
 import { AuthCachePort } from '@/application/port/authCachePort.ts'
 import { AuthPersistencePort } from '@/application/port/authPersistencePort.ts'
-import {
-  AuthMethod,
-  PasswordLoginFinishClientData,
-  PasswordLoginFinishServerData,
-} from '@time-app-test/shared/model/domain/auth.ts'
+import { AuthMethod } from '@time-app-test/shared/model/domain/auth.ts'
 import { AuthStrategyFactory } from '@/application/service/auth/factory.ts'
 import { UserService } from '@/application/service/userService.ts'
 import { LoginStart } from '@time-app-test/shared/model/domain/auth/loginStart.ts'
 import { RegistrationFinish } from '@time-app-test/shared/model/domain/auth/registrationFinish.ts'
 import { RegistrationStart } from '@time-app-test/shared/model/domain/auth/registrationStart.ts'
+import { LoginFinish } from '@time-app-test/shared/model/domain/auth/loginFinish.ts'
 
 const REFRESH_TOKEN_MAX_AGE_SEC = 604800 // 7 days
 
@@ -115,7 +110,7 @@ export class AuthService {
       authenticators,
     })
 
-    await this.#authCache.setPendingPasswordLogin(user.id, cacheData, 60)
+    await this.#authCache.setPendingLogin(user.id, cacheData, 60)
 
     return {
       userId: user.id,
@@ -125,26 +120,21 @@ export class AuthService {
 
   async loginFinish({
     userId,
-    clientProof,
-  }: PasswordLoginFinishClientData): Promise<PasswordLoginFinishServerData> {
-    const pending = await this.#authCache.getPendingPasswordLogin(userId)
+    auth,
+  }: LoginFinish.ConcreteInputDto): Promise<LoginFinish.ConcreteResultDto> {
+    const pending = await this.#authCache.getPendingLogin(userId)
 
     if (isUndefined(pending)) {
       throw InvalidLoginSession({ userId })
     }
 
-    if (pending.method !== AuthMethod.Srp) {
-      throw NotImplemented()
-    }
-
-    const serverSession = srp.deriveSession(
-      pending.serverSecretEphemeral,
-      pending.clientPublicEphemeral,
-      pending.salt,
+    const { clientData } = await AuthStrategyFactory.create(
+      auth.method,
+    ).loginFinish({
       userId,
-      pending.verifier,
-      clientProof,
-    )
+      clientData: auth,
+      cacheData: pending,
+    })
 
     const refreshToken = this.#tokenService.generateRefreshToken()
     const accessToken = await this.#tokenService.generateAccessToken({
@@ -156,7 +146,7 @@ export class AuthService {
       userId,
       expirySec: REFRESH_TOKEN_MAX_AGE_SEC,
     })
-    await this.#authCache.deletePendingPasswordLogin(userId)
+    await this.#authCache.deletePendingLogin(userId)
 
     const encryption = await this.#authPersistence.getEncryptionByUserId(
       userId,
@@ -164,9 +154,9 @@ export class AuthService {
     )
 
     return {
-      serverProof: serverSession.proof,
+      auth: clientData,
+      encryption,
       accessToken,
-      ...encryption,
       refreshToken: {
         value: refreshToken,
         maxAge: REFRESH_TOKEN_MAX_AGE_SEC,
