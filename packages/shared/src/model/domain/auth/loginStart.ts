@@ -1,5 +1,5 @@
 import z from 'zod'
-import { UserAuthenticatorDtoSchema } from '@/model/domain/auth/authenticator.ts'
+import { UserAuthenticatorWithIdSchema } from '@/model/domain/auth/authenticator.ts'
 import { LoginCacheDtoSchema } from '@/model/domain/auth/loginCache.ts'
 import {
   AuthMethod,
@@ -37,7 +37,7 @@ export namespace LoginStart {
 
   export const StrategyInputDtoSchema = z.object({
     clientData: ClientRequestDtoSchema,
-    authenticators: UserAuthenticatorDtoSchema.array(),
+    authenticators: UserAuthenticatorWithIdSchema.array(),
   })
   export type StrategyInputDto = z.Infer<typeof StrategyInputDtoSchema>
 

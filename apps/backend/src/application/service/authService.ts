@@ -1,4 +1,4 @@
-import { isUndefined } from '@time-app-test/shared/guards.ts'
+import { isDefined, isUndefined } from '@time-app-test/shared/guards.ts'
 import { nanoid } from 'nanoid'
 import {
   InvalidLoginSession,
@@ -128,13 +128,19 @@ export class AuthService {
       throw InvalidLoginSession({ userId })
     }
 
-    const { clientData } = await AuthStrategyFactory.create(
-      auth.method,
-    ).loginFinish({
-      userId,
-      clientData: auth,
-      cacheData: pending,
-    })
+    const { clientData, updatedAuthenticator } =
+      await AuthStrategyFactory.create(auth.method).loginFinish({
+        userId,
+        clientData: auth,
+        cacheData: pending,
+      })
+
+    if (isDefined(updatedAuthenticator)) {
+      await this.#authPersistence.updateAuthenticator(
+        updatedAuthenticator.id,
+        updatedAuthenticator.data,
+      )
+    }
 
     const refreshToken = this.#tokenService.generateRefreshToken()
     const accessToken = await this.#tokenService.generateAccessToken({

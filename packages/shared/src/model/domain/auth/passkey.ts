@@ -105,7 +105,7 @@ const CredentialPropertiesOutputSchema = z.object({
 
 const AuthenticationExtensionsClientOutputsSchema = z.object({
   appid: z.boolean().optional(),
-  credProps: CredentialPropertiesOutputSchema,
+  credProps: CredentialPropertiesOutputSchema.optional(),
   hmacCreateSecret: z.boolean().optional(),
 })
 
@@ -141,4 +141,24 @@ export const PublicKeyCredentialRequestOptionsJSONSchema = z
   })
   .meta({
     title: 'PublicKeyCredentialRequestOptionsJSON',
+  })
+
+const AuthenticatorAssertionResponseJSONSchema = z.object({
+  clientDataJSON: z.base64url(),
+  authenticatorData: z.base64url(),
+  signature: z.base64url(),
+  userHandle: z.base64url().optional(),
+})
+
+export const AuthenticationResponseJSONSchema = z
+  .object({
+    id: z.base64url(),
+    rawId: z.base64url(),
+    response: AuthenticatorAssertionResponseJSONSchema,
+    authenticatorAttachment: AuthenticatorAttachmentSchema.optional(),
+    clientExtensionResults: AuthenticationExtensionsClientOutputsSchema,
+    type: PublicKeyCredentialTypeSchema,
+  })
+  .meta({
+    title: 'AuthenticationResponseJSON',
   })

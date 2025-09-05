@@ -39,7 +39,7 @@ export class SrpStrategy implements AuthStrategy {
 
   async loginStart({
     clientData,
-    authenticators: [authenticator],
+    authenticators: [{ data: authenticator }],
   }: LoginStart.StrategyInputDto): Promise<LoginStart.StrategyResultDto> {
     if (
       clientData.method !== AuthMethod.Srp ||

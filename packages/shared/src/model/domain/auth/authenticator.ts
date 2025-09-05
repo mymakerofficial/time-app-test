@@ -1,6 +1,5 @@
 import z from 'zod'
 import { AuthenticatorTransportFutureSchema } from '@/model/domain/auth/passkey.ts'
-import { UserIdSchema } from '@/model/domain/user.ts'
 import {
   AuthMethod,
   SrpSaltSchema,
@@ -35,10 +34,10 @@ export const UserAuthenticatorDtoSchema = z.discriminatedUnion('method', [
 ])
 export type UserAuthenticatorDto = z.Infer<typeof UserAuthenticatorDtoSchema>
 
-export const UserAuthenticatorWithUserIdSchema = z.object({
-  userId: UserIdSchema,
-  authenticator: UserAuthenticatorDtoSchema,
+export const UserAuthenticatorWithIdSchema = z.object({
+  id: z.nanoid(),
+  data: UserAuthenticatorDtoSchema,
 })
-export type UserAuthenticatorWithUserId = z.Infer<
-  typeof UserAuthenticatorWithUserIdSchema
+export type UserAuthenticatorWithId = z.Infer<
+  typeof UserAuthenticatorWithIdSchema
 >

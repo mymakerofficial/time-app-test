@@ -18,6 +18,7 @@ export class AuthPersistence implements AuthPersistencePort {
   async getAuthenticators(userId: string, method: AuthMethod) {
     const authenticators = await this.#db
       .select({
+        id: userAuthenticators.id,
         data: userAuthenticators.data,
       })
       .from(userAuthenticators)
@@ -32,7 +33,7 @@ export class AuthPersistence implements AuthPersistencePort {
       throw AuthenticationMethodNotFound({ userId, method })
     }
 
-    return authenticators.map((it) => it.data)
+    return authenticators
   }
 
   async createAuthenticator(
