@@ -14,10 +14,8 @@ import { uint8ToHex } from '@time-app-test/shared/helper/binary.ts'
 import { Crypt } from '@time-app-test/shared/helper/crypt.ts'
 import * as authn from '@simplewebauthn/browser'
 import { AuthMethod } from '@time-app-test/shared/model/domain/auth.ts'
-import {
-  AuthMethodDidNotMatch,
-  NotImplemented,
-} from '@time-app-test/shared/error/errors.ts'
+import { AuthMethodDidNotMatch } from '@time-app-test/shared/error/errors.ts'
+import { isUndefined } from '@time-app-test/shared/guards.ts'
 
 async function startRegistration(data: RegisterStartBody) {
   const response = await fetch('/api/auth/register/start', {
@@ -77,6 +75,40 @@ async function registerSrp({ username, password }: RegisterFormValues) {
   })
 }
 
+function addPrfExtension(
+  options: authn.PublicKeyCredentialCreationOptionsJSON,
+  salt: Uint8Array<ArrayBuffer>,
+) {
+  return {
+    ...options,
+    extensions: {
+      ...options.extensions,
+      prf: {
+        eval: {
+          first: salt,
+        },
+      },
+    } as AuthenticationExtensionsClientInputs,
+  }
+}
+
+function extractPrfResult(response: authn.RegistrationResponseJSON) {
+  return {
+    response: {
+      ...response,
+      clientExtensionResults: {
+        appid: response.clientExtensionResults.appid,
+        credProps: response.clientExtensionResults.credProps,
+        hmacCreateSecret: response.clientExtensionResults.hmacCreateSecret,
+        // remove the prf result
+      },
+    },
+    prfResult: (
+      response.clientExtensionResults as AuthenticationExtensionsClientOutputs
+    )?.prf?.results?.first,
+  }
+}
+
 async function registerPasskey({ username }: RegisterFormValues) {
   const { userId, auth } = await startRegistration({
     username,
@@ -87,22 +119,27 @@ async function registerPasskey({ username }: RegisterFormValues) {
     throw AuthMethodDidNotMatch({ expected: AuthMethod.Passkey })
   }
 
-  const response = await authn.startRegistration({
-    optionsJSON: auth.options,
-  })
-
-  // TODO get prf
-
-  throw NotImplemented()
-
-  const dek = await Crypt.generatePrivateKey()
   const kekSalt = Crypt.generateSalt()
-  const kek = await Crypt.deriveKey(
-    await Crypt.phraseToKey('TODO CHANGE THIS'),
-    kekSalt,
+
+  const { response, prfResult: kekBuffer } = extractPrfResult(
+    await authn.startRegistration({
+      optionsJSON: addPrfExtension(auth.options, kekSalt),
+    }),
   )
-  const exportedDek = await crypto.subtle.exportKey('raw', dek)
-  const encryptedDek = await Crypt.encrypt(exportedDek, kek)
+
+  if (isUndefined(kekBuffer)) {
+    throw new Error('Could not generate key encryption key')
+    // TODO abort register on server
+  }
+
+  const dek = await crypto.subtle.exportKey(
+    'raw',
+    await Crypt.generatePrivateKey(),
+  )
+  const kek = await crypto.subtle.importKey('raw', kekBuffer, 'AES-GCM', true, [
+    'encrypt',
+  ])
+  const encryptedDek = await Crypt.encrypt(dek, kek)
 
   await finishRegistration({
     username,
