@@ -27,10 +27,20 @@ function RouteComponent() {
         className="space-y-6"
       >
         <form.AppField name="username">
-          {(field) => <field.TextField label="Username" />}
+          {(field) => (
+            <field.TextField
+              label="Username"
+              autoComplete="username webauthn"
+            />
+          )}
         </form.AppField>
         <form.AppField name="password">
-          {(field) => <field.TextField label="Password" />}
+          {(field) => (
+            <field.TextField
+              label="Password"
+              autoComplete="current-password webauthn"
+            />
+          )}
         </form.AppField>
         <form.AppField name="method">
           {(field) => (
