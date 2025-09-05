@@ -74,4 +74,14 @@ export class AuthPersistence implements AuthPersistencePort {
 
     return encryption
   }
+
+  async updateAuthenticator(
+    id: string,
+    data: UserAuthenticatorDto,
+  ): Promise<void> {
+    await this.#db
+      .update(userAuthenticators)
+      .set({ data })
+      .where(eq(userAuthenticators.id, id))
+  }
 }
