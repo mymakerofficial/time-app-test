@@ -6,7 +6,7 @@ import {
   PasskeyVerificationFailed,
 } from '@time-app-test/shared/error/errors.ts'
 import { isUndefined } from '@time-app-test/shared/guards.ts'
-import { uint8ToHex } from '@time-app-test/shared/helper/binary.ts'
+import { hexToUint8, uint8ToHex } from '@time-app-test/shared/helper/binary.ts'
 import { RegistrationStart } from '@time-app-test/shared/model/domain/auth/registrationStart.ts'
 import { RegistrationFinish } from '@time-app-test/shared/model/domain/auth/registrationFinish.ts'
 import { LoginStart } from '@time-app-test/shared/model/domain/auth/loginStart.ts'
@@ -139,7 +139,7 @@ export class PasskeyStrategy implements AuthStrategy {
         expectedRPID: RP_ID,
         credential: {
           id: authenticator.data.id,
-          publicKey: new TextEncoder().encode(authenticator.data.publicKey),
+          publicKey: hexToUint8(authenticator.data.publicKey),
           counter: authenticator.data.counter,
           transports: authenticator.data.transports,
         },

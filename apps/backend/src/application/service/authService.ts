@@ -9,7 +9,6 @@ import { TokenService } from '@/application/service/tokenService.ts'
 import { UserPersistencePort } from '@/application/port/userPersistencePort.ts'
 import { AuthCachePort } from '@/application/port/authCachePort.ts'
 import { AuthPersistencePort } from '@/application/port/authPersistencePort.ts'
-import { AuthMethod } from '@time-app-test/shared/model/domain/auth.ts'
 import { AuthStrategyFactory } from '@/application/service/auth/factory.ts'
 import { UserService } from '@/application/service/userService.ts'
 import { LoginStart } from '@time-app-test/shared/model/domain/auth/loginStart.ts'
@@ -156,7 +155,7 @@ export class AuthService {
 
     const encryption = await this.#authPersistence.getEncryptionByUserId(
       userId,
-      AuthMethod.Srp,
+      auth.method,
     )
 
     return {
