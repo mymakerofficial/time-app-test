@@ -1,6 +1,7 @@
 import { LoginStart } from '@time-app-test/shared/model/domain/auth/loginStart.ts'
 import { RegistrationStart } from '@time-app-test/shared/model/domain/auth/registrationStart.ts'
 import { RegistrationFinish } from '@time-app-test/shared/model/domain/auth/registrationFinish.ts'
+import { LoginFinish } from '@time-app-test/shared/model/domain/auth/loginFinish.ts'
 
 export interface AuthStrategy {
   registerStart(
@@ -12,4 +13,7 @@ export interface AuthStrategy {
   loginStart(
     data: LoginStart.StrategyInputDto,
   ): Promise<LoginStart.StrategyResultDto>
+  loginFinish(
+    data: LoginFinish.StrategyInputDto,
+  ): Promise<LoginFinish.StrategyResultDto>
 }

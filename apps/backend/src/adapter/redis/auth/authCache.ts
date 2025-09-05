@@ -20,7 +20,7 @@ export class RedisAuthCache implements AuthCachePort {
     this.#redis = container.redis
   }
 
-  async setPendingPasswordLogin(
+  async setPendingLogin(
     userId: string,
     data: LoginCacheDto,
     expirySec: number,
@@ -34,14 +34,12 @@ export class RedisAuthCache implements AuthCachePort {
     )
   }
 
-  async getPendingPasswordLogin(
-    userId: string,
-  ): Promise<LoginCacheDto | undefined> {
+  async getPendingLogin(userId: string): Promise<LoginCacheDto | undefined> {
     const res = await this.#redis.get(`${PENDING_LOGIN_PREFIX}:${userId}`)
     return res ? LoginCacheDtoSchema.parse(JSON.parse(res)) : undefined
   }
 
-  async deletePendingPasswordLogin(userId: string) {
+  async deletePendingLogin(userId: string) {
     await this.#redis.del(`${PENDING_LOGIN_PREFIX}:${userId}`)
   }
 

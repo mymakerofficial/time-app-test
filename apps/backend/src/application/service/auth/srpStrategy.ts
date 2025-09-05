@@ -5,6 +5,7 @@ import { RegistrationStart } from '@time-app-test/shared/model/domain/auth/regis
 import { RegistrationFinish } from '@time-app-test/shared/model/domain/auth/registrationFinish.ts'
 import { LoginStart } from '@time-app-test/shared/model/domain/auth/loginStart.ts'
 import { AuthMethodDidNotMatch } from '@time-app-test/shared/error/errors.ts'
+import { LoginFinish } from '@time-app-test/shared/model/domain/auth/loginFinish.ts'
 
 export class SrpStrategy implements AuthStrategy {
   async registerStart(
@@ -60,6 +61,32 @@ export class SrpStrategy implements AuthStrategy {
         salt: authenticator.salt,
         serverPublicEphemeral: serverEphemeral.public,
       },
+    }
+  }
+
+  async loginFinish({
+    userId,
+    clientData,
+    cacheData,
+  }: LoginFinish.StrategyInputDto): Promise<LoginFinish.StrategyResultDto> {
+    if (
+      clientData.method !== AuthMethod.Srp ||
+      cacheData.method !== AuthMethod.Srp
+    ) {
+      throw AuthMethodDidNotMatch({ expected: AuthMethod.Srp })
+    }
+
+    const serverSession = srp.deriveSession(
+      cacheData.serverSecretEphemeral,
+      cacheData.clientPublicEphemeral,
+      cacheData.salt,
+      userId,
+      cacheData.verifier,
+      clientData.clientProof,
+    )
+
+    return {
+      clientData: { method: AuthMethod.Srp, serverProof: serverSession.proof },
     }
   }
 }

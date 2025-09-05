@@ -3,6 +3,7 @@ import { AuthMethod } from '@time-app-test/shared/model/domain/auth.ts'
 import * as authn from '@simplewebauthn/server'
 import {
   AuthMethodDidNotMatch,
+  NotImplemented,
   PasskeyRegistrationVerificationFailed,
 } from '@time-app-test/shared/error/errors.ts'
 import { isUndefined } from '@time-app-test/shared/guards.ts'
@@ -14,6 +15,7 @@ import {
   PasskeyUserAuthenticatorDto,
   UserAuthenticatorDto,
 } from '@time-app-test/shared/model/domain/auth/authenticator.ts'
+import { LoginFinish } from '@time-app-test/shared/model/domain/auth/loginFinish.ts'
 
 // Passkey config
 // TODO make configurable
@@ -106,6 +108,10 @@ export class PasskeyStrategy implements AuthStrategy {
       clientData: { method: AuthMethod.Passkey, options },
       cacheData: { method: AuthMethod.Passkey, challenge: options.challenge },
     }
+  }
+
+  async loginFinish({}: LoginFinish.StrategyInputDto): Promise<LoginFinish.StrategyResultDto> {
+    throw NotImplemented()
   }
 }
 
