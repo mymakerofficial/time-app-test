@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useLogin } from '../../lib/hooks/auth/useLogin.ts'
-import { useLoginForm } from '../../lib/hooks/form/useLoginForm.ts'
+import { useLogin } from '@/lib/hooks/auth/useLogin.ts'
+import { useLoginForm } from '@/lib/hooks/form/useLoginForm.ts'
+import { AuthMethod } from '@time-app-test/shared/model/domain/auth.ts'
 
 export const Route = createFileRoute('/auth/login')({
   component: RouteComponent,
@@ -30,6 +31,23 @@ function RouteComponent() {
         </form.AppField>
         <form.AppField name="password">
           {(field) => <field.TextField label="Password" />}
+        </form.AppField>
+        <form.AppField name="method">
+          {(field) => (
+            <field.Select
+              label="Method"
+              values={[
+                {
+                  value: AuthMethod.Srp,
+                  label: 'Password',
+                },
+                {
+                  value: AuthMethod.Passkey,
+                  label: 'Passkey',
+                },
+              ]}
+            />
+          )}
         </form.AppField>
         <div className="flex items-center space-x-3">
           <form.AppForm>

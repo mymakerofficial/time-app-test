@@ -1,7 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useRegisterSrp } from '@/lib/hooks/auth/useRegister.ts'
 import { useRegisterForm } from '@/lib/hooks/form/useRegisterForm.ts'
-import { Button } from '@/lib/components/ui/button.tsx'
 import { AuthMethod } from '@time-app-test/shared/model/domain/auth.ts'
 
 export const Route = createFileRoute('/auth/register')({

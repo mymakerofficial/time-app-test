@@ -7,7 +7,6 @@ import {
   varchar,
 } from 'drizzle-orm/pg-core'
 import { nanoid } from 'nanoid'
-import { AuthMethod } from '@time-app-test/shared/model/domain/auth.ts'
 import { UserAuthenticatorDto } from '@time-app-test/shared/model/domain/auth/authenticator.ts'
 
 export const users = pgTable('users', {
@@ -20,7 +19,7 @@ export const users = pgTable('users', {
   username: varchar().notNull().unique(),
 })
 
-const authMethodEnum = pgEnum('auth_method', AuthMethod)
+export const authMethodEnum = pgEnum('auth_method', ['SRP', 'PASSKEY'])
 export const userAuthenticators = pgTable('user_authenticators', {
   id: varchar()
     .primaryKey()
