@@ -3,19 +3,16 @@ import { AuthMethod } from '@time-app-test/shared/model/domain/auth.ts'
 import * as authn from '@simplewebauthn/server'
 import {
   AuthMethodDidNotMatch,
-  NotImplemented,
-  PasskeyRegistrationVerificationFailed,
+  PasskeyVerificationFailed,
 } from '@time-app-test/shared/error/errors.ts'
 import { isUndefined } from '@time-app-test/shared/guards.ts'
 import { uint8ToHex } from '@time-app-test/shared/helper/binary.ts'
 import { RegistrationStart } from '@time-app-test/shared/model/domain/auth/registrationStart.ts'
 import { RegistrationFinish } from '@time-app-test/shared/model/domain/auth/registrationFinish.ts'
 import { LoginStart } from '@time-app-test/shared/model/domain/auth/loginStart.ts'
-import {
-  PasskeyUserAuthenticatorDto,
-  UserAuthenticatorDto,
-} from '@time-app-test/shared/model/domain/auth/authenticator.ts'
+import { UserAuthenticatorWithId } from '@time-app-test/shared/model/domain/auth/authenticator.ts'
 import { LoginFinish } from '@time-app-test/shared/model/domain/auth/loginFinish.ts'
+import { Prettify2 } from '@time-app-test/shared/types.ts'
 
 // Passkey config
 // TODO make configurable
@@ -69,7 +66,7 @@ export class PasskeyStrategy implements AuthStrategy {
       })
 
     if (!verified || isUndefined(registrationInfo)) {
-      throw PasskeyRegistrationVerificationFailed()
+      throw PasskeyVerificationFailed()
     }
 
     return {
@@ -96,29 +93,84 @@ export class PasskeyStrategy implements AuthStrategy {
 
     const options = await authn.generateAuthenticationOptions({
       rpID: RP_ID,
-      allowCredentials: authenticators.map((auth) => ({
-        id: auth.id,
+      allowCredentials: authenticators.map(({ data }) => ({
+        id: data.id,
         type: 'public-key',
-        transports: auth.transports,
+        transports: data.transports,
       })),
       userVerification: 'preferred',
     })
 
     return {
       clientData: { method: AuthMethod.Passkey, options },
-      cacheData: { method: AuthMethod.Passkey, challenge: options.challenge },
+      cacheData: {
+        method: AuthMethod.Passkey,
+        challenge: options.challenge,
+        authenticators,
+      },
     }
   }
 
-  async loginFinish({}: LoginFinish.StrategyInputDto): Promise<LoginFinish.StrategyResultDto> {
-    throw NotImplemented()
+  async loginFinish({
+    clientData,
+    cacheData,
+  }: LoginFinish.StrategyInputDto): Promise<LoginFinish.StrategyResultDto> {
+    if (
+      clientData.method !== AuthMethod.Passkey ||
+      cacheData.method !== AuthMethod.Passkey ||
+      !arePasskeyAuthenticators(cacheData.authenticators)
+    ) {
+      throw AuthMethodDidNotMatch({ expected: AuthMethod.Passkey })
+    }
+
+    const authenticator = cacheData.authenticators.find(
+      (auth) => auth.data.id === clientData.response.id,
+    )
+
+    if (isUndefined(authenticator)) {
+      throw PasskeyVerificationFailed()
+    }
+
+    const { verified, authenticationInfo } =
+      await authn.verifyAuthenticationResponse({
+        response: clientData.response,
+        expectedChallenge: cacheData.challenge,
+        expectedOrigin: ORIGIN,
+        expectedRPID: RP_ID,
+        credential: {
+          id: authenticator.data.id,
+          publicKey: new TextEncoder().encode(authenticator.data.publicKey),
+          counter: authenticator.data.counter,
+          transports: authenticator.data.transports,
+        },
+        requireUserVerification: true,
+      })
+
+    if (!verified || isUndefined(authenticationInfo)) {
+      throw PasskeyVerificationFailed()
+    }
+
+    return {
+      clientData: { method: AuthMethod.Passkey },
+      updatedAuthenticator: {
+        id: authenticator.id,
+        data: {
+          ...authenticator.data,
+          counter: authenticationInfo.newCounter,
+        },
+      },
+    }
   }
 }
 
 function arePasskeyAuthenticators(
-  authenticators: UserAuthenticatorDto[],
-): authenticators is (PasskeyUserAuthenticatorDto & {
-  method: 'PASSKEY'
-})[] {
-  return !authenticators.some((it) => it.method !== AuthMethod.Passkey)
+  authenticators: UserAuthenticatorWithId[],
+): authenticators is Prettify2<
+  UserAuthenticatorWithId & {
+    data: {
+      method: 'PASSKEY'
+    }
+  }
+>[] {
+  return !authenticators.some((it) => it.data.method !== AuthMethod.Passkey)
 }
