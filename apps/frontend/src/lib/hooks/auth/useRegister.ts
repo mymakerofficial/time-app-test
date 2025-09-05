@@ -14,7 +14,10 @@ import { uint8ToHex } from '@time-app-test/shared/helper/binary.ts'
 import { Crypt } from '@time-app-test/shared/helper/crypt.ts'
 import * as authn from '@simplewebauthn/browser'
 import { AuthMethod } from '@time-app-test/shared/model/domain/auth.ts'
-import { NotImplemented } from '@time-app-test/shared/error/errors.ts'
+import {
+  AuthMethodDidNotMatch,
+  NotImplemented,
+} from '@time-app-test/shared/error/errors.ts'
 
 async function startRegistration(data: RegisterStartBody) {
   const response = await fetch('/api/auth/register/start', {
@@ -81,9 +84,7 @@ async function registerPasskey({ username }: RegisterFormValues) {
   })
 
   if (auth.method !== AuthMethod.Passkey) {
-    throw new Error(
-      `AuthMethod did not match, expected '${AuthMethod.Passkey}'`,
-    )
+    throw AuthMethodDidNotMatch({ expected: AuthMethod.Passkey })
   }
 
   const response = await authn.startRegistration({

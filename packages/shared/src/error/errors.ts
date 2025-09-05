@@ -181,10 +181,10 @@ export const InvalidRefreshToken = createError('INVALID_REFRESH_TOKEN', {
   statusCode: HttpStatusCode.UNAUTHORIZED,
   message: 'Access denied because refresh token was invalid or expired.',
 })
-export const PasskeyRegistrationVerificationFailed = createError(
-  'PASSKEY_REGISTRATION_VERIFICATION_FAILED',
+export const PasskeyVerificationFailed = createError(
+  'PASSKEY_VERIFICATION_FAILED',
   {
-    statusCode: HttpStatusCode.BAD_REQUEST,
+    statusCode: HttpStatusCode.UNAUTHORIZED,
     message: 'Verification of provided passkey information failed.',
   },
 )

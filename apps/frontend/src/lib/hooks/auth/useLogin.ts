@@ -15,6 +15,7 @@ import { Crypt } from '@time-app-test/shared/helper/crypt.ts'
 import { hexToUint8 } from '@time-app-test/shared/helper/binary.ts'
 import { AuthMethod } from '@time-app-test/shared/model/domain/auth.ts'
 import { AuthMethodDidNotMatch } from '@time-app-test/shared/error/errors.ts'
+import * as authn from '@simplewebauthn/browser'
 
 async function startLogin(data: LoginStartBody) {
   const response = await fetch('/api/auth/login/start', {
@@ -44,6 +45,109 @@ async function finishLogin(data: LoginFinishBody) {
   })
 }
 
+async function loginSrp({ username, password }: LoginFormValues) {
+  const clientEphemeral = srp.generateEphemeral()
+
+  const { userId, auth: startAuth } = await startLogin({
+    username,
+    auth: {
+      method: AuthMethod.Srp,
+      clientPublicEphemeral: clientEphemeral.public,
+    },
+  })
+
+  if (startAuth.method !== AuthMethod.Srp) {
+    throw AuthMethodDidNotMatch({ expected: AuthMethod.Srp })
+  }
+
+  const privateKey = srp.derivePrivateKey(startAuth.salt, userId, password)
+  const clientSession = srp.deriveSession(
+    clientEphemeral.secret,
+    startAuth.serverPublicEphemeral,
+    startAuth.salt,
+    userId,
+    privateKey,
+  )
+
+  const {
+    accessToken,
+    auth: finishAuth,
+    encryption,
+  } = await finishLogin({
+    userId,
+    auth: {
+      method: AuthMethod.Srp,
+      clientProof: clientSession.proof,
+    },
+  })
+
+  if (finishAuth.method !== AuthMethod.Srp) {
+    throw AuthMethodDidNotMatch({ expected: AuthMethod.Srp })
+  }
+
+  srp.verifySession(
+    clientEphemeral.public,
+    clientSession,
+    finishAuth.serverProof,
+  )
+
+  const kek = await Crypt.deriveKey(
+    await Crypt.phraseToKey(password),
+    hexToUint8(encryption.kekSalt),
+  )
+  const decryptedDek = await Crypt.decrypt(
+    hexToUint8(encryption.encryptedDek),
+    kek,
+  )
+  const dek = await crypto.subtle.importKey(
+    'raw',
+    decryptedDek,
+    {
+      name: 'AES-GCM',
+    },
+    true,
+    ['decrypt', 'encrypt'],
+  )
+
+  return { accessToken, dek }
+}
+
+async function loginPasskey({ username }: LoginFormValues) {
+  const { userId, auth: startAuth } = await startLogin({
+    username,
+    auth: {
+      method: AuthMethod.Passkey,
+    },
+  })
+
+  if (startAuth.method !== AuthMethod.Passkey) {
+    throw AuthMethodDidNotMatch({ expected: AuthMethod.Passkey })
+  }
+
+  const assertion = await authn.startAuthentication({
+    optionsJSON: startAuth.options,
+  })
+
+  const { accessToken, encryption: _ } = await finishLogin({
+    userId,
+    auth: {
+      method: AuthMethod.Passkey,
+      response: assertion,
+    },
+  })
+
+  return { accessToken }
+}
+
+function executeLoginStrategy(values: LoginFormValues) {
+  switch (values.method) {
+    case AuthMethod.Srp:
+      return loginSrp(values)
+    case AuthMethod.Passkey:
+      return loginPasskey(values)
+  }
+}
+
 export function useLogin({
   onSuccess,
 }: {
@@ -53,70 +157,8 @@ export function useLogin({
 
   return useMutation({
     mutationKey: ['login'],
-    mutationFn: async ({ username, password }: LoginFormValues) => {
-      const clientEphemeral = srp.generateEphemeral()
-
-      const { userId, auth: startAuth } = await startLogin({
-        username,
-        auth: {
-          method: AuthMethod.Srp,
-          clientPublicEphemeral: clientEphemeral.public,
-        },
-      })
-
-      if (startAuth.method !== AuthMethod.Srp) {
-        throw AuthMethodDidNotMatch({ expected: AuthMethod.Srp })
-      }
-
-      const privateKey = srp.derivePrivateKey(startAuth.salt, userId, password)
-      const clientSession = srp.deriveSession(
-        clientEphemeral.secret,
-        startAuth.serverPublicEphemeral,
-        startAuth.salt,
-        userId,
-        privateKey,
-      )
-
-      const {
-        accessToken,
-        auth: finishAuth,
-        encryption,
-      } = await finishLogin({
-        userId,
-        auth: {
-          method: AuthMethod.Srp,
-          clientProof: clientSession.proof,
-        },
-      })
-
-      if (finishAuth.method !== AuthMethod.Srp) {
-        throw AuthMethodDidNotMatch({ expected: AuthMethod.Srp })
-      }
-
-      srp.verifySession(
-        clientEphemeral.public,
-        clientSession,
-        finishAuth.serverProof,
-      )
-
-      const kek = await Crypt.deriveKey(
-        await Crypt.phraseToKey(password),
-        hexToUint8(encryption.kekSalt),
-      )
-      const decryptedDek = await Crypt.decrypt(
-        hexToUint8(encryption.encryptedDek),
-        kek,
-      )
-      const dek = await crypto.subtle.importKey(
-        'raw',
-        decryptedDek,
-        {
-          name: 'AES-GCM',
-        },
-        true,
-        ['decrypt', 'encrypt'],
-      )
-
+    mutationFn: async (values: LoginFormValues) => {
+      const { accessToken, dek } = await executeLoginStrategy(values)
       setSession({ accessToken, encryptionKey: dek })
     },
     onSuccess: async () => {

@@ -11,13 +11,15 @@ import { UserIdSchema } from '@/model/domain/user.ts'
 import { LoginCacheDtoSchema } from '@/model/domain/auth/loginCache.ts'
 import { EncryptionPublicDtoSchema } from '@/model/domain/auth/encryption.ts'
 import { CookieSchema } from '@/model/domain/cookie.ts'
+import { AuthenticationResponseJSONSchema } from '@/model/domain/auth/passkey.ts'
+import { UserAuthenticatorWithIdSchema } from '@/model/domain/auth/authenticator.ts'
 
 export namespace LoginFinish {
   export const SrpClientRequestDtoSchema = z.object({
     clientProof: SrpClientProofSchema,
   })
   export const PasskeyClientRequestDtoSchema = z.object({
-    // TODO
+    response: AuthenticationResponseJSONSchema,
   })
 
   export const ClientRequestDtoSchema = z.discriminatedUnion('method', [
@@ -46,7 +48,7 @@ export namespace LoginFinish {
     serverProof: SrpServerProofSchema,
   })
   export const PasskeyClientResponseDtoSchema = z.object({
-    // TODO
+    // TODO probably empty
   })
 
   export const ClientResponseDtoSchema = z.discriminatedUnion('method', [
@@ -60,6 +62,7 @@ export namespace LoginFinish {
 
   export const StrategyResultDtoSchema = z.object({
     clientData: ClientResponseDtoSchema,
+    updatedAuthenticator: UserAuthenticatorWithIdSchema.optional(),
   })
   export type StrategyResultDto = z.Infer<typeof StrategyResultDtoSchema>
 

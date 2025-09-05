@@ -1,4 +1,7 @@
-import { SrpUserAuthenticatorDtoSchema } from '@/model/domain/auth/authenticator.ts'
+import {
+  SrpUserAuthenticatorDtoSchema,
+  UserAuthenticatorWithIdSchema,
+} from '@/model/domain/auth/authenticator.ts'
 import z from 'zod'
 import {
   AuthMethod,
@@ -11,6 +14,7 @@ export const SrpLoginCacheDtoSchema = SrpUserAuthenticatorDtoSchema.extend({
 })
 export const PasskeyLoginCacheDtoSchema = z.object({
   challenge: z.base64url(),
+  authenticators: UserAuthenticatorWithIdSchema.array(),
 })
 
 export const LoginCacheDtoSchema = z.discriminatedUnion('method', [
