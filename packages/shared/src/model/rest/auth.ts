@@ -20,6 +20,7 @@ export type RegisterFinishBody = z.Infer<typeof RegisterFinishBodySchema>
 export const AddAuthStartBodySchema = AddAuthStart.ConcreteInputDtoSchema.omit({
   userId: true,
 })
+export type AddAuthStartBody = z.Infer<typeof AddAuthStartBodySchema>
 
 export const AddAuthStartResponseSchema = AddAuthStart.ConcreteResultDtoSchema
 
@@ -27,6 +28,7 @@ export const AddAuthFinishBodySchema =
   AddAuthFinish.ConcreteInputDtoSchema.omit({
     userId: true,
   })
+export type AddAuthFinishBody = z.Infer<typeof AddAuthFinishBodySchema>
 
 export const LoginStartBodySchema = LoginStart.ConcreteInputDtoSchema
 export type LoginStartBody = z.Infer<typeof LoginStartBodySchema>

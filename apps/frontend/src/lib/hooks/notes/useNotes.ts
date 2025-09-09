@@ -1,4 +1,4 @@
-import { useAccessToken, useEncryptionKey } from '@/lib/authStore.ts'
+import { useSession } from '@/lib/authStore.ts'
 import { useQuery } from '@tanstack/react-query'
 import { getResponseBody } from '@time-app-test/shared/fetch/response.ts'
 import { useLiveQuery } from '@tanstack/react-db'
@@ -9,11 +9,10 @@ import { Crypt } from '@time-app-test/shared/helper/crypt.ts'
 import { SyncStatus } from '@time-app-test/shared/model/domain/notes.ts'
 
 export function useNotes() {
-  const getAccessToken = useAccessToken()
-  const getEncryptionKey = useEncryptionKey()
+  const { getUserIdSafe, getAccessToken, getEncryptionKey } = useSession()
 
   useQuery({
-    queryKey: ['notes'],
+    queryKey: ['user', getUserIdSafe(), 'notes'],
     queryFn: async () => {
       const response = await fetch('/api/notes', {
         headers: {

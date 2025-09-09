@@ -1,15 +1,14 @@
 import { nanoid } from 'nanoid'
 import { Note, SyncStatus } from '@time-app-test/shared/model/domain/notes.ts'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useAccessToken, useEncryptionKey } from '@/lib/authStore.ts'
+import { useSession, useEncryptionKey } from '@/lib/authStore.ts'
 import { CreateNoteBodySchema } from '@time-app-test/shared/model/rest/notes.ts'
 import { str2ab, uint8ToHex } from '@time-app-test/shared/helper/binary.ts'
 import { Crypt } from '@time-app-test/shared/helper/crypt.ts'
 import { getResponseBody } from '@time-app-test/shared/fetch/response.ts'
 
 export function useCreateNote() {
-  const getAccessToken = useAccessToken()
-  const getEncryptionKey = useEncryptionKey()
+  const { getUserId, getAccessToken, getEncryptionKey } = useSession()
   const queryClient = useQueryClient()
 
   const { mutate } = useMutation({
@@ -41,7 +40,7 @@ export function useCreateNote() {
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({
-        queryKey: ['notes'],
+        queryKey: ['user', getUserId(), 'notes'],
       })
     },
   })

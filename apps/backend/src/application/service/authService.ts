@@ -100,10 +100,7 @@ export class AuthService {
     method,
   }: AddAuthStart.ConcreteInputDto): Promise<AddAuthStart.ConcreteResultDto> {
     const user = await this.#userPersistence.getUserById(userId)
-    const authenticators = await this.#authPersistence.getAuthenticators(
-      userId,
-      method,
-    )
+    const authenticators = await this.#authPersistence.getAuthenticators(userId)
 
     const { cacheData, clientData } = await AuthStrategyFactory.create(
       method,
@@ -150,10 +147,11 @@ export class AuthService {
     auth,
   }: LoginStart.ConcreteInputDto): Promise<LoginStart.ConcreteResultDto> {
     const user = await this.#userPersistence.getUserByName(username)
-    const authenticators = await this.#authPersistence.getAuthenticators(
-      user.id,
-      auth.method,
-    )
+    const authenticators =
+      await this.#authPersistence.getAuthenticatorsWithMethod(
+        user.id,
+        auth.method,
+      )
     // TODO cache this
     const encryption = await this.#authPersistence.getEncryptionByUserId(
       user.id,

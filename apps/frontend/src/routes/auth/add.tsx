@@ -1,19 +1,19 @@
-import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
-import { useLogin } from '@/lib/hooks/auth/useLogin.ts'
-import { useLoginForm } from '@/lib/hooks/form/useLoginForm.ts'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { AuthMethod } from '@time-app-test/shared/model/domain/auth.ts'
+import { useAddAuth } from '@/lib/hooks/auth/useAddAuth.ts'
+import { useAddAuthForm } from '@/lib/hooks/form/useAddAuthForm.ts'
 
-export const Route = createFileRoute('/auth/login')({
+export const Route = createFileRoute('/auth/add')({
   component: RouteComponent,
 })
 
 function RouteComponent() {
   const navigate = useNavigate()
-  const { mutateAsync: login, error } = useLogin({
+  const { mutateAsync: addAuth, error } = useAddAuth({
     onSuccess: () => navigate({ to: '/' }),
   })
-  const form = useLoginForm({
-    onSubmit: login,
+  const form = useAddAuthForm({
+    onSubmit: addAuth,
   })
 
   return (
@@ -26,21 +26,8 @@ function RouteComponent() {
         }}
         className="space-y-6"
       >
-        <form.AppField name="username">
-          {(field) => (
-            <field.TextField
-              label="Username"
-              autoComplete="username webauthn"
-            />
-          )}
-        </form.AppField>
         <form.AppField name="password">
-          {(field) => (
-            <field.TextField
-              label="Password"
-              autoComplete="current-password webauthn"
-            />
-          )}
+          {(field) => <field.TextField label="Password" />}
         </form.AppField>
         <form.AppField name="method">
           {(field) => (
@@ -61,11 +48,8 @@ function RouteComponent() {
         </form.AppField>
         <div className="flex items-center space-x-3">
           <form.AppForm>
-            <form.SubscribeButton label="Login" />
+            <form.SubscribeButton label="Submit" />
           </form.AppForm>
-          <Link to="/auth/register" className="text-blue-500 hover:underline">
-            Register
-          </Link>
         </div>
       </form>
       {error && (

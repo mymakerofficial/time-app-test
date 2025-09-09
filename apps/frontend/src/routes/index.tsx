@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { useNotes } from '@/lib/hooks/notes/useNotes.ts'
 import { useCreateNote } from '@/lib/hooks/notes/useCreateNote.ts'
 import { useAppForm } from '@/lib/hooks/form/form.ts'
@@ -36,12 +36,15 @@ function App() {
   return (
     <div className="max-w-md mx-auto mt-10 p-6 space-y-6">
       <h1 className="text-2xl font-bold">You are</h1>
-      <pre>{JSON.stringify(me)}</pre>
+      <pre>{JSON.stringify(me) || 'Not logged in :('}</pre>
       <div className="flex items-center space-x-3">
         <Button onClick={() => logout()}>Logout</Button>
-        <a href="/auth/login" className="text-blue-500 hover:underline">
+        <Link to="/auth/login" className="text-blue-500 hover:underline">
           Login
-        </a>
+        </Link>
+        <Link to="/auth/add" className="text-blue-500 hover:underline">
+          Add Authentication Method
+        </Link>
       </div>
       <form
         onSubmit={async (e) => {

@@ -15,7 +15,7 @@ export class AuthPersistence implements AuthPersistencePort {
     this.#db = container.db
   }
 
-  async getAuthenticators(userId: string, method: AuthMethod) {
+  async getAuthenticatorsWithMethod(userId: string, method: AuthMethod) {
     const authenticators = await this.#db
       .select({
         id: userAuthenticators.id,
@@ -34,6 +34,16 @@ export class AuthPersistence implements AuthPersistencePort {
     }
 
     return authenticators
+  }
+
+  async getAuthenticators(userId: string) {
+    return await this.#db
+      .select({
+        id: userAuthenticators.id,
+        data: userAuthenticators.data,
+      })
+      .from(userAuthenticators)
+      .where(eq(userAuthenticators.userId, userId))
   }
 
   async createAuthenticator(

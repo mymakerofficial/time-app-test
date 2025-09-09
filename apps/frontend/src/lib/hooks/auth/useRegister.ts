@@ -14,7 +14,7 @@ export function useRegister({
   })
 
   return useMutation({
-    mutationKey: ['register'],
+    mutationKey: ['auth', 'register'],
     mutationFn: async (values: RegisterFormValues) => {
       await auth.getStrategy(values.method).register(values)
     },

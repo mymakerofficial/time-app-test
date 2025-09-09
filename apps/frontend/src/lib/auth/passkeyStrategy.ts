@@ -1,5 +1,9 @@
 import { AuthStrategy, LoginResult } from '@/lib/auth/authStrategy.ts'
-import { LoginFormValues, RegisterFormValues } from '@/lib/schema/form.ts'
+import {
+  AddAuthFormValues,
+  LoginFormValues,
+  RegisterFormValues,
+} from '@/lib/schema/form.ts'
 import * as authn from '@simplewebauthn/browser'
 import { AuthMethod } from '@time-app-test/shared/model/domain/auth.ts'
 import {
@@ -105,6 +109,51 @@ export class PasskeyStrategy extends AuthStrategy {
     )
   }
 
+  protected async generateEncryption(
+    kekSalt: Uint8Array<ArrayBuffer>,
+    kekBuffer: BufferSource,
+    dek: CryptoKey,
+  ) {
+    const exportedDek = await crypto.subtle.exportKey('raw', dek)
+    const kek = await crypto.subtle.importKey(
+      'raw',
+      kekBuffer,
+      'AES-GCM',
+      true,
+      ['encrypt'],
+    )
+    const encryptedDek = await Crypt.encrypt(exportedDek, kek)
+
+    return {
+      kekSalt: uint8ToHex(kekSalt),
+      encryptedDek: uint8ToHex(encryptedDek),
+    }
+  }
+
+  protected async doRegister(
+    options: authn.PublicKeyCredentialCreationOptionsJSON,
+    dek: CryptoKey,
+  ) {
+    const kekSalt = Crypt.generateSalt()
+
+    const { response, prfResult: kekBuffer } =
+      await this.startPasskeyRegistration(options, kekSalt)
+
+    if (isUndefined(kekBuffer)) {
+      throw PasskeyPrfNotSupported()
+    }
+
+    const encryption = await this.generateEncryption(kekSalt, kekBuffer, dek)
+
+    return {
+      auth: {
+        response,
+        method: AuthMethod.Passkey,
+      },
+      encryption,
+    }
+  }
+
   async register({ username }: RegisterFormValues): Promise<void> {
     const { userId, auth } = await this.api.startRegistration({
       username,
@@ -115,40 +164,33 @@ export class PasskeyStrategy extends AuthStrategy {
       throw AuthMethodDidNotMatch({ expected: AuthMethod.Passkey })
     }
 
-    const kekSalt = Crypt.generateSalt()
-
-    const { response, prfResult: kekBuffer } =
-      await this.startPasskeyRegistration(auth.options, kekSalt)
-
-    if (isUndefined(kekBuffer)) {
-      throw PasskeyPrfNotSupported()
-    }
-
-    const dek = await crypto.subtle.exportKey(
-      'raw',
+    const result = await this.doRegister(
+      auth.options,
       await Crypt.generatePrivateKey(),
     )
-    const kek = await crypto.subtle.importKey(
-      'raw',
-      kekBuffer,
-      'AES-GCM',
-      true,
-      ['encrypt'],
-    )
-    const encryptedDek = await Crypt.encrypt(dek, kek)
 
     await this.api.finishRegistration({
       username,
       userId,
-      auth: {
-        response,
-        method: AuthMethod.Passkey,
-      },
-      encryption: {
-        kekSalt: uint8ToHex(kekSalt),
-        encryptedDek: uint8ToHex(encryptedDek),
-      },
+      ...result,
     })
+  }
+
+  async addAuthenticator(_: AddAuthFormValues): Promise<void> {
+    const auth = await this.api.startAddAuth({
+      method: AuthMethod.Passkey,
+    })
+
+    if (auth.method !== AuthMethod.Passkey) {
+      throw AuthMethodDidNotMatch({ expected: AuthMethod.Passkey })
+    }
+
+    const result = await this.doRegister(
+      auth.options,
+      this.session.getEncryptionKey(),
+    )
+
+    await this.api.finishAddAuth(result)
   }
 
   async login({ username }: LoginFormValues): Promise<LoginResult> {
@@ -190,10 +232,10 @@ export class PasskeyStrategy extends AuthStrategy {
       kekBuffer,
       'AES-GCM',
       true,
-      ['decrypt'],
+      ['decrypt', 'encrypt'],
     )
     const dek = await this.decryptDek(encryptedDek, kek)
 
-    return { accessToken, dek }
+    return { accessToken, dek, userId }
   }
 }
