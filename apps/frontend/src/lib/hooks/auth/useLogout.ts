@@ -1,19 +1,15 @@
-import { useAccessToken, useSetSession } from '@/lib/authStore.ts'
+import { useSetSession } from '@/lib/authStore.ts'
 import { useMutation } from '@tanstack/react-query'
+import { useAuth } from '@/lib/auth/auth.ts'
 
 export function useLogout() {
   const setSession = useSetSession()
-  const getAccessToken = useAccessToken()
+  const auth = useAuth()
 
   return useMutation({
     mutationKey: ['logout'],
     mutationFn: async () => {
-      await fetch('/api/auth/logout', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${getAccessToken()}`,
-        },
-      })
+      await auth.logout()
     },
     onSuccess: async () => {
       setSession({
