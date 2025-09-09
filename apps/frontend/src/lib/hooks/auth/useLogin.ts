@@ -14,8 +14,12 @@ import {
 import { Crypt } from '@time-app-test/shared/helper/crypt.ts'
 import { hexToUint8 } from '@time-app-test/shared/helper/binary.ts'
 import { AuthMethod } from '@time-app-test/shared/model/domain/auth.ts'
-import { AuthMethodDidNotMatch } from '@time-app-test/shared/error/errors.ts'
+import {
+  AuthMethodDidNotMatch,
+  PasskeyPrfNotSupported,
+} from '@time-app-test/shared/error/errors.ts'
 import * as authn from '@simplewebauthn/browser'
+import { isUndefined } from '@time-app-test/shared/guards.ts'
 
 async function startLogin(data: LoginStartBody) {
   const response = await fetch('/api/auth/login/start', {
@@ -48,7 +52,11 @@ async function finishLogin(data: LoginFinishBody) {
 async function loginSrp({ username, password }: LoginFormValues) {
   const clientEphemeral = srp.generateEphemeral()
 
-  const { userId, auth: startAuth } = await startLogin({
+  const {
+    userId,
+    auth: startAuth,
+    encryption: { kekSalt },
+  } = await startLogin({
     username,
     auth: {
       method: AuthMethod.Srp,
@@ -72,7 +80,7 @@ async function loginSrp({ username, password }: LoginFormValues) {
   const {
     accessToken,
     auth: finishAuth,
-    encryption,
+    encryption: { encryptedDek },
   } = await finishLogin({
     userId,
     auth: {
@@ -93,18 +101,13 @@ async function loginSrp({ username, password }: LoginFormValues) {
 
   const kek = await Crypt.deriveKey(
     await Crypt.phraseToKey(password),
-    hexToUint8(encryption.kekSalt),
+    hexToUint8(kekSalt),
   )
-  const decryptedDek = await Crypt.decrypt(
-    hexToUint8(encryption.encryptedDek),
-    kek,
-  )
+  const decryptedDek = await Crypt.decrypt(hexToUint8(encryptedDek), kek)
   const dek = await crypto.subtle.importKey(
     'raw',
     decryptedDek,
-    {
-      name: 'AES-GCM',
-    },
+    'AES-GCM',
     true,
     ['decrypt', 'encrypt'],
   )
@@ -112,8 +115,46 @@ async function loginSrp({ username, password }: LoginFormValues) {
   return { accessToken, dek }
 }
 
+function addPrfExtension(
+  options: authn.PublicKeyCredentialRequestOptionsJSON,
+  salt: Uint8Array<ArrayBuffer>,
+) {
+  return {
+    ...options,
+    extensions: {
+      ...options.extensions,
+      prf: {
+        eval: {
+          first: salt,
+        },
+      },
+    } as AuthenticationExtensionsClientInputs,
+  }
+}
+
+function extractPrfResult(response: authn.AuthenticationResponseJSON) {
+  return {
+    response: {
+      ...response,
+      clientExtensionResults: {
+        appid: response.clientExtensionResults.appid,
+        credProps: response.clientExtensionResults.credProps,
+        hmacCreateSecret: response.clientExtensionResults.hmacCreateSecret,
+        // remove the prf result
+      },
+    },
+    prfResult: (
+      response.clientExtensionResults as AuthenticationExtensionsClientOutputs
+    )?.prf?.results?.first,
+  }
+}
+
 async function loginPasskey({ username }: LoginFormValues) {
-  const { userId, auth: startAuth } = await startLogin({
+  const {
+    userId,
+    auth: startAuth,
+    encryption: { kekSalt },
+  } = await startLogin({
     username,
     auth: {
       method: AuthMethod.Passkey,
@@ -124,19 +165,40 @@ async function loginPasskey({ username }: LoginFormValues) {
     throw AuthMethodDidNotMatch({ expected: AuthMethod.Passkey })
   }
 
-  const assertion = await authn.startAuthentication({
-    optionsJSON: startAuth.options,
-  })
+  const { response, prfResult: kekBuffer } = extractPrfResult(
+    await authn.startAuthentication({
+      optionsJSON: addPrfExtension(startAuth.options, hexToUint8(kekSalt)),
+    }),
+  )
 
-  const { accessToken, encryption: _ } = await finishLogin({
+  if (isUndefined(kekBuffer)) {
+    throw PasskeyPrfNotSupported()
+  }
+
+  const {
+    accessToken,
+    encryption: { encryptedDek },
+  } = await finishLogin({
     userId,
     auth: {
       method: AuthMethod.Passkey,
-      response: assertion,
+      response,
     },
   })
 
-  return { accessToken }
+  const kek = await crypto.subtle.importKey('raw', kekBuffer, 'AES-GCM', true, [
+    'decrypt',
+  ])
+  const decryptedDek = await Crypt.decrypt(hexToUint8(encryptedDek), kek)
+  const dek = await crypto.subtle.importKey(
+    'raw',
+    decryptedDek,
+    'AES-GCM',
+    true,
+    ['decrypt', 'encrypt'],
+  )
+
+  return { accessToken, dek }
 }
 
 function executeLoginStrategy(values: LoginFormValues) {

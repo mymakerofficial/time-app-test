@@ -194,3 +194,8 @@ export const AuthMethodDidNotMatch = createError('AUTH_METHOD_DID_NOT_MATCH', {
   message: ({ expected }) =>
     `Provided authorization method did not match expected of ${expected}.`,
 })
+export const PasskeyPrfNotSupported = createError('PASSKEY_PRF_NOT_SUPPORTED', {
+  statusCode: HttpStatusCode.INTERNAL_SERVER_ERROR,
+  message:
+    'The provided Passkey does not support PRF. No encryption is possible and account creation is aborted. Please use try another Passkey or use Password based authentication.',
+})
