@@ -20,6 +20,7 @@ import {
 } from '@time-app-test/shared/error/errors.ts'
 import * as authn from '@simplewebauthn/browser'
 import { isUndefined } from '@time-app-test/shared/guards.ts'
+import { base64URLStringToBuffer } from '@simplewebauthn/browser'
 
 async function startLogin(data: LoginStartBody) {
   const response = await fetch('/api/auth/login/start', {
