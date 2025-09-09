@@ -3,20 +3,23 @@ import { SrpStrategy } from '@/lib/auth/srpStrategy.ts'
 import { PasskeyStrategy } from '@/lib/auth/passkeyStrategy.ts'
 import { AuthApi, useAuthApi } from '@/lib/auth/api.ts'
 import { AuthStrategy } from '@/lib/auth/authStrategy.ts'
+import { SessionContext, useSession } from '@/lib/authStore.ts'
 
 export class AuthBase {
   protected api: AuthApi
+  protected session: SessionContext
 
-  constructor(api: AuthApi) {
+  constructor(api: AuthApi, session: SessionContext) {
     this.api = api
+    this.session = session
   }
 
   getStrategy(method: AuthMethod): AuthStrategy {
     switch (method) {
       case AuthMethod.Srp:
-        return new SrpStrategy(this.api)
+        return new SrpStrategy(this.api, this.session)
       case AuthMethod.Passkey:
-        return new PasskeyStrategy(this.api)
+        return new PasskeyStrategy(this.api, this.session)
     }
   }
 
@@ -30,6 +33,7 @@ export class AuthBase {
 }
 
 export function useAuth() {
+  const session = useSession()
   const api = useAuthApi()
-  return new AuthBase(api)
+  return new AuthBase(api, session)
 }

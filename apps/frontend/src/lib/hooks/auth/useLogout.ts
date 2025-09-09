@@ -7,13 +7,14 @@ export function useLogout() {
   const auth = useAuth()
 
   return useMutation({
-    mutationKey: ['logout'],
+    mutationKey: ['auth', 'logout'],
     mutationFn: async () => {
       await auth.logout()
     },
     onSuccess: async () => {
       setSession({
         accessToken: null,
+        userId: null,
         encryptionKey: null,
       })
     },

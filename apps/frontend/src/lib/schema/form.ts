@@ -8,6 +8,12 @@ export const RegisterFormSchema = z.object({
 })
 export type RegisterFormValues = z.infer<typeof RegisterFormSchema>
 
+export const AddAuthFormSchema = z.object({
+  password: z.string(),
+  method: AuthMethodSchema,
+})
+export type AddAuthFormValues = z.infer<typeof AddAuthFormSchema>
+
 export const LoginFormSchema = z.object({
   username: z.string(),
   password: z.string(),

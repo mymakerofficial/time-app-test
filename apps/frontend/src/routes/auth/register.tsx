@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useRegister } from '@/lib/hooks/auth/useRegister.ts'
 import { useRegisterForm } from '@/lib/hooks/form/useRegisterForm.ts'
 import { AuthMethod } from '@time-app-test/shared/model/domain/auth.ts'
@@ -56,9 +56,9 @@ function RouteComponent() {
           <form.AppForm>
             <form.SubscribeButton label="Register" />
           </form.AppForm>
-          <a href="/auth/login" className="text-blue-500 hover:underline">
+          <Link to="/auth/login" className="text-blue-500 hover:underline">
             Login
-          </a>
+          </Link>
         </div>
       </form>
       {error && (
