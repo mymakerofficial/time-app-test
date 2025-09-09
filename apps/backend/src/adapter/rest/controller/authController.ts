@@ -1,6 +1,9 @@
 import { createApiController } from '@/adapter/rest/utils/apiController.ts'
 import { createLocalHook } from '@/adapter/rest/utils/zodAdapter.ts'
 import {
+  AddAuthFinishBodySchema,
+  AddAuthStartBodySchema,
+  AddAuthStartResponseSchema,
   GetTokenResponseSchema,
   LoginFinishBodySchema,
   LoginFinishResponseSchema,
@@ -32,6 +35,29 @@ export const authController = createApiController({
     },
     createLocalHook({
       body: RegisterFinishBodySchema,
+    }),
+  )
+  .post(
+    '/add/start',
+    ({ body, session, authService }) => {
+      const userId = session.getCurrentUserId()
+      return authService.addAuthMethodStart({ userId, ...body })
+    },
+    createLocalHook({
+      body: AddAuthStartBodySchema,
+      response: AddAuthStartResponseSchema,
+      validateSession: true,
+    }),
+  )
+  .post(
+    '/add/finish',
+    ({ body, session, authService }) => {
+      const userId = session.getCurrentUserId()
+      return authService.addAuthMethodFinish({ userId, ...body })
+    },
+    createLocalHook({
+      body: AddAuthFinishBodySchema,
+      validateSession: true,
     }),
   )
   .post(

@@ -8,6 +8,7 @@ import {
   PASSKEY_API_META,
   SRP_API_META,
 } from '@/model/domain/auth.ts'
+import { UserAuthenticatorWithIdSchema } from '@/model/domain/auth/authenticator.ts'
 
 export namespace RegistrationStart {
   export const ConcreteInputDtoSchema = z.object({
@@ -19,6 +20,8 @@ export namespace RegistrationStart {
   export const StrategyInputDtoSchema = z.object({
     userId: UserIdSchema,
     username: UsernameSchema,
+    // only used for adding new auth methods, empty for initial registration
+    existingAuthenticators: UserAuthenticatorWithIdSchema.array(),
   })
   export type StrategyInputDto = z.Infer<typeof StrategyInputDtoSchema>
 

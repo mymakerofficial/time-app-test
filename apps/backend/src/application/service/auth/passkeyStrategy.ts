@@ -25,13 +25,22 @@ export class PasskeyStrategy implements AuthStrategy {
   async registerStart({
     userId,
     username,
+    existingAuthenticators,
   }: RegistrationStart.StrategyInputDto): Promise<RegistrationStart.StrategyResultDto> {
+    const filteredAuthenticators = filterPasskeyAuthenticators(
+      existingAuthenticators,
+    )
+
     const options = await authn.generateRegistrationOptions({
       rpName: RP_NAME,
       rpID: RP_ID,
       userID: new TextEncoder().encode(userId),
       userName: username,
       attestationType: 'none',
+      excludeCredentials: filteredAuthenticators.map(({ data }) => ({
+        id: data.id,
+        transports: data.transports,
+      })),
       authenticatorSelection: {
         authenticatorAttachment: 'platform',
         residentKey: 'required',
@@ -173,4 +182,24 @@ function arePasskeyAuthenticators(
   }
 >[] {
   return !authenticators.some((it) => it.data.method !== AuthMethod.Passkey)
+}
+
+function filterPasskeyAuthenticators(
+  authenticators: UserAuthenticatorWithId[],
+): Prettify2<
+  UserAuthenticatorWithId & {
+    data: {
+      method: 'PASSKEY'
+    }
+  }
+>[] {
+  return authenticators.filter(
+    (it) => it.data.method === AuthMethod.Passkey,
+  ) as Prettify2<
+    UserAuthenticatorWithId & {
+      data: {
+        method: 'PASSKEY'
+      }
+    }
+  >[]
 }

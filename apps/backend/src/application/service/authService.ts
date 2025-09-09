@@ -15,6 +15,8 @@ import { LoginStart } from '@time-app-test/shared/model/domain/auth/loginStart.t
 import { RegistrationFinish } from '@time-app-test/shared/model/domain/auth/registrationFinish.ts'
 import { RegistrationStart } from '@time-app-test/shared/model/domain/auth/registrationStart.ts'
 import { LoginFinish } from '@time-app-test/shared/model/domain/auth/loginFinish.ts'
+import { AddAuthStart } from '@time-app-test/shared/model/domain/auth/addAuthStart.ts'
+import { AddAuthFinish } from '@time-app-test/shared/model/domain/auth/addAuthFinish.ts'
 
 const REFRESH_TOKEN_MAX_AGE_SEC = 604800 // 7 days
 
@@ -52,6 +54,7 @@ export class AuthService {
     ).registerStart({
       userId,
       username,
+      existingAuthenticators: [],
     })
 
     await this.#authCache.setPendingRegistration(userId, cacheData, 60)
@@ -81,6 +84,56 @@ export class AuthService {
     await this.#userPersistence.createUser({
       id: userId,
       username,
+    })
+
+    await this.#authPersistence.createAuthenticator(
+      userId,
+      authenticatorData,
+      encryption,
+    )
+
+    await this.#authCache.deletePendingRegistration(userId)
+  }
+
+  async addAuthMethodStart({
+    userId,
+    method,
+  }: AddAuthStart.ConcreteInputDto): Promise<AddAuthStart.ConcreteResultDto> {
+    const user = await this.#userPersistence.getUserById(userId)
+    const authenticators = await this.#authPersistence.getAuthenticators(
+      userId,
+      method,
+    )
+
+    const { cacheData, clientData } = await AuthStrategyFactory.create(
+      method,
+    ).registerStart({
+      userId,
+      username: user.username,
+      existingAuthenticators: authenticators,
+    })
+
+    await this.#authCache.setPendingRegistration(userId, cacheData, 60)
+
+    return clientData
+  }
+
+  async addAuthMethodFinish({
+    userId,
+    auth,
+    encryption,
+  }: AddAuthFinish.ConcreteInputDto): Promise<void> {
+    const cacheData = await this.#authCache.getPendingRegistration(userId)
+
+    if (isUndefined(cacheData) || cacheData.method !== auth.method) {
+      throw InvalidRegistrationSession({ userId })
+    }
+
+    const { authenticatorData } = await AuthStrategyFactory.create(
+      auth.method,
+    ).registerFinish({
+      cacheData,
+      clientData: auth,
     })
 
     await this.#authPersistence.createAuthenticator(
