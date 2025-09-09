@@ -4,7 +4,6 @@ import { RegistrationStart } from '@/model/domain/auth/registrationStart.ts'
 import { RegistrationFinish } from '@/model/domain/auth/registrationFinish.ts'
 import { LoginStart } from '@/model/domain/auth/loginStart.ts'
 import { LoginFinish } from '@/model/domain/auth/loginFinish.ts'
-import { EncryptionPublicDtoSchema } from '@/model/domain/auth/encryption.ts'
 
 export const RegisterStartBodySchema = RegistrationStart.ConcreteInputDtoSchema
 export type RegisterStartBody = z.Infer<typeof RegisterStartBodySchema>
@@ -24,11 +23,10 @@ export const LoginStartResponseSchema = LoginStart.ConcreteResultDtoSchema
 export const LoginFinishBodySchema = LoginFinish.ConcreteInputDtoSchema
 export type LoginFinishBody = z.Infer<typeof LoginFinishBodySchema>
 
-export const LoginFinishResponseSchema = z.object({
-  auth: LoginFinish.ClientResponseDtoSchema,
-  encryption: EncryptionPublicDtoSchema,
-  accessToken: JwtAccessTokenSchema,
-})
+export const LoginFinishResponseSchema =
+  LoginFinish.ConcreteResultDtoSchema.omit({
+    refreshToken: true,
+  })
 
 export const GetTokenResponseSchema = z.object({
   accessToken: JwtAccessTokenSchema,

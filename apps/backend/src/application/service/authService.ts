@@ -101,6 +101,11 @@ export class AuthService {
       user.id,
       auth.method,
     )
+    // TODO cache this
+    const encryption = await this.#authPersistence.getEncryptionByUserId(
+      user.id,
+      auth.method,
+    )
 
     const { cacheData, clientData } = await AuthStrategyFactory.create(
       auth.method,
@@ -114,6 +119,9 @@ export class AuthService {
     return {
       userId: user.id,
       auth: clientData,
+      encryption: {
+        kekSalt: encryption.kekSalt,
+      },
     }
   }
 
@@ -160,7 +168,9 @@ export class AuthService {
 
     return {
       auth: clientData,
-      encryption,
+      encryption: {
+        encryptedDek: encryption.encryptedDek,
+      },
       accessToken,
       refreshToken: {
         value: refreshToken,

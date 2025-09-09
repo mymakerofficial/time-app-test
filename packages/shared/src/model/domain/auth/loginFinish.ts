@@ -1,6 +1,7 @@
 import z from 'zod'
 import {
   AuthMethod,
+  EncryptedDekSchema,
   JwtAccessTokenSchema,
   PASSKEY_API_META,
   SRP_API_META,
@@ -9,7 +10,6 @@ import {
 } from '@/model/domain/auth.ts'
 import { UserIdSchema } from '@/model/domain/user.ts'
 import { LoginCacheDtoSchema } from '@/model/domain/auth/loginCache.ts'
-import { EncryptionPublicDtoSchema } from '@/model/domain/auth/encryption.ts'
 import { CookieSchema } from '@/model/domain/cookie.ts'
 import { AuthenticationResponseJSONSchema } from '@/model/domain/auth/passkey.ts'
 import { UserAuthenticatorWithIdSchema } from '@/model/domain/auth/authenticator.ts'
@@ -68,7 +68,9 @@ export namespace LoginFinish {
 
   export const ConcreteResultDtoSchema = z.object({
     auth: ClientResponseDtoSchema,
-    encryption: EncryptionPublicDtoSchema,
+    encryption: z.object({
+      encryptedDek: EncryptedDekSchema,
+    }),
     accessToken: JwtAccessTokenSchema,
     refreshToken: CookieSchema,
   })

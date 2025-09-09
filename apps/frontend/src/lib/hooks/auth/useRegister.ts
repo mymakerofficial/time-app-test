@@ -14,7 +14,10 @@ import { uint8ToHex } from '@time-app-test/shared/helper/binary.ts'
 import { Crypt } from '@time-app-test/shared/helper/crypt.ts'
 import * as authn from '@simplewebauthn/browser'
 import { AuthMethod } from '@time-app-test/shared/model/domain/auth.ts'
-import { AuthMethodDidNotMatch } from '@time-app-test/shared/error/errors.ts'
+import {
+  AuthMethodDidNotMatch,
+  PasskeyPrfNotSupported,
+} from '@time-app-test/shared/error/errors.ts'
 import { isUndefined } from '@time-app-test/shared/guards.ts'
 
 async function startRegistration(data: RegisterStartBody) {
@@ -128,8 +131,7 @@ async function registerPasskey({ username }: RegisterFormValues) {
   )
 
   if (isUndefined(kekBuffer)) {
-    throw new Error('Could not generate key encryption key')
-    // TODO abort register on server
+    throw PasskeyPrfNotSupported()
   }
 
   const dek = await crypto.subtle.exportKey(
