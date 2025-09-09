@@ -30,6 +30,7 @@ export function useCreateNote() {
           }),
         ),
         headers: {
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${getAccessToken()}`,
         },
       })
