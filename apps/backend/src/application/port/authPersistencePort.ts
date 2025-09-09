@@ -6,10 +6,11 @@ import {
 import { EncryptionPublicDto } from '@time-app-test/shared/model/domain/auth/encryption.ts'
 
 export interface AuthPersistencePort {
-  getAuthenticators(
+  getAuthenticatorsWithMethod(
     userId: string,
     method: AuthMethod,
   ): Promise<UserAuthenticatorWithId[]>
+  getAuthenticators(userId: string): Promise<UserAuthenticatorWithId[]>
   createAuthenticator(
     userId: string,
     data: UserAuthenticatorDto,

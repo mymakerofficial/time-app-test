@@ -12,12 +12,12 @@ export function useLogin({
   const setSession = useSetSession()
 
   return useMutation({
-    mutationKey: ['login'],
+    mutationKey: ['auth', 'login'],
     mutationFn: async (values: LoginFormValues) => {
-      const { accessToken, dek } = await auth
+      const { accessToken, dek, userId } = await auth
         .getStrategy(values.method)
         .login(values)
-      setSession({ accessToken, encryptionKey: dek })
+      setSession({ accessToken, encryptionKey: dek, userId })
     },
     onSuccess: async () => {
       return onSuccess?.()

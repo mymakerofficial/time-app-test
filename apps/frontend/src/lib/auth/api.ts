@@ -1,5 +1,7 @@
 import {
+  AddAuthFinishBody,
   AddAuthFinishBodySchema,
+  AddAuthStartBody,
   AddAuthStartBodySchema,
   AddAuthStartResponseSchema,
   GetTokenResponseSchema,
@@ -16,13 +18,13 @@ import {
   RegisterStartResponseSchema,
 } from '@time-app-test/shared/model/rest/auth.ts'
 import { getResponseBody } from '@time-app-test/shared/fetch/response.ts'
-import { useAccessToken } from '@/lib/authStore.ts'
+import { SessionContext, useSession } from '@/lib/authStore.ts'
 
 export class AuthApi {
   private readonly getAccessToken: () => string
 
-  constructor(getAccessToken: () => string) {
-    this.getAccessToken = getAccessToken
+  constructor(session: SessionContext) {
+    this.getAccessToken = session.getAccessToken
   }
 
   async startRegistration(data: RegisterStartBody) {
@@ -52,7 +54,7 @@ export class AuthApi {
     })
   }
 
-  async startAddAuth(data: RegisterStartBody) {
+  async startAddAuth(data: AddAuthStartBody) {
     const response = await fetch('/api/auth/add/start', {
       method: 'POST',
       body: JSON.stringify(AddAuthStartBodySchema.parse(data)),
@@ -67,7 +69,7 @@ export class AuthApi {
     })
   }
 
-  async finishAddAuth(data: RegisterFinishBody) {
+  async finishAddAuth(data: AddAuthFinishBody) {
     const response = await fetch('/api/auth/add/finish', {
       method: 'POST',
       body: JSON.stringify(AddAuthFinishBodySchema.parse(data)),
@@ -130,6 +132,6 @@ export class AuthApi {
 }
 
 export function useAuthApi() {
-  const getAccessToken = useAccessToken()
-  return new AuthApi(getAccessToken)
+  const session = useSession()
+  return new AuthApi(session)
 }
