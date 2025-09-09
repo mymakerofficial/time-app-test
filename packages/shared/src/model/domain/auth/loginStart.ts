@@ -3,6 +3,7 @@ import { UserAuthenticatorWithIdSchema } from '@/model/domain/auth/authenticator
 import { LoginCacheDtoSchema } from '@/model/domain/auth/loginCache.ts'
 import {
   AuthMethod,
+  KekSaltSchema,
   PASSKEY_API_META,
   SRP_API_META,
   SrpClientPublicEphemeralSchema,
@@ -67,6 +68,9 @@ export namespace LoginStart {
   export const ConcreteResultDtoSchema = z.object({
     userId: UserIdSchema,
     auth: ClientResponseDtoSchema,
+    encryption: z.object({
+      kekSalt: KekSaltSchema,
+    }),
   })
   export type ConcreteResultDto = z.Infer<typeof ConcreteResultDtoSchema>
 }
