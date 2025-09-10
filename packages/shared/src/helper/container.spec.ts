@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { Container } from '@/lib/container.ts'
+import { Container } from '@/helper/container.ts'
 
 describe('Container', () => {
   it('builds sync', () => {

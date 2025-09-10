@@ -158,7 +158,7 @@ export class PasskeyStrategy extends AuthStrategy {
   }
 
   async register({ username }: RegisterFormValues): Promise<void> {
-    const { userId, auth } = await this.api.startRegistration({
+    const { userId, auth } = await this.authApi.startRegistration({
       username,
       method: AuthMethod.Passkey,
     })
@@ -172,7 +172,7 @@ export class PasskeyStrategy extends AuthStrategy {
       await Crypt.generatePrivateKey(),
     )
 
-    await this.api.finishRegistration({
+    await this.authApi.finishRegistration({
       username,
       userId,
       ...result,
@@ -180,7 +180,7 @@ export class PasskeyStrategy extends AuthStrategy {
   }
 
   async addAuthenticator(_: AddAuthFormValues): Promise<void> {
-    const auth = await this.api.startAddAuth({
+    const auth = await this.authApi.startAddAuth({
       method: AuthMethod.Passkey,
     })
 
@@ -193,7 +193,7 @@ export class PasskeyStrategy extends AuthStrategy {
       this.session.getEncryptionKey(),
     )
 
-    await this.api.finishAddAuth(result)
+    await this.authApi.finishAddAuth(result)
   }
 
   async login({ username }: LoginFormValues): Promise<LoginResult> {
@@ -201,7 +201,7 @@ export class PasskeyStrategy extends AuthStrategy {
       userId,
       auth,
       encryption: { kekSalt },
-    } = await this.api.startLogin({
+    } = await this.authApi.startLogin({
       username,
       auth: {
         method: AuthMethod.Passkey,
@@ -222,7 +222,7 @@ export class PasskeyStrategy extends AuthStrategy {
     const {
       accessToken,
       encryption: { encryptedDek },
-    } = await this.api.finishLogin({
+    } = await this.authApi.finishLogin({
       userId,
       auth: {
         method: AuthMethod.Passkey,

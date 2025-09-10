@@ -1,18 +1,18 @@
 import { useMutation } from '@tanstack/react-query'
 import { AddAuthFormValues } from '@/lib/schema/form.ts'
-import { useAuth } from '@/lib/application/auth/auth.ts'
+import { useContainer } from '@/lib/application/container.ts'
 
 export function useAddAuth({
   onSuccess,
 }: {
   onSuccess?: () => void | Promise<void>
 }) {
-  const auth = useAuth()
+  const { authService } = useContainer()
 
   return useMutation({
     mutationKey: ['auth', 'add'],
     mutationFn: async (values: AddAuthFormValues) => {
-      await auth.getStrategy(values.method).addAuthenticator(values)
+      await authService.getStrategy(values.method).addAuthenticator(values)
     },
     onSuccess,
   })

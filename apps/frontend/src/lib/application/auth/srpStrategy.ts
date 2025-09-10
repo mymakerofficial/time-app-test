@@ -43,7 +43,7 @@ export class SrpStrategy extends AuthStrategy {
   }
 
   async register({ username, password }: RegisterFormValues): Promise<void> {
-    const { userId } = await this.api.startRegistration({
+    const { userId } = await this.authApi.startRegistration({
       username,
       method: AuthMethod.Srp,
     })
@@ -51,7 +51,7 @@ export class SrpStrategy extends AuthStrategy {
     const auth = this.generateAuth(userId, password)
     const encryption = await this.generateEncryption(password)
 
-    await this.api.finishRegistration({
+    await this.authApi.finishRegistration({
       username,
       userId,
       auth,
@@ -60,7 +60,7 @@ export class SrpStrategy extends AuthStrategy {
   }
 
   async addAuthenticator({ password }: AddAuthFormValues) {
-    await this.api.startAddAuth({
+    await this.authApi.startAddAuth({
       method: AuthMethod.Srp,
     })
 
@@ -69,7 +69,7 @@ export class SrpStrategy extends AuthStrategy {
     const auth = this.generateAuth(userId, password)
     const encryption = await this.generateEncryption(password)
 
-    await this.api.finishAddAuth({
+    await this.authApi.finishAddAuth({
       auth,
       encryption,
     })
@@ -82,7 +82,7 @@ export class SrpStrategy extends AuthStrategy {
       userId,
       auth: startAuth,
       encryption: { kekSalt },
-    } = await this.api.startLogin({
+    } = await this.authApi.startLogin({
       username,
       auth: {
         method: AuthMethod.Srp,
@@ -107,7 +107,7 @@ export class SrpStrategy extends AuthStrategy {
       accessToken,
       auth: finishAuth,
       encryption: { encryptedDek },
-    } = await this.api.finishLogin({
+    } = await this.authApi.finishLogin({
       userId,
       auth: {
         method: AuthMethod.Srp,

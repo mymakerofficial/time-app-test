@@ -1,4 +1,3 @@
-import { AuthApi } from '@/lib/application/auth/api.ts'
 import {
   AddAuthFormValues,
   LoginFormValues,
@@ -6,7 +5,9 @@ import {
 } from '@/lib/schema/form.ts'
 import { Crypt } from '@time-app-test/shared/helper/crypt.ts'
 import { hexToUint8 } from '@time-app-test/shared/helper/binary.ts'
+import { AuthApi } from '@/lib/application/auth/api.ts'
 import { SessionContext } from '@/lib/application/session/sessionStore.ts'
+import { BaseService } from '@/lib/application/base/baseService.ts'
 
 export interface LoginResult {
   accessToken: string
@@ -14,13 +15,12 @@ export interface LoginResult {
   userId: string
 }
 
-export abstract class AuthStrategy {
-  protected api: AuthApi
-  protected session: SessionContext
+export abstract class AuthStrategy extends BaseService {
+  protected readonly authApi: AuthApi
 
-  constructor(api: AuthApi, session: SessionContext) {
-    this.api = api
-    this.session = session
+  constructor(container: { authApi: AuthApi; session: SessionContext }) {
+    super(container)
+    this.authApi = container.authApi
   }
 
   protected async decryptDek(

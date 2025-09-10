@@ -14,21 +14,22 @@ export const NoteIdSchema = z.nanoid().meta({
 export const NoteMessageSchema = z.string().min(1)
 export const EntitySyncStatusSchema = z.enum(SyncStatus)
 
-export const EncryptedNoteSchema = z.object({
+export const EncryptedNoteDtoSchema = z.object({
   id: NoteIdSchema,
   userId: UserIdSchema,
   createdAt: z.hex(),
   updatedAt: z.hex(),
   message: z.hex(),
 })
-export type EncryptedNote = z.Infer<typeof EncryptedNoteSchema>
+export type EncryptedNoteDto = z.Infer<typeof EncryptedNoteDtoSchema>
 
-export const NoteSchema = z.object({
+export const LocalNoteDtoSchema = z.object({
   id: NoteIdSchema,
+  userId: UserIdSchema,
   createdAt: z.date(),
   updatedAt: z.date(),
   syncStatus: EntitySyncStatusSchema,
   deleted: z.boolean().default(false),
   message: NoteMessageSchema,
 })
-export type Note = z.Infer<typeof NoteSchema>
+export type LocalNoteDto = z.Infer<typeof LocalNoteDtoSchema>

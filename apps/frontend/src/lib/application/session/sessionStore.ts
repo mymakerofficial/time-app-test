@@ -52,11 +52,15 @@ function getEncryptionKey() {
   return encryptionKey
 }
 
-export function useSession(): SessionContext {
+export function getSessionContext(): SessionContext {
   return {
     getAccessToken,
     getUserId,
     getEncryptionKey,
     getUserIdSafe: () => store.state.userId,
   }
+}
+
+export function useSession(): SessionContext {
+  return getSessionContext()
 }

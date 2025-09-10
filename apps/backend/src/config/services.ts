@@ -1,6 +1,6 @@
 import { AuthService } from '@/application/service/authService.ts'
 import { Elysia } from 'elysia'
-import { Container } from '@/lib/container.ts'
+import { Container } from '@time-app-test/shared/helper/container.ts'
 import { Pool } from 'pg'
 import { drizzle } from '@/lib/drizzle.ts'
 import * as schema from '@/adapter/db/schema/schema.ts'

@@ -1,5 +1,5 @@
 import { NotesPersistencePort } from '@/application/port/notesPersistencePort.ts'
-import { EncryptedNote } from '@time-app-test/shared/model/domain/notes.ts'
+import { EncryptedNoteDto } from '@time-app-test/shared/model/domain/notes.ts'
 
 export class NotesService {
   readonly #notesPersistence: NotesPersistencePort
@@ -12,7 +12,7 @@ export class NotesService {
     return this.#notesPersistence.getAll(userId)
   }
 
-  createNote(note: EncryptedNote) {
+  createNote(note: EncryptedNoteDto) {
     return this.#notesPersistence.createNote(note)
   }
 }

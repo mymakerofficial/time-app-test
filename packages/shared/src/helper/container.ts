@@ -1,6 +1,6 @@
-import { MaybePromise, Prettify } from '@time-app-test/shared/types.ts'
-import { toPromise } from '@time-app-test/shared/helper/promise.ts'
-import { isPromise } from '@time-app-test/shared/guards.ts'
+import { MaybePromise, Prettify } from '@/types.ts'
+import { toPromise } from '@/helper/promise.ts'
+import { isPromise } from '@/guards.ts'
 
 export class Container<
   T extends { [K: string]: unknown } = {},

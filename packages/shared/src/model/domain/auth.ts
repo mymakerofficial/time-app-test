@@ -1,6 +1,4 @@
 import z from 'zod'
-import { CookieSchema } from '@/model/domain/cookie.ts'
-import { UserIdSchema, UsernameSchema } from '@/model/domain/user.ts'
 import { hexExamples } from '@/zod.ts'
 
 export const AuthMethod = {
@@ -33,72 +31,3 @@ export const SRP_API_META = {
 export const PASSKEY_API_META = {
   title: 'Passkey',
 }
-
-/** @deprecated */
-export const UserPasswordDataSchema = z.object({
-  userId: UserIdSchema,
-  username: UsernameSchema,
-  authSalt: SrpSaltSchema,
-  authVerifier: SrpVerifierSchema,
-  kekSalt: KekSaltSchema,
-  encryptedDek: EncryptedDekSchema,
-})
-/** @deprecated */
-export type UserPasswordData = z.Infer<typeof UserPasswordDataSchema>
-
-/** @deprecated */
-export const CreateUserPasswordDataSchema = z.object({
-  userId: UserIdSchema,
-  authSalt: SrpSaltSchema,
-  authVerifier: SrpVerifierSchema,
-  kekSalt: KekSaltSchema,
-  encryptedDek: EncryptedDekSchema,
-})
-/** @deprecated */
-export type CreateUserPasswordData = z.Infer<
-  typeof CreateUserPasswordDataSchema
->
-
-/** @deprecated */
-export const PasswordLoginStartClientDataSchema = z.object({
-  username: UsernameSchema,
-  clientPublicEphemeral: SrpClientPublicEphemeralSchema,
-})
-/** @deprecated */
-export type PasswordLoginStartClientData = z.Infer<
-  typeof PasswordLoginStartClientDataSchema
->
-
-/** @deprecated */
-export const PasswordLoginStartServerDataSchema = z.object({
-  userId: UserIdSchema,
-  authSalt: SrpSaltSchema,
-  serverPublicEphemeral: SrpServerPublicEphemeralSchema,
-})
-/** @deprecated */
-export type PasswordLoginStartServerData = z.Infer<
-  typeof PasswordLoginStartServerDataSchema
->
-
-/** @deprecated */
-export const PasswordLoginFinishClientDataSchema = z.object({
-  userId: UserIdSchema,
-  clientProof: SrpClientProofSchema,
-})
-/** @deprecated */
-export type PasswordLoginFinishClientData = z.Infer<
-  typeof PasswordLoginFinishClientDataSchema
->
-
-/** @deprecated */
-export const PasswordLoginFinishServerDataSchema = z.object({
-  serverProof: SrpServerProofSchema,
-  accessToken: JwtAccessTokenSchema,
-  refreshToken: CookieSchema,
-  kekSalt: KekSaltSchema,
-  encryptedDek: EncryptedDekSchema,
-})
-/** @deprecated */
-export type PasswordLoginFinishServerData = z.Infer<
-  typeof PasswordLoginFinishServerDataSchema
->

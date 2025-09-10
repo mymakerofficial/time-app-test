@@ -1,16 +1,17 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
-export function getContext() {
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: {
-        throwOnError: true,
-      },
-      mutations: {
-        throwOnError: true,
-      },
+export const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      throwOnError: true,
     },
-  })
+    mutations: {
+      throwOnError: true,
+    },
+  },
+})
+
+export function getContext() {
   return {
     queryClient,
   }

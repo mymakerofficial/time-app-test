@@ -134,8 +134,8 @@ importers:
         specifier: ^4.0.6
         version: 4.1.11(vite@6.3.5(@types/node@24.2.1)(jiti@2.5.1)(lightningcss@1.30.1)(terser@5.43.1)(tsx@4.20.4)(yaml@2.8.1))
       '@tanstack/db':
-        specifier: ^0.1.8
-        version: 0.1.8(typescript@5.9.2)
+        specifier: ^0.2.2
+        version: 0.2.2(typescript@5.9.2)
       '@tanstack/match-sorter-utils':
         specifier: ^8.19.4
         version: 8.19.4
@@ -212,6 +212,9 @@ importers:
         specifier: ^5.1.4
         version: 5.1.4(typescript@5.9.2)(vite@6.3.5(@types/node@24.2.1)(jiti@2.5.1)(lightningcss@1.30.1)(terser@5.43.1)(tsx@4.20.4)(yaml@2.8.1))
     devDependencies:
+      '@standard-schema/spec':
+        specifier: ^1.0.0
+        version: 1.0.0
       '@testing-library/dom':
         specifier: ^10.4.0
         version: 10.4.1
@@ -254,6 +257,9 @@ importers:
       typescript:
         specifier: ^5.4.0
         version: 5.9.2
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.4(@types/node@24.2.1)(jiti@2.5.1)(jsdom@26.1.0)(lightningcss@1.30.1)(terser@5.43.1)(tsx@4.20.4)(yaml@2.8.1)
 
 packages:
 
@@ -1898,8 +1904,8 @@ packages:
     peerDependencies:
       typescript: '>=4.7'
 
-  '@tanstack/db-ivm@0.1.2':
-    resolution: {integrity: sha512-byXz+tsaVT2Wi/9F6dbZIiTG/L/Kq6tAN+lpQsp5g6URk2Tw/tZ9zB3503UkZpTyHLdKDk23+qiPKiHZCb5efw==}
+  '@tanstack/db-ivm@0.1.4':
+    resolution: {integrity: sha512-4ItrJ5qxLTK+LjhpyuLkQvpD7EfUYDDtv5oY3RiUCXSFR8MinUxq0NV5Q+W/UhIC5sdl3BXKYy4IS9XPZPAEQg==}
     peerDependencies:
       typescript: '>=4.7'
 
@@ -1908,8 +1914,8 @@ packages:
     peerDependencies:
       typescript: '>=4.7'
 
-  '@tanstack/db@0.1.8':
-    resolution: {integrity: sha512-1ZtmzkN1qLS9dYjQTeLRZwHCtsjhtlBzrThzL3x7FI5G6VimStpJV50F+r0YRloxiCk2xi2mC+eTFmG81zusyQ==}
+  '@tanstack/db@0.2.2':
+    resolution: {integrity: sha512-kNp85JaBd9JiNmrcABeFppTRYsuq3ATy0e/PQGPI8FEUKN05KhPV4oKt6OQpizIoQDA2a3PuHsRa6wfpUkPlVQ==}
     peerDependencies:
       typescript: '>=4.7'
 
@@ -6953,10 +6959,9 @@ snapshots:
       sorted-btree: 1.8.1
       typescript: 5.9.2
 
-  '@tanstack/db-ivm@0.1.2(typescript@5.9.2)':
+  '@tanstack/db-ivm@0.1.4(typescript@5.9.2)':
     dependencies:
       fractional-indexing: 3.2.0
-      murmurhash-js: 1.0.0
       sorted-btree: 1.8.1
       typescript: 5.9.2
 
@@ -6966,10 +6971,10 @@ snapshots:
       '@tanstack/db-ivm': 0.1.0(typescript@5.9.2)
       typescript: 5.9.2
 
-  '@tanstack/db@0.1.8(typescript@5.9.2)':
+  '@tanstack/db@0.2.2(typescript@5.9.2)':
     dependencies:
       '@standard-schema/spec': 1.0.0
-      '@tanstack/db-ivm': 0.1.2(typescript@5.9.2)
+      '@tanstack/db-ivm': 0.1.4(typescript@5.9.2)
       typescript: 5.9.2
 
   '@tanstack/directive-functions-plugin@1.130.12(vite@6.3.5(@types/node@24.2.1)(jiti@2.5.1)(lightningcss@1.30.1)(terser@5.43.1)(tsx@4.20.4)(yaml@2.8.1))':

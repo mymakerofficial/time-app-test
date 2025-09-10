@@ -18,18 +18,9 @@ import {
   RegisterStartResponseSchema,
 } from '@time-app-test/shared/model/rest/auth.ts'
 import { getResponseBody } from '@time-app-test/shared/fetch/response.ts'
-import {
-  SessionContext,
-  useSession,
-} from '@/lib/application/session/sessionStore.ts'
+import { BaseApi } from '@/lib/application/base/baseApi.ts'
 
-export class AuthApi {
-  private readonly getAccessToken: () => string
-
-  constructor(session: SessionContext) {
-    this.getAccessToken = session.getAccessToken
-  }
-
+export class AuthApi extends BaseApi {
   async startRegistration(data: RegisterStartBody) {
     const response = await fetch('/api/auth/register/start', {
       method: 'POST',
@@ -63,7 +54,7 @@ export class AuthApi {
       body: JSON.stringify(AddAuthStartBodySchema.parse(data)),
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${this.getAccessToken()}`,
+        Authorization: `Bearer ${this.session.getAccessToken()}`,
       },
     })
     return getResponseBody({
@@ -78,7 +69,7 @@ export class AuthApi {
       body: JSON.stringify(AddAuthFinishBodySchema.parse(data)),
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${this.getAccessToken()}`,
+        Authorization: `Bearer ${this.session.getAccessToken()}`,
       },
     })
     await getResponseBody({
@@ -128,13 +119,8 @@ export class AuthApi {
     await fetch('/api/auth/logout', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${this.getAccessToken()}`,
+        Authorization: `Bearer ${this.session.getAccessToken()}`,
       },
     })
   }
-}
-
-export function useAuthApi() {
-  const session = useSession()
-  return new AuthApi(session)
 }
