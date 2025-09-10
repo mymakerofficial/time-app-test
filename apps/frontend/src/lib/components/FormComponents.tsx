@@ -10,6 +10,8 @@ import { Slider as ShadcnSlider } from './ui/slider.tsx'
 import { Switch as ShadcnSwitch } from './ui/switch.tsx'
 import { Label } from './ui/label.tsx'
 import { HTMLInputAutoCompleteAttribute } from 'react'
+import { cn } from '@/lib/utils.ts'
+import { ClassNameValue } from 'tailwind-merge'
 
 export function SubscribeButton({ label }: { label: string }) {
   const form = useFormContext()
@@ -45,19 +47,26 @@ function ErrorMessages({
 
 export function TextField({
   label,
+  labelHidden = false,
   placeholder,
   autoComplete,
+  className,
 }: {
   label: string
+  labelHidden?: boolean
   placeholder?: string
   autoComplete?: HTMLInputAutoCompleteAttribute
+  className?: string
 }) {
   const field = useFieldContext<string>()
   const errors = useStore(field.store, (state) => state.meta.errors)
 
   return (
-    <div>
-      <Label htmlFor={label} className="mb-2 text-xl font-bold">
+    <div className={className}>
+      <Label
+        htmlFor={label}
+        className={cn('mb-2 text-xl font-bold', labelHidden ? 'sr-only' : '')}
+      >
         {label}
       </Label>
       <Input

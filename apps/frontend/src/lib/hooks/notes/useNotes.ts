@@ -56,6 +56,6 @@ export function useNotes() {
   return useLiveQuery((q) =>
     q
       .from({ notes: notesCollection })
-      .orderBy(({ notes }) => notes.createdAt, 'desc'),
+      .orderBy(({ notes }) => notes.createdAt, 'asc'),
   )
 }
