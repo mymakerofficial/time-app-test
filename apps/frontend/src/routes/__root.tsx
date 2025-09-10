@@ -1,11 +1,16 @@
-import {createRootRouteWithContext, HeadContent, Scripts} from '@tanstack/react-router'
-import {TanStackRouterDevtools} from '@tanstack/react-router-devtools'
+import {
+  createRootRouteWithContext,
+  HeadContent,
+  Scripts,
+} from '@tanstack/react-router'
+import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
 
 import TanStackQueryLayout from '../integrations/tanstack-query/layout.tsx'
 
 import appCss from '../styles.css?url'
 
-import type {QueryClient} from '@tanstack/react-query'
+import type { QueryClient } from '@tanstack/react-query'
+import { DefaultErrorBoundary } from '@/lib/components/ErrorBoundary.tsx'
 
 interface MyRouterContext {
   queryClient: QueryClient
@@ -32,7 +37,6 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
       },
     ],
   }),
-
   shellComponent: RootDocument,
 })
 
@@ -43,7 +47,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body>
-        {children}
+        <DefaultErrorBoundary>{children}</DefaultErrorBoundary>
         <TanStackRouterDevtools />
         <TanStackQueryLayout />
         <Scripts />

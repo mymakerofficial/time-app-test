@@ -1,7 +1,7 @@
 import { useMutation } from '@tanstack/react-query'
 import { RegisterFormValues } from '@/lib/schema/form.ts'
 import { useLogin } from '@/lib/hooks/auth/useLogin.ts'
-import { useAuth } from '@/lib/auth/auth.ts'
+import { useAuth } from '@/lib/application/auth/auth.ts'
 
 export function useRegister({
   onSuccess,

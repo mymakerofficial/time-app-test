@@ -1,9 +1,12 @@
 import { AuthMethod } from '@time-app-test/shared/model/domain/auth.ts'
-import { SrpStrategy } from '@/lib/auth/srpStrategy.ts'
-import { PasskeyStrategy } from '@/lib/auth/passkeyStrategy.ts'
-import { AuthApi, useAuthApi } from '@/lib/auth/api.ts'
-import { AuthStrategy } from '@/lib/auth/authStrategy.ts'
-import { SessionContext, useSession } from '@/lib/authStore.ts'
+import { SrpStrategy } from '@/lib/application/auth/srpStrategy.ts'
+import { PasskeyStrategy } from '@/lib/application/auth/passkeyStrategy.ts'
+import { AuthApi, useAuthApi } from '@/lib/application/auth/api.ts'
+import { AuthStrategy } from '@/lib/application/auth/authStrategy.ts'
+import {
+  SessionContext,
+  useSession,
+} from '@/lib/application/session/sessionStore.ts'
 
 export class AuthBase {
   protected api: AuthApi

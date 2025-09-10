@@ -1,4 +1,5 @@
 import { Store } from '@tanstack/store'
+import { SessionNotSet } from '@time-app-test/shared/error/errors.ts'
 
 interface SessionStore {
   accessToken: string | null
@@ -30,7 +31,7 @@ export function useSetSession() {
 function getAccessToken() {
   const accessToken = store.state.accessToken
   if (!accessToken) {
-    throw new Error('Access token is not set')
+    throw SessionNotSet()
   }
   return accessToken
 }
@@ -38,7 +39,7 @@ function getAccessToken() {
 function getUserId() {
   const userId = store.state.userId
   if (!userId) {
-    throw new Error('User is not set')
+    throw SessionNotSet()
   }
   return userId
 }
@@ -46,13 +47,12 @@ function getUserId() {
 function getEncryptionKey() {
   const encryptionKey = store.state.encryptionKey
   if (!encryptionKey) {
-    throw new Error('Encryption key is not set')
+    throw SessionNotSet()
   }
   return encryptionKey
 }
 
 export function useSession(): SessionContext {
-  // TODO if access token is not set we need to refresh it
   return {
     getAccessToken,
     getUserId,

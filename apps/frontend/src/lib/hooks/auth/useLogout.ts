@@ -1,6 +1,9 @@
-import { useSetSession } from '@/lib/authStore.ts'
-import { useMutation } from '@tanstack/react-query'
-import { useAuth } from '@/lib/auth/auth.ts'
+import {
+  useSession,
+  useSetSession,
+} from '@/lib/application/session/sessionStore.ts'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useAuth } from '@/lib/application/auth/auth.ts'
 
 export function useLogout() {
   const setSession = useSetSession()
@@ -9,9 +12,8 @@ export function useLogout() {
   return useMutation({
     mutationKey: ['auth', 'logout'],
     mutationFn: async () => {
-      await auth.logout()
-    },
-    onSuccess: async () => {
+      await auth.logout().catch()
+
       setSession({
         accessToken: null,
         userId: null,

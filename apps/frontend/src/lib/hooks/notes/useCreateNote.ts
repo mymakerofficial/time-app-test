@@ -1,7 +1,7 @@
 import { nanoid } from 'nanoid'
 import { Note, SyncStatus } from '@time-app-test/shared/model/domain/notes.ts'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useSession, useEncryptionKey } from '@/lib/authStore.ts'
+import { useSession } from '@/lib/application/session/sessionStore.ts'
 import { CreateNoteBodySchema } from '@time-app-test/shared/model/rest/notes.ts'
 import { str2ab, uint8ToHex } from '@time-app-test/shared/helper/binary.ts'
 import { Crypt } from '@time-app-test/shared/helper/crypt.ts'
