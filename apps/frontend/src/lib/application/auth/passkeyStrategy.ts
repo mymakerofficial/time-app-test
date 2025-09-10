@@ -1,4 +1,7 @@
-import { AuthStrategy, LoginResult } from '@/lib/auth/authStrategy.ts'
+import {
+  AuthStrategy,
+  LoginResult,
+} from '@/lib/application/auth/authStrategy.ts'
 import {
   AddAuthFormValues,
   LoginFormValues,

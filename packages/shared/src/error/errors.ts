@@ -106,6 +106,12 @@ export const UnexpectedError = createError('UNEXPECTED_ERROR', {
   message: 'Something went wrong.',
 })
 
+export const SessionNotSet = createError('SESSION_NOT_SET', {
+  statusCode: HttpStatusCode.UNAUTHORIZED,
+  message:
+    'Tried to access a resource that requires authentication but no session was set.',
+})
+
 export const PathNotFound = createError('PATH_NOT_FOUND', {
   statusCode: HttpStatusCode.NOT_FOUND,
   message: 'The requested route does not exist.',

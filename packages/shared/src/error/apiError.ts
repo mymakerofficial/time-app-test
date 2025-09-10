@@ -1,5 +1,6 @@
 import { ApiErrorResponse } from '@/error/schema.ts'
 import { HttpStatusCode } from '@/api/httpStatusCode.ts'
+import { UnexpectedError } from '@/error/errors.ts'
 
 type CreateApiErrorOptions<
   TErrorCode extends string,
@@ -37,6 +38,20 @@ export class ApiError<
     this.statusCode = options?.statusCode
     this.parameters = options?.parameters ?? ({} as TParameters)
     this.path = options?.path
+  }
+
+  static from(error: unknown) {
+    if (error instanceof ApiError) {
+      return error
+    } else if (error instanceof Error) {
+      return new ApiError(error.message, {
+        errorCode: error.name,
+        statusCode: 500,
+        cause: error,
+      })
+    } else {
+      return UnexpectedError()
+    }
   }
 
   withPath(path: string) {

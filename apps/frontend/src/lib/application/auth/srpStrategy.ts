@@ -1,4 +1,7 @@
-import { AuthStrategy, LoginResult } from '@/lib/auth/authStrategy.ts'
+import {
+  AuthStrategy,
+  LoginResult,
+} from '@/lib/application/auth/authStrategy.ts'
 import * as srp from 'secure-remote-password/client'
 import { AuthMethod } from '@time-app-test/shared/model/domain/auth.ts'
 import { AuthMethodDidNotMatch } from '@time-app-test/shared/error/errors.ts'

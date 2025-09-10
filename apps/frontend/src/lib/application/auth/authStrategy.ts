@@ -1,4 +1,4 @@
-import { AuthApi } from '@/lib/auth/api.ts'
+import { AuthApi } from '@/lib/application/auth/api.ts'
 import {
   AddAuthFormValues,
   LoginFormValues,
@@ -6,7 +6,7 @@ import {
 } from '@/lib/schema/form.ts'
 import { Crypt } from '@time-app-test/shared/helper/crypt.ts'
 import { hexToUint8 } from '@time-app-test/shared/helper/binary.ts'
-import { SessionContext } from '@/lib/authStore.ts'
+import { SessionContext } from '@/lib/application/session/sessionStore.ts'
 
 export interface LoginResult {
   accessToken: string
