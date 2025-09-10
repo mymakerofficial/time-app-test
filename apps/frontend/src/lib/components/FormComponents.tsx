@@ -9,16 +9,21 @@ import * as ShadcnSelect from './ui/select.tsx'
 import { Slider as ShadcnSlider } from './ui/slider.tsx'
 import { Switch as ShadcnSwitch } from './ui/switch.tsx'
 import { Label } from './ui/label.tsx'
-import { HTMLInputAutoCompleteAttribute } from 'react'
+import { HTMLInputAutoCompleteAttribute, ReactNode } from 'react'
 import { cn } from '@/lib/utils.ts'
-import { ClassNameValue } from 'tailwind-merge'
 
-export function SubscribeButton({ label }: { label: string }) {
+export function SubscribeButton({
+  label,
+  disabled = false,
+}: {
+  label: string | ReactNode
+  disabled?: boolean
+}) {
   const form = useFormContext()
   return (
     <form.Subscribe selector={(state) => state.isSubmitting}>
       {(isSubmitting) => (
-        <Button type="submit" disabled={isSubmitting}>
+        <Button type="submit" disabled={isSubmitting || disabled}>
           {label}
         </Button>
       )}
@@ -49,12 +54,14 @@ export function TextField({
   label,
   labelHidden = false,
   placeholder,
+  disabled = false,
   autoComplete,
   className,
 }: {
   label: string
   labelHidden?: boolean
   placeholder?: string
+  disabled?: boolean
   autoComplete?: HTMLInputAutoCompleteAttribute
   className?: string
 }) {
@@ -73,6 +80,7 @@ export function TextField({
         value={field.state.value}
         placeholder={placeholder}
         autoComplete={autoComplete}
+        disabled={disabled}
         onBlur={field.handleBlur}
         onChange={(e) => field.handleChange(e.target.value)}
       />

@@ -11,7 +11,6 @@ export function useRegisterForm({
     defaultValues: {
       username: '',
       password: '',
-      method: AuthMethod.Srp,
     },
     validators: {
       onBlur: RegisterFormSchema,

@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query'
-import { RegisterFormValues } from '@/lib/schema/form.ts'
+import { RegisterFormValues, WithAuthMethod } from '@/lib/schema/form.ts'
 import { useLogin } from '@/lib/hooks/auth/useLogin.ts'
 import { useContainer } from '@/lib/application/container.ts'
 
@@ -15,7 +15,7 @@ export function useRegister({
 
   return useMutation({
     mutationKey: ['auth', 'register'],
-    mutationFn: async (values: RegisterFormValues) => {
+    mutationFn: async (values: WithAuthMethod<RegisterFormValues>) => {
       await authService.getStrategy(values.method).register(values)
     },
     onSuccess: async (_, values) => {

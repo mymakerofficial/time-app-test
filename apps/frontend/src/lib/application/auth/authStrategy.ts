@@ -2,6 +2,7 @@ import {
   AddAuthFormValues,
   LoginFormValues,
   RegisterFormValues,
+  WithAuthMethod,
 } from '@/lib/schema/form.ts'
 import { Crypt } from '@time-app-test/shared/helper/crypt.ts'
 import { hexToUint8 } from '@time-app-test/shared/helper/binary.ts'
@@ -34,7 +35,9 @@ export abstract class AuthStrategy extends BaseService {
     ])
   }
 
-  abstract register(values: RegisterFormValues): Promise<void>
-  abstract addAuthenticator(values: AddAuthFormValues): Promise<void>
-  abstract login(values: LoginFormValues): Promise<LoginResult>
+  abstract register(values: WithAuthMethod<RegisterFormValues>): Promise<void>
+  abstract addAuthenticator(
+    values: WithAuthMethod<AddAuthFormValues>,
+  ): Promise<void>
+  abstract login(values: WithAuthMethod<LoginFormValues>): Promise<LoginResult>
 }

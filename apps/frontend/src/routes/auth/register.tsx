@@ -16,7 +16,11 @@ function RouteComponent() {
       }),
   })
   const form = useRegisterForm({
-    onSubmit: register,
+    onSubmit: (values) =>
+      register({
+        ...values,
+        method: values.password.length ? AuthMethod.Srp : AuthMethod.Passkey,
+      }),
   })
 
   return (
@@ -33,28 +37,21 @@ function RouteComponent() {
           {(field) => <field.TextField label="Username" />}
         </form.AppField>
         <form.AppField name="password">
-          {(field) => <field.TextField label="Password" />}
-        </form.AppField>
-        <form.AppField name="method">
-          {(field) => (
-            <field.Select
-              label="Method"
-              values={[
-                {
-                  value: AuthMethod.Srp,
-                  label: 'Password',
-                },
-                {
-                  value: AuthMethod.Passkey,
-                  label: 'Passkey',
-                },
-              ]}
-            />
-          )}
+          {(field) => <field.TextField label="Password (Optional)" />}
         </form.AppField>
         <div className="flex items-center space-x-3">
           <form.AppForm>
-            <form.SubscribeButton label="Register" />
+            <form.Subscribe>
+              {({ values }) => (
+                <form.SubscribeButton
+                  label={
+                    values.password.length
+                      ? 'Register with Password'
+                      : 'Register with Passkey'
+                  }
+                />
+              )}
+            </form.Subscribe>
           </form.AppForm>
           <Link to="/auth/login" className="text-blue-500 hover:underline">
             Login

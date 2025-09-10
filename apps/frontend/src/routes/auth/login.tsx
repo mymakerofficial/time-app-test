@@ -13,7 +13,11 @@ function RouteComponent() {
     onSuccess: () => navigate({ to: '/' }),
   })
   const form = useLoginForm({
-    onSubmit: login,
+    onSubmit: (values) =>
+      login({
+        ...values,
+        method: values.password.length ? AuthMethod.Srp : AuthMethod.Passkey,
+      }),
   })
 
   return (
@@ -28,40 +32,30 @@ function RouteComponent() {
       >
         <form.AppField name="username">
           {(field) => (
-            <field.TextField
-              label="Username"
-              autoComplete="username webauthn"
-            />
+            <field.TextField label="Username" autoComplete="username" />
           )}
         </form.AppField>
         <form.AppField name="password">
           {(field) => (
             <field.TextField
-              label="Password"
-              autoComplete="current-password webauthn"
-            />
-          )}
-        </form.AppField>
-        <form.AppField name="method">
-          {(field) => (
-            <field.Select
-              label="Method"
-              values={[
-                {
-                  value: AuthMethod.Srp,
-                  label: 'Password',
-                },
-                {
-                  value: AuthMethod.Passkey,
-                  label: 'Passkey',
-                },
-              ]}
+              label="Password (Optional)"
+              autoComplete="current-password"
             />
           )}
         </form.AppField>
         <div className="flex items-center space-x-3">
           <form.AppForm>
-            <form.SubscribeButton label="Login" />
+            <form.Subscribe>
+              {({ values }) => (
+                <form.SubscribeButton
+                  label={
+                    values.password.length
+                      ? 'Login with Password'
+                      : 'Login with Passkey'
+                  }
+                />
+              )}
+            </form.Subscribe>
           </form.AppForm>
           <Link to="/auth/register" className="text-blue-500 hover:underline">
             Register

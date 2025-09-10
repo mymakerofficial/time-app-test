@@ -13,7 +13,11 @@ function RouteComponent() {
     onSuccess: () => navigate({ to: '/' }),
   })
   const form = useAddAuthForm({
-    onSubmit: addAuth,
+    onSubmit: (values) =>
+      addAuth({
+        ...values,
+        method: values.password.length ? AuthMethod.Srp : AuthMethod.Passkey,
+      }),
   })
 
   return (
@@ -27,28 +31,19 @@ function RouteComponent() {
         className="space-y-6"
       >
         <form.AppField name="password">
-          {(field) => <field.TextField label="Password" />}
-        </form.AppField>
-        <form.AppField name="method">
-          {(field) => (
-            <field.Select
-              label="Method"
-              values={[
-                {
-                  value: AuthMethod.Srp,
-                  label: 'Password',
-                },
-                {
-                  value: AuthMethod.Passkey,
-                  label: 'Passkey',
-                },
-              ]}
-            />
-          )}
+          {(field) => <field.TextField label="Password (Optional)" />}
         </form.AppField>
         <div className="flex items-center space-x-3">
           <form.AppForm>
-            <form.SubscribeButton label="Submit" />
+            <form.Subscribe>
+              {({ values }) => (
+                <form.SubscribeButton
+                  label={
+                    values.password.length ? 'Add Password' : 'Add Passkey'
+                  }
+                />
+              )}
+            </form.Subscribe>
           </form.AppForm>
         </div>
       </form>
