@@ -1,11 +1,12 @@
 import { jsonb, pgEnum, pgTable, timestamp, varchar } from 'drizzle-orm/pg-core'
 import { nanoid } from 'nanoid'
 import { UserAuthenticatorDto } from '@time-app-test/shared/model/domain/auth/authenticator.ts'
+import { bytea } from '@/lib/drizzle'
 
 export const users = pgTable('users', {
   id: varchar().primaryKey(),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at')
+  createdAt: timestamp().notNull().defaultNow(),
+  updatedAt: timestamp()
     .notNull()
     .defaultNow()
     .$onUpdate(() => new Date()),
@@ -17,24 +18,36 @@ export const userAuthenticators = pgTable('user_authenticators', {
   id: varchar()
     .primaryKey()
     .$defaultFn(() => nanoid()),
-  userId: varchar('user_id').references(() => users.id),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at')
+  userId: varchar().references(() => users.id, { onDelete: 'cascade' }),
+  createdAt: timestamp().notNull().defaultNow(),
+  updatedAt: timestamp()
     .notNull()
     .defaultNow()
     .$onUpdate(() => new Date()),
   method: authMethodEnum().notNull(),
   data: jsonb().$type<UserAuthenticatorDto>().notNull(),
-  kekSalt: varchar('kek_salt').notNull(),
+  kekSalt: varchar().notNull(),
   dek: varchar().notNull(),
 })
 
 export const notes = pgTable('notes', {
   id: varchar().primaryKey(),
   userId: varchar()
-    .notNull()
-    .references(() => users.id),
-  createdAt: varchar('updated_at').notNull(),
-  updatedAt: varchar('created_at').notNull(),
+    .references(() => users.id, { onDelete: 'cascade' })
+    .notNull(),
+  createdAt: varchar().notNull(),
+  updatedAt: varchar().notNull(),
   message: varchar().notNull(),
+})
+
+export const attachments = pgTable('attachments', {
+  id: varchar().primaryKey(),
+  noteId: varchar()
+    .references(() => notes.id, { onDelete: 'cascade' })
+    .notNull(),
+  createdAt: varchar().notNull(),
+  updatedAt: varchar().notNull(),
+  filename: varchar().notNull(),
+  mimeType: varchar().notNull(),
+  content: bytea().notNull(),
 })

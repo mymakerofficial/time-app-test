@@ -1,8 +1,5 @@
 import { BaseService } from '@/lib/application/base/baseService.ts'
-import {
-  SessionContext,
-  useSession,
-} from '@/lib/application/session/sessionStore.ts'
+import { SessionContext } from '@/lib/application/session/sessionStore.ts'
 import { NotesApi } from '@/lib/application/notes/api.ts'
 import {
   ab2str,
@@ -61,6 +58,13 @@ export class NotesService extends BaseService {
           syncStatus: SyncStatus.Synced,
           deleted: false,
           message: await transformer.decode(it.message),
+          attachments: await Promise.all(
+            it.attachments.map(async (att) => ({
+              id: att.id,
+              filename: await transformer.decode(att.filename),
+              mimeType: att.mimeType,
+            })),
+          ),
         }),
       ),
     )
@@ -75,9 +79,4 @@ export class NotesService extends BaseService {
       message: await transformer.encode(note.message),
     })
   }
-}
-
-export function useNotesService() {
-  const session = useSession()
-  return new NotesService(new NotesApi(session), session)
 }

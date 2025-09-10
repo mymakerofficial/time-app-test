@@ -15,6 +15,7 @@ export function useCreateNote() {
       syncStatus: SyncStatus.Pending,
       deleted: false,
       message,
+      attachments: [],
     })
   }
 }

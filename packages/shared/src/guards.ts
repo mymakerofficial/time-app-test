@@ -39,3 +39,7 @@ export function isNumber(value: unknown): value is number {
 export function isArray<T>(value: unknown): value is T[] {
   return Array.isArray(value)
 }
+
+export function isObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}

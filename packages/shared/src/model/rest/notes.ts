@@ -1,9 +1,13 @@
-import { EncryptedNoteDtoSchema } from '@/model/domain/notes.ts'
+import {
+  EncryptedNoteDtoSchema,
+  EncryptedNoteWithAttachmentsMetaDtoSchema,
+} from '@/model/domain/notes.ts'
 import z from 'zod'
 
-export const GetAllNotesResponseSchema = EncryptedNoteDtoSchema.omit({
-  userId: true,
-}).array()
+export const GetAllNotesResponseSchema =
+  EncryptedNoteWithAttachmentsMetaDtoSchema.omit({
+    userId: true,
+  }).array()
 
 export const CreateNoteBodySchema = EncryptedNoteDtoSchema.omit({
   userId: true,

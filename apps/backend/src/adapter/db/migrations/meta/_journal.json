@@ -43,6 +43,20 @@
       "when": 1756992050306,
       "tag": "0005_legal_king_bedlam",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1757521857338,
+      "tag": "0006_lying_thanos",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1757525678161,
+      "tag": "0007_exotic_wendigo",
+      "breakpoints": true
     }
   ]
 }

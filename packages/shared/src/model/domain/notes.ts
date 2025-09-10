@@ -14,6 +14,23 @@ export const NoteIdSchema = z.nanoid().meta({
 export const NoteMessageSchema = z.string().min(1)
 export const EntitySyncStatusSchema = z.enum(SyncStatus)
 
+export const AttachmentIdSchema = z.nanoid().meta({
+  description: 'Unique identifier for an attachment',
+  examples: Array.from({ length: 4 }, () => nanoid()),
+})
+
+export const EncryptedAttachmentMetadataDtoSchema = z.object({
+  id: AttachmentIdSchema,
+  filename: z.hex(),
+  mimeType: z.string(),
+})
+
+export const AttachmentMetadataDtoSchema = z.object({
+  id: AttachmentIdSchema,
+  filename: z.string().min(1),
+  mimeType: z.string(),
+})
+
 export const EncryptedNoteDtoSchema = z.object({
   id: NoteIdSchema,
   userId: UserIdSchema,
@@ -23,6 +40,14 @@ export const EncryptedNoteDtoSchema = z.object({
 })
 export type EncryptedNoteDto = z.Infer<typeof EncryptedNoteDtoSchema>
 
+export const EncryptedNoteWithAttachmentsMetaDtoSchema =
+  EncryptedNoteDtoSchema.extend({
+    attachments: EncryptedAttachmentMetadataDtoSchema.array(),
+  })
+export type EncryptedNoteWithAttachmentsMetaDto = z.Infer<
+  typeof EncryptedNoteWithAttachmentsMetaDtoSchema
+>
+
 export const LocalNoteDtoSchema = z.object({
   id: NoteIdSchema,
   userId: UserIdSchema,
@@ -31,5 +56,6 @@ export const LocalNoteDtoSchema = z.object({
   syncStatus: EntitySyncStatusSchema,
   deleted: z.boolean().default(false),
   message: NoteMessageSchema,
+  attachments: AttachmentMetadataDtoSchema.array(),
 })
 export type LocalNoteDto = z.Infer<typeof LocalNoteDtoSchema>

@@ -18,8 +18,11 @@ export function NotesView({ className }: { className?: string }) {
     <div className={cn('overflow-y-auto', className)} ref={containerRef}>
       <div className="max-w-2xl mx-auto my-10 p-6 space-y-6">
         {notes.map((note) => (
-          <div key={note.id} className="p-4 rounded bg-accent">
-            <div className="flex gap-1 mb-2 text-xs text-muted-foreground">
+          <div
+            key={note.id}
+            className="p-4 rounded bg-accent flex flex-col gap-2"
+          >
+            <div className="flex gap-1 text-xs text-muted-foreground">
               <span>{note.createdAt.toLocaleString()}</span>
               {note.updatedAt.getTime() !== note.createdAt.getTime() && (
                 <span>(edited {note.updatedAt.toLocaleString()})</span>
@@ -34,6 +37,15 @@ export function NotesView({ className }: { className?: string }) {
               </span>
             </div>
             <p>{note.message}</p>
+            <div className="flex gap-1">
+              {note.attachments.map((attachment) => (
+                <div key={attachment.id}>
+                  <p className="text-blue-500 text-sm">
+                    Attachment ({attachment.filename} - {attachment.mimeType})
+                  </p>
+                </div>
+              ))}
+            </div>
           </div>
         ))}
       </div>
