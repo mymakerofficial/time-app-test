@@ -1,14 +1,11 @@
 import { useMutation } from '@tanstack/react-query'
-import { useNavigate } from '@tanstack/react-router'
-import { useLogout } from './useLogout.ts'
-import { ApiError } from '@time-app-test/shared/error/apiError.ts'
 import { NotImplemented } from '@time-app-test/shared/error/errors.ts'
+import { useHandleMutationAuthError } from '@/lib/hooks/helpers/authQuery.ts'
 
 export function useGetToken() {
-  const navigate = useNavigate()
   // const auth = useAuth()
   // const setSession = useSetSession()
-  const { mutateAsync: logout } = useLogout()
+  const handleAuthError = useHandleMutationAuthError()
 
   return useMutation({
     mutationKey: ['auth', 'get-token'],
@@ -18,11 +15,6 @@ export function useGetToken() {
       // const { accessToken } = await auth.getToken()
       // setSession({ accessToken })
     },
-    onError: async (error) => {
-      if (error instanceof ApiError && error.statusCode === 401) {
-        await logout()
-        await navigate({ to: '/auth/login' })
-      }
-    },
+    onError: handleAuthError(),
   })
 }

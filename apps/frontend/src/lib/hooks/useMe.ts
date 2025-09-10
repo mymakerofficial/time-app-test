@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { useSession } from '../authStore.ts'
+import { useSession } from '../application/session/sessionStore.ts'
 import { getResponseBody } from '@time-app-test/shared/fetch/response.ts'
 import { GetUsersMeResponse } from '@time-app-test/shared/model/rest/user.ts'
 

@@ -1,7 +1,7 @@
 import { useMutation } from '@tanstack/react-query'
 import { LoginFormValues } from '@/lib/schema/form.ts'
-import { useSetSession } from '@/lib/authStore.ts'
-import { useAuth } from '@/lib/auth/auth.ts'
+import { useSetSession } from '@/lib/application/session/sessionStore.ts'
+import { useAuth } from '@/lib/application/auth/auth.ts'
 
 export function useLogin({
   onSuccess,

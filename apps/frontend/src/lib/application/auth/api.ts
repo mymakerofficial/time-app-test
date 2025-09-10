@@ -18,7 +18,10 @@ import {
   RegisterStartResponseSchema,
 } from '@time-app-test/shared/model/rest/auth.ts'
 import { getResponseBody } from '@time-app-test/shared/fetch/response.ts'
-import { SessionContext, useSession } from '@/lib/authStore.ts'
+import {
+  SessionContext,
+  useSession,
+} from '@/lib/application/session/sessionStore.ts'
 
 export class AuthApi {
   private readonly getAccessToken: () => string
