@@ -27,7 +27,12 @@ function createContainer() {
           'postgres://postgres_user:password@localhost:5432/postgres_db',
       })
       const client = await pool.connect()
-      return drizzle({ client, schema, casing: 'snake_case' }) as DB
+      return drizzle({
+        client,
+        schema,
+        casing: 'snake_case',
+        logger: true,
+      }) as DB
     })
     .add('redis', async () => {
       return (await createClient({
