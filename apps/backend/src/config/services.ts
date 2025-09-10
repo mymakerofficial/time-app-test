@@ -4,12 +4,10 @@ import { Container } from '@time-app-test/shared/helper/container.ts'
 import { Pool } from 'pg'
 import { drizzle } from '@/lib/drizzle.ts'
 import * as schema from '@/adapter/db/schema/schema.ts'
-import { TimeEntriesService } from '@/application/service/timeEntriesService.ts'
 import { TokenService } from '@/application/service/tokenService.ts'
 import { createClient } from 'redis'
 import { RedisAuthCache } from '@/adapter/redis/auth/authCache.ts'
 import { UserPersistence } from '@/adapter/db/persistence/userPersistence.ts'
-import { TimeEntriesPersistence } from '@/adapter/db/persistence/timeEntriesPersistence.ts'
 import { AuthPersistence } from '@/adapter/db/persistence/authPersistence.ts'
 import { NotesPersistence } from '@/adapter/db/persistence/notesPersistence.ts'
 import { NotesService } from '@/application/service/notesService.ts'
@@ -40,14 +38,9 @@ function createContainer() {
     .add('authCache', (container) => new RedisAuthCache(container))
     .add('authPersistence', (container) => new AuthPersistence(container))
     .add('userPersistence', (container) => new UserPersistence(container))
-    .add(
-      'timeEntriesPersistence',
-      (container) => new TimeEntriesPersistence(container),
-    )
     .add('notesPersistence', (container) => new NotesPersistence(container))
     .add('userService', (container) => new UserService(container))
     .add('authService', (container) => new AuthService(container))
-    .add('timeEntriesService', (container) => new TimeEntriesService(container))
     .add('notesService', (container) => new NotesService(container))
 }
 

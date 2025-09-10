@@ -1,11 +1,4 @@
-import {
-  integer,
-  jsonb,
-  pgEnum,
-  pgTable,
-  timestamp,
-  varchar,
-} from 'drizzle-orm/pg-core'
+import { jsonb, pgEnum, pgTable, timestamp, varchar } from 'drizzle-orm/pg-core'
 import { nanoid } from 'nanoid'
 import { UserAuthenticatorDto } from '@time-app-test/shared/model/domain/auth/authenticator.ts'
 
@@ -43,18 +36,5 @@ export const notes = pgTable('notes', {
     .references(() => users.id),
   createdAt: varchar('updated_at').notNull(),
   updatedAt: varchar('created_at').notNull(),
-  message: varchar().notNull(),
-})
-
-export const timeEntries = pgTable('time_entries', {
-  id: varchar().primaryKey(),
-  userId: varchar()
-    .notNull()
-    .references(() => users.id),
-  createdAt: varchar('updated_at').notNull(),
-  updatedAt: varchar('updated_at').notNull(),
-  lookupKey: integer('lookup_key').notNull(),
-  startedAt: varchar('updated_at').notNull(),
-  endedAt: varchar('ended_at'),
   message: varchar().notNull(),
 })
