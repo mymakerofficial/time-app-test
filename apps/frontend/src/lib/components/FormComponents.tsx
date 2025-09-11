@@ -9,7 +9,12 @@ import * as ShadcnSelect from './ui/select.tsx'
 import { Slider as ShadcnSlider } from './ui/slider.tsx'
 import { Switch as ShadcnSwitch } from './ui/switch.tsx'
 import { Label } from './ui/label.tsx'
-import { HTMLInputAutoCompleteAttribute, ReactNode } from 'react'
+import {
+  ChangeEvent,
+  HTMLInputAutoCompleteAttribute,
+  ReactNode,
+  useRef,
+} from 'react'
 import { cn } from '@/lib/utils.ts'
 
 export function SubscribeButton({
@@ -84,6 +89,50 @@ export function TextField({
         onBlur={field.handleBlur}
         onChange={(e) => field.handleChange(e.target.value)}
       />
+      {field.state.meta.isTouched && <ErrorMessages errors={errors} />}
+    </div>
+  )
+}
+
+export function FileField({
+  label,
+  className,
+}: {
+  label: string | ReactNode
+  className?: string
+}) {
+  const field = useFieldContext<File[]>()
+  const errors = useStore(field.store, (state) => state.meta.errors)
+
+  const inputRef = useRef<HTMLInputElement>(null)
+  const inputId = `file-input-${field.name}`
+
+  function handleButtonClick() {
+    if (inputRef.current) {
+      inputRef.current.click()
+    }
+  }
+
+  function handleInputChange(event: ChangeEvent<HTMLInputElement>) {
+    if (event.target.files?.length) {
+      field.setValue([...field.state.value, ...event.target.files])
+      event.target.value = ''
+    }
+  }
+
+  return (
+    <div className={className}>
+      <Button onClick={handleButtonClick} variant="secondary">
+        <Label htmlFor={inputId}>{label}</Label>
+      </Button>
+      <input
+        ref={inputRef}
+        id={inputId}
+        type="file"
+        multiple
+        onChange={handleInputChange}
+        className="hidden"
+      ></input>
       {field.state.meta.isTouched && <ErrorMessages errors={errors} />}
     </div>
   )

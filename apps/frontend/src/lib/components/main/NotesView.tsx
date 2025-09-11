@@ -29,10 +29,10 @@ export function NotesView({ className }: { className?: string }) {
               )}
               <span className="ml-auto">
                 {note.syncStatus === SyncStatus.Pending && (
-                  <LoaderCircleIcon className="animate-spin text-orange-400 size-4" />
+                  <LoaderCircleIcon className="animate-spin text-orange-300 size-4" />
                 )}
                 {note.syncStatus === SyncStatus.Synced && (
-                  <CheckIcon className="text-green-700 size-4" />
+                  <CheckIcon className="text-green-500 size-4" />
                 )}
               </span>
             </div>
