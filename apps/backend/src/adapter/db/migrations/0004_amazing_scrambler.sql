@@ -1,1 +1,0 @@
-ALTER TABLE "notes" ADD COLUMN "created_at" varchar NOT NULL;

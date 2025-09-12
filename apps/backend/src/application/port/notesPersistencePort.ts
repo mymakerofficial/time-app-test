@@ -6,4 +6,5 @@ import {
 export interface NotesPersistencePort {
   getAll(userId: string): Promise<EncryptedNoteWithAttachmentsMetaDto[]>
   createNote(note: EncryptedNoteDto): Promise<void>
+  addAttachmentToNote(noteId: string, attachmentId: string): Promise<void>
 }

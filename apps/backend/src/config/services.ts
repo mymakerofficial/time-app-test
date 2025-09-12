@@ -14,6 +14,8 @@ import { NotesService } from '@/application/service/notesService.ts'
 import { NodePgDatabase } from 'drizzle-orm/node-postgres'
 import { Readable } from 'node:stream'
 import { UserService } from '@/application/service/userService.ts'
+import { AttachmentsPersistence } from '@/adapter/db/persistence/attachmentsPersistence'
+import { AttachmentsService } from '@/application/service/attachmentsService.ts'
 
 export type DB = NodePgDatabase<typeof schema> & { $client: Pool } & {
   queryStream: <T>(query: T) => Readable
@@ -44,9 +46,14 @@ function createContainer() {
     .add('authPersistence', (container) => new AuthPersistence(container))
     .add('userPersistence', (container) => new UserPersistence(container))
     .add('notesPersistence', (container) => new NotesPersistence(container))
+    .add(
+      'attachmentsPersistence',
+      (container) => new AttachmentsPersistence(container),
+    )
     .add('userService', (container) => new UserService(container))
     .add('authService', (container) => new AuthService(container))
     .add('notesService', (container) => new NotesService(container))
+    .add('attachmentsService', (container) => new AttachmentsService(container))
 }
 
 export const servicesPlugin = new Elysia({ name: 'services' }).decorate(

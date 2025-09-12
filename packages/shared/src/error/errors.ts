@@ -205,3 +205,11 @@ export const PasskeyPrfNotSupported = createError('PASSKEY_PRF_NOT_SUPPORTED', {
   message:
     'The provided Passkey does not support PRF. No encryption is possible and account creation was aborted. Please try another Passkey or use Password based authentication.',
 })
+export const AttachmentNotFoundById = createError(
+  'ATTACHMENT_NOT_FOUND_BY_ID',
+  {
+    statusCode: HttpStatusCode.NOT_FOUND,
+    parameters: z.object({ id: z.string() }),
+    message: ({ id }) => `Attachment with id '${id}' does not exist.`,
+  },
+)

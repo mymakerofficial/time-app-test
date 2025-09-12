@@ -10,6 +10,7 @@ import {
 import { DrizzleQueryError } from 'drizzle-orm/errors'
 import { notesController } from '@/adapter/rest/controller/notesController.ts'
 import { ZodError } from 'zod'
+import { attachmentsController } from '@/adapter/rest/controller/attachmentsController.ts'
 
 export const apiController = new Elysia({ prefix: '/api' })
   .error({
@@ -56,3 +57,4 @@ export const apiController = new Elysia({ prefix: '/api' })
   .use(authController)
   .use(usersController)
   .use(notesController)
+  .use(attachmentsController)

@@ -1,7 +1,14 @@
-import { jsonb, pgEnum, pgTable, timestamp, varchar } from 'drizzle-orm/pg-core'
+import {
+  jsonb,
+  pgEnum,
+  pgTable,
+  primaryKey,
+  timestamp,
+  varchar,
+} from 'drizzle-orm/pg-core'
 import { nanoid } from 'nanoid'
 import { UserAuthenticatorDto } from '@time-app-test/shared/model/domain/auth/authenticator.ts'
-import { bytea } from '@/lib/drizzle'
+import { bytea, byteaToHex } from '@/lib/drizzle'
 
 export const users = pgTable('users', {
   id: varchar().primaryKey(),
@@ -42,12 +49,28 @@ export const notes = pgTable('notes', {
 
 export const attachments = pgTable('attachments', {
   id: varchar().primaryKey(),
-  noteId: varchar()
-    .references(() => notes.id, { onDelete: 'cascade' })
+  userId: varchar()
+    .references(() => users.id, { onDelete: 'cascade' })
     .notNull(),
-  createdAt: varchar().notNull(),
-  updatedAt: varchar().notNull(),
-  filename: varchar().notNull(),
+  createdAt: timestamp().notNull().defaultNow(),
+  updatedAt: timestamp()
+    .notNull()
+    .defaultNow()
+    .$onUpdate(() => new Date()),
+  filename: byteaToHex().notNull(),
   mimeType: varchar().notNull(),
   content: bytea().notNull(),
 })
+
+export const noteAttachments = pgTable(
+  'note_attachments',
+  {
+    noteId: varchar()
+      .references(() => notes.id, { onDelete: 'cascade' })
+      .notNull(),
+    attachmentId: varchar()
+      .references(() => attachments.id, { onDelete: 'cascade' })
+      .notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.noteId, t.attachmentId] })],
+)

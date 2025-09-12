@@ -77,6 +77,7 @@ export class NotesService extends BaseService {
       createdAt: await transformer.encode(note.createdAt.toISOString()),
       updatedAt: await transformer.encode(note.updatedAt.toISOString()),
       message: await transformer.encode(note.message),
+      attachments: note.attachments.map((att) => att.id),
     })
   }
 }

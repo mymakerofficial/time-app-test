@@ -2,6 +2,7 @@ import z from 'zod'
 import { uint8ToHex } from '@/helper/binary.ts'
 
 export const uInt8Array = () => z.instanceof(Uint8Array)
+export const blob = () => z.instanceof(Blob)
 
 export const stringToDate = z.codec(
   z.iso.datetime(), // input schema: ISO date string

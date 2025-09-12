@@ -5,57 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1756189929405,
-      "tag": "0000_wakeful_slapstick",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1756235892188,
-      "tag": "0001_careless_enchantress",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1756237667750,
-      "tag": "0002_conscious_bushwacker",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1756321171335,
-      "tag": "0003_bent_red_ghost",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1756386207192,
-      "tag": "0004_amazing_scrambler",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "7",
-      "when": 1756992050306,
-      "tag": "0005_legal_king_bedlam",
-      "breakpoints": true
-    },
-    {
-      "idx": 6,
-      "version": "7",
-      "when": 1757521857338,
-      "tag": "0006_lying_thanos",
-      "breakpoints": true
-    },
-    {
-      "idx": 7,
-      "version": "7",
-      "when": 1757525678161,
-      "tag": "0007_exotic_wendigo",
+      "when": 1757658970766,
+      "tag": "0000_warm_miracleman",
       "breakpoints": true
     }
   ]

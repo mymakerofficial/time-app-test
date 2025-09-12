@@ -1,6 +1,7 @@
 import z from 'zod'
 import { nanoid } from 'nanoid'
 import { UserIdSchema } from '@/model/domain/user.ts'
+import { Attachments } from '@/model/domain/attachments.ts'
 
 export const SyncStatus = {
   Pending: 'pending',
@@ -14,23 +15,6 @@ export const NoteIdSchema = z.nanoid().meta({
 export const NoteMessageSchema = z.string().min(1)
 export const EntitySyncStatusSchema = z.enum(SyncStatus)
 
-export const AttachmentIdSchema = z.nanoid().meta({
-  description: 'Unique identifier for an attachment',
-  examples: Array.from({ length: 4 }, () => nanoid()),
-})
-
-export const EncryptedAttachmentMetadataDtoSchema = z.object({
-  id: AttachmentIdSchema,
-  filename: z.hex(),
-  mimeType: z.string(),
-})
-
-export const AttachmentMetadataDtoSchema = z.object({
-  id: AttachmentIdSchema,
-  filename: z.string().min(1),
-  mimeType: z.string(),
-})
-
 export const EncryptedNoteDtoSchema = z.object({
   id: NoteIdSchema,
   userId: UserIdSchema,
@@ -40,9 +24,17 @@ export const EncryptedNoteDtoSchema = z.object({
 })
 export type EncryptedNoteDto = z.Infer<typeof EncryptedNoteDtoSchema>
 
+export const EncryptedNoteWithAttachmentIdsDtoSchema =
+  EncryptedNoteDtoSchema.extend({
+    attachments: Attachments.IdSchema.array(),
+  })
+export type EncryptedNoteWithAttachmentIdsDto = z.Infer<
+  typeof EncryptedNoteWithAttachmentIdsDtoSchema
+>
+
 export const EncryptedNoteWithAttachmentsMetaDtoSchema =
   EncryptedNoteDtoSchema.extend({
-    attachments: EncryptedAttachmentMetadataDtoSchema.array(),
+    attachments: Attachments.EncryptedMetadataDtoSchema.array(),
   })
 export type EncryptedNoteWithAttachmentsMetaDto = z.Infer<
   typeof EncryptedNoteWithAttachmentsMetaDtoSchema
@@ -56,6 +48,6 @@ export const LocalNoteDtoSchema = z.object({
   syncStatus: EntitySyncStatusSchema,
   deleted: z.boolean().default(false),
   message: NoteMessageSchema,
-  attachments: AttachmentMetadataDtoSchema.array(),
+  attachments: Attachments.MetadataDtoSchema.array(),
 })
 export type LocalNoteDto = z.Infer<typeof LocalNoteDtoSchema>
