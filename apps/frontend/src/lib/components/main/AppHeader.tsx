@@ -9,7 +9,7 @@ export function AppHeader() {
   const { mutate: logout } = useLogout()
 
   return (
-    <nav className="flex min-h-16 items-center justify-between px-6 border-b border-accent">
+    <nav className="flex h-16 min-h-16 items-center justify-between px-6 border-b border-accent">
       <div className="flex gap-3 items-center">
         <UserIcon />
         <h1 aria-label="Username" className="font-bold">
