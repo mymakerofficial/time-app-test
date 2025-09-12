@@ -35,14 +35,6 @@ function mapColumn<K extends string, C extends Column>(
   col: C,
 ): GetColumnData<C> {
   if (!hasProperty(item, key)) throw new Error(`Key ${key} not found in item`)
-
-  console.log(
-    'Mapping column',
-    key,
-    col.getSQLType(),
-    item[key],
-    typeof item[key],
-  )
   return col.mapFromDriverValue(item[key])
 }
 
