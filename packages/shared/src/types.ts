@@ -15,3 +15,11 @@ export type Prettify2<T> = {
     ? Prettify<T[K]>
     : T[K]
 } & {}
+
+export type PromiseIf<T, TPromise extends boolean> = TPromise extends true
+  ? Promise<T>
+  : T
+export type NeverIf<T, TNever extends boolean> = TNever extends true ? never : T
+export type NeverIfNot<T, TNever extends boolean> = TNever extends false
+  ? never
+  : T
