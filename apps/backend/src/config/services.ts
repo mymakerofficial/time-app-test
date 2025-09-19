@@ -14,13 +14,9 @@ import { NotesService } from '@/application/service/notesService'
 import { AttachmentsService } from '@/application/service/attachmentsService.ts'
 import { AuthService } from '@/application/service/authService.ts'
 import { UserPersistence } from '@/adapter/db/persistence/userPersistence.ts'
-import {
-  ExtendedDrizzle,
-  ExtendedDrizzleTransaction,
-} from '@/lib/drizzle/types.ts'
+import { ExtendedDatabaseOrTransaction } from '@/lib/drizzle/types.ts'
 
-export type DB = ExtendedDrizzle<typeof schema>
-export type TX = ExtendedDrizzleTransaction<typeof schema>
+export type DB = ExtendedDatabaseOrTransaction<typeof schema>
 
 function createContainer() {
   return new Container()

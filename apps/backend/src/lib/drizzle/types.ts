@@ -29,31 +29,35 @@ export type DatabaseOrTransaction<
   TSchema extends Record<string, unknown> = Record<string, never>,
 > = UniversalPgDatabase<TSchema> | UniversalPgTransaction<TSchema>
 
-export interface DrizzleExtension<
+export interface DatabaseExtensionBase<
   TSchema extends Record<string, unknown> = Record<string, never>,
 > {
   queryStream: <T extends SQLWrapper>(query: T) => Readable
-  createTransaction: () => Promise<ExtendedDrizzleTransaction<TSchema>>
+  createTransaction: () => Promise<ExtendedTransaction<TSchema>>
 }
 
 export type DrizzleWithExtension<
-  TBase extends object,
-  TSchema extends Record<string, unknown> = Record<string, never>,
-> = TBase & DrizzleExtension<TSchema>
+  TSchema extends Record<string, unknown>,
+  TBase extends DatabaseOrTransaction<TSchema>,
+> = TBase & DatabaseExtensionBase<TSchema>
 
-export type ExtendedDrizzle<
+export type ExtendedDatabase<
   TSchema extends Record<string, unknown> = Record<string, never>,
-> = DrizzleWithExtension<UniversalPgDatabase<TSchema>, TSchema>
+> = DrizzleWithExtension<TSchema, UniversalPgDatabase<TSchema>>
 
-export interface DrizzleManualTransactionBase {
+export interface ManualTransactionBase {
   rollback: () => Promise<void>
   commit: () => Promise<void>
 }
 
-export type ExtendedDrizzleTransaction<
+export type ExtendedTransaction<
   TSchema extends Record<string, unknown> = Record<string, never>,
 > = Omit<
-  DrizzleWithExtension<UniversalPgTransaction<TSchema>, TSchema>,
+  DrizzleWithExtension<TSchema, UniversalPgTransaction<TSchema>>,
   'rollback'
 > &
-  DrizzleManualTransactionBase
+  ManualTransactionBase
+
+export type ExtendedDatabaseOrTransaction<
+  TSchema extends Record<string, unknown> = Record<string, never>,
+> = ExtendedDatabase<TSchema> | ExtendedTransaction<TSchema>

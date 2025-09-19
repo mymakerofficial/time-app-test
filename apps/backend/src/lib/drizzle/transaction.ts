@@ -1,12 +1,11 @@
 import {
   DatabaseOrTransaction,
-  DrizzleManualTransactionBase,
-  ExtendedDrizzleTransaction,
+  ExtendedTransaction,
+  ManualTransactionBase,
+  UniversalPgClient,
   UniversalPgTransaction,
 } from '@/lib/drizzle/types.ts'
-import { NodePgClient } from 'drizzle-orm/node-postgres/session'
 import type { DrizzleConfig } from 'drizzle-orm/utils'
-
 import { extendedDrizzleFactory } from '@/lib/drizzle/extension.ts'
 
 export class DrizzleTransactionFactory<
@@ -17,9 +16,9 @@ export class DrizzleTransactionFactory<
     private readonly config: DrizzleConfig<TSchema>,
   ) {}
 
-  async execute(): Promise<ExtendedDrizzleTransaction<TSchema>> {
+  async execute(): Promise<ExtendedTransaction<TSchema>> {
     const base = await new Promise<
-      DrizzleManualTransactionBase & UniversalPgTransaction<TSchema>
+      ManualTransactionBase & UniversalPgTransaction<TSchema>
     >((resolveOuter) => {
       // we need to await this promise later to make sure all is done
       const txPromise = this.drizzle
@@ -48,7 +47,7 @@ export class DrizzleTransactionFactory<
     })
 
     // client is private
-    const client = (base as unknown as { client: NodePgClient }).client
+    const client = (base as unknown as { client: UniversalPgClient }).client
 
     return extendedDrizzleFactory(base, client, this.config)
   }

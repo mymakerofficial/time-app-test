@@ -1,6 +1,6 @@
 import { Pool } from 'pg'
 import type { DrizzleConfig } from 'drizzle-orm/utils'
-import { ExtendedDrizzle } from '@/lib/drizzle/types.ts'
+import { ExtendedDatabase } from '@/lib/drizzle/types.ts'
 import { extendedDrizzleFactory } from '@/lib/drizzle/extension.ts'
 import { PGlite } from '@electric-sql/pglite'
 
@@ -10,7 +10,7 @@ export async function nodeDrizzle<
   config: DrizzleConfig<TSchema> & {
     client: Pool
   },
-): Promise<ExtendedDrizzle<TSchema>> {
+): Promise<ExtendedDatabase<TSchema>> {
   const base = (await import('drizzle-orm/node-postgres')).drizzle(config)
   return extendedDrizzleFactory(base, base.$client, config)
 }
@@ -21,7 +21,7 @@ export async function pgliteDrizzle<
   config: DrizzleConfig<TSchema> & {
     client: PGlite
   },
-): Promise<ExtendedDrizzle<TSchema>> {
+): Promise<ExtendedDatabase<TSchema>> {
   const base = (await import('drizzle-orm/pglite')).drizzle(config)
   return extendedDrizzleFactory(base, base.$client, config)
 }

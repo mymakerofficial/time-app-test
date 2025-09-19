@@ -15,7 +15,7 @@ export function extendedDrizzleFactory<
   base: TBase,
   client: UniversalPgClient,
   config: DrizzleConfig<TSchema>,
-): DrizzleWithExtension<TBase, TSchema> {
+): DrizzleWithExtension<TSchema, TBase> {
   const queryStream = DrizzleQueryStreamFactoryFactory.create(
     client,
     new PgDialect({
