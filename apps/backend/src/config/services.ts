@@ -1,48 +1,52 @@
-import { AuthService } from '@/application/service/authService.ts'
 import { Elysia } from 'elysia'
-import { Container } from '@time-app-test/shared/helper/container.ts'
 import { Pool } from 'pg'
-import { drizzle } from '@/lib/drizzle.ts'
+import { drizzle } from '@/lib/drizzle/drizzle.ts'
 import * as schema from '@/adapter/db/schema/schema.ts'
-import { TokenService } from '@/application/service/tokenService.ts'
+import { Container } from '@time-app-test/shared/helper/container/container.ts'
 import { createClient } from 'redis'
-import { RedisAuthCache } from '@/adapter/redis/auth/authCache.ts'
-import { UserPersistence } from '@/adapter/db/persistence/userPersistence.ts'
-import { AuthPersistence } from '@/adapter/db/persistence/authPersistence.ts'
-import { NotesPersistence } from '@/adapter/db/persistence/notesPersistence.ts'
-import { NotesService } from '@/application/service/notesService.ts'
-import { NodePgDatabase } from 'drizzle-orm/node-postgres'
-import { Readable } from 'node:stream'
-import { UserService } from '@/application/service/userService.ts'
+import { TokenService } from '@/application/service/tokenService'
+import { RedisAuthCache } from '@/adapter/redis/auth/authCache'
+import { AuthPersistence } from '@/adapter/db/persistence/authPersistence'
+import { NotesPersistence } from '@/adapter/db/persistence/notesPersistence'
 import { AttachmentsPersistence } from '@/adapter/db/persistence/attachmentsPersistence'
+import { UserService } from '@/application/service/userService'
+import { NotesService } from '@/application/service/notesService'
 import { AttachmentsService } from '@/application/service/attachmentsService.ts'
+import { AuthService } from '@/application/service/authService.ts'
+import { UserPersistence } from '@/adapter/db/persistence/userPersistence.ts'
+import {
+  ExtendedDrizzle,
+  ExtendedDrizzleTransaction,
+} from '@/lib/drizzle/types.ts'
 
-export type DB = NodePgDatabase<typeof schema> & { $client: Pool } & {
-  queryStream: <T>(query: T) => Readable
-}
+export type DB = ExtendedDrizzle<typeof schema>
+export type TX = ExtendedDrizzleTransaction<typeof schema>
 
 function createContainer() {
   return new Container()
-    .add('db', async () => {
+    .add('config', () => ({
+      pgConnectionString:
+        'postgres://postgres_user:password@localhost:5432/postgres_db',
+      redisConnectionString: 'redis://localhost:6379',
+    }))
+    .add('db', async ({ config }) => {
       const pool = new Pool({
-        connectionString:
-          'postgres://postgres_user:password@localhost:5432/postgres_db',
+        connectionString: config.pgConnectionString,
       })
-      const client = await pool.connect()
       return drizzle({
-        client,
+        client: pool,
         schema,
         casing: 'snake_case',
         logger: true,
-      }) as DB
+      })
     })
-    .add('redis', async () => {
+    .add('redis', async ({ config }) => {
       return (await createClient({
-        url: 'redis://localhost:6379',
+        url: config.redisConnectionString,
       }).connect()) as any // as RedisClientType
     })
-    .add('tokenService', () => new TokenService())
     .add('authCache', (container) => new RedisAuthCache(container))
+    .add('tokenService', () => new TokenService())
     .add('authPersistence', (container) => new AuthPersistence(container))
     .add('userPersistence', (container) => new UserPersistence(container))
     .add('notesPersistence', (container) => new NotesPersistence(container))
