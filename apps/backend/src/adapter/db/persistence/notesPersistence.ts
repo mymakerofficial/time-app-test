@@ -10,7 +10,7 @@ import {
   EncryptedNoteDto,
   EncryptedNoteWithAttachmentsMetaDto,
 } from '@time-app-test/shared/model/domain/notes.ts'
-import { jsonAgg } from '@/lib/drizzleJsonAgg'
+import { jsonAgg } from '@/lib/drizzle/jsonAgg'
 
 export class NotesPersistence implements NotesPersistencePort {
   readonly #db: DB

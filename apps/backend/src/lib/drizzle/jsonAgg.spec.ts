@@ -1,12 +1,12 @@
-import { describe, it, expect } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { PgDialect, pgTable, QueryBuilder, varchar } from 'drizzle-orm/pg-core'
 import { jsonAgg } from '@/lib/drizzle/jsonAgg.ts'
 
-import { bytea } from '@/lib/drizzle/schema.ts'
+import { byteaToHex } from '@/lib/drizzle/schema.ts'
 
 const table = pgTable('test', {
   id: varchar(),
-  test: bytea(),
+  test: byteaToHex(),
 })
 
 const pgDialect = new PgDialect()
@@ -15,7 +15,7 @@ const qb = new QueryBuilder({
 })
 
 describe('Drizzle Json Agg', () => {
-  it('builds correct json', () => {
+  it('builds correct sql', () => {
     const query = qb
       .select({
         items: jsonAgg({ id: table.id, foo: table.test }),

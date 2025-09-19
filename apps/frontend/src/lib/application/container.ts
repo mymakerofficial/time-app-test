@@ -1,4 +1,4 @@
-import { Container } from '@time-app-test/shared/helper/container.ts'
+import { Container } from '@time-app-test/shared/helper/container/container.ts'
 import { getSessionContext } from '@/lib/application/session/sessionStore.ts'
 import { AuthApi } from '@/lib/application/auth/api.ts'
 import { AuthService } from '@/lib/application/auth/authService.ts'

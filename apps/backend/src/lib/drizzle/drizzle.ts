@@ -1,44 +1,27 @@
-import { drizzle as drizzleNode } from 'drizzle-orm/node-postgres'
 import { Pool } from 'pg'
 import type { DrizzleConfig } from 'drizzle-orm/utils'
-import { DrizzleQueryStreamFactory } from '@/lib/drizzle/queryStream.ts'
-import { PgDialect } from 'drizzle-orm/pg-core'
-import {
-  DatabaseOrTransaction,
-  DrizzleWithExtension,
-  ExtendedDrizzle,
-} from '@/lib/drizzle/types.ts'
-import { DrizzleTransactionFactory } from '@/lib/drizzle/transaction.ts'
-import { NodePgClient } from 'drizzle-orm/node-postgres/session'
+import { ExtendedDrizzle } from '@/lib/drizzle/types.ts'
+import { extendedDrizzleFactory } from '@/lib/drizzle/extension.ts'
+import { PGlite } from '@electric-sql/pglite'
 
-export function extendedDrizzleFactory<
-  TSchema extends Record<string, unknown>,
-  T extends
-    | DatabaseOrTransaction
-    | DrizzleWithExtension<DatabaseOrTransaction, TSchema>,
->(base: T, client: NodePgClient, config: DrizzleConfig<TSchema>) {
-  const queryStream = new DrizzleQueryStreamFactory(
-    client,
-    new PgDialect({
-      casing: config.casing,
-    }),
-  )
-
-  const manualTransaction = new DrizzleTransactionFactory(base, config)
-
-  return Object.assign(base, {
-    queryStream: queryStream.execute.bind(queryStream),
-    manualTransaction: manualTransaction.execute.bind(manualTransaction),
-  })
-}
-
-export function drizzle<
+export async function nodeDrizzle<
   TSchema extends Record<string, unknown> = Record<string, never>,
 >(
   config: DrizzleConfig<TSchema> & {
     client: Pool
   },
-): ExtendedDrizzle<TSchema> {
-  const base = drizzleNode(config)
+): Promise<ExtendedDrizzle<TSchema>> {
+  const base = (await import('drizzle-orm/node-postgres')).drizzle(config)
+  return extendedDrizzleFactory(base, base.$client, config)
+}
+
+export async function pgliteDrizzle<
+  TSchema extends Record<string, unknown> = Record<string, never>,
+>(
+  config: DrizzleConfig<TSchema> & {
+    client: PGlite
+  },
+): Promise<ExtendedDrizzle<TSchema>> {
+  const base = (await import('drizzle-orm/pglite')).drizzle(config)
   return extendedDrizzleFactory(base, base.$client, config)
 }

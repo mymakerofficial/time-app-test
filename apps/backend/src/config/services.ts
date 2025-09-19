@@ -1,6 +1,6 @@
 import { Elysia } from 'elysia'
 import { Pool } from 'pg'
-import { drizzle } from '@/lib/drizzle/drizzle.ts'
+import { nodeDrizzle } from '@/lib/drizzle/drizzle.ts'
 import * as schema from '@/adapter/db/schema/schema.ts'
 import { Container } from '@time-app-test/shared/helper/container/container.ts'
 import { createClient } from 'redis'
@@ -33,7 +33,7 @@ function createContainer() {
       const pool = new Pool({
         connectionString: config.pgConnectionString,
       })
-      return drizzle({
+      return await nodeDrizzle({
         client: pool,
         schema,
         casing: 'snake_case',
