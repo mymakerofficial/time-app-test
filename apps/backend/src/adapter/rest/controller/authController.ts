@@ -1,5 +1,4 @@
 import { createApiController } from '@/adapter/rest/utils/apiController.ts'
-import { createLocalHook } from '@/adapter/rest/utils/zodAdapter.ts'
 import {
   AddAuthFinishBodySchema,
   AddAuthStartBodySchema,
@@ -23,19 +22,19 @@ export const authController = createApiController({
     async ({ body, authService }) => {
       return await authService.registerStart(body)
     },
-    createLocalHook({
+    {
       body: RegisterStartBodySchema,
       response: RegisterStartResponseSchema,
-    }),
+    },
   )
   .post(
     '/register/finish',
     async ({ body, authService }) => {
       await authService.registerFinish(body)
     },
-    createLocalHook({
+    {
       body: RegisterFinishBodySchema,
-    }),
+    },
   )
   .post(
     '/add/start',
@@ -43,11 +42,11 @@ export const authController = createApiController({
       const userId = session.getCurrentUserId()
       return authService.addAuthMethodStart({ userId, ...body })
     },
-    createLocalHook({
+    {
       body: AddAuthStartBodySchema,
       response: AddAuthStartResponseSchema,
       validateSession: true,
-    }),
+    },
   )
   .post(
     '/add/finish',
@@ -55,20 +54,20 @@ export const authController = createApiController({
       const userId = session.getCurrentUserId()
       return authService.addAuthMethodFinish({ userId, ...body })
     },
-    createLocalHook({
+    {
       body: AddAuthFinishBodySchema,
       validateSession: true,
-    }),
+    },
   )
   .post(
     '/login/start',
     async ({ body, authService }) => {
       return await authService.loginStart(body)
     },
-    createLocalHook({
+    {
       body: LoginStartBodySchema,
       response: LoginStartResponseSchema,
-    }),
+    },
   )
   .post(
     '/login/finish',
@@ -77,10 +76,10 @@ export const authController = createApiController({
       session.setRefreshToken(refreshToken)
       return response
     },
-    createLocalHook({
+    {
       body: LoginFinishBodySchema,
       response: LoginFinishResponseSchema,
-    }),
+    },
   )
   .post(
     '/get-token',
@@ -88,9 +87,10 @@ export const authController = createApiController({
       const refreshToken = session.getRefreshToken()
       return await authService.getAccessTokenWithRefreshToken({ refreshToken })
     },
-    createLocalHook({
+    {
       response: GetTokenResponseSchema,
-    }),
+      authorizationHeader: true,
+    },
   )
   .post(
     '/logout',
@@ -99,7 +99,7 @@ export const authController = createApiController({
       authCache.deleteRefreshToken(refreshToken)
       session.clearRefreshToken()
     },
-    createLocalHook({
+    {
       validateSession: true,
-    }),
+    },
   )

@@ -11,6 +11,8 @@ import { DrizzleQueryError } from 'drizzle-orm/errors'
 import { notesController } from '@/adapter/rest/controller/notesController.ts'
 import { ZodError } from 'zod'
 import { attachmentsController } from '@/adapter/rest/controller/attachmentsController.ts'
+import { isFile, isPlainObject } from '@time-app-test/shared/guards.ts'
+import { mapJsonResponse } from '@/adapter/rest/utils/jsonResponse.ts'
 
 export const apiController = new Elysia({ prefix: '/api' })
   .error({
@@ -54,6 +56,24 @@ export const apiController = new Elysia({ prefix: '/api' })
 
     return UnexpectedError({ cause: error }).withPath(path).toFetchResponse()
   })
+  .onAfterHandle(async ({ responseValue }) => {
+    if (isPlainObject(responseValue)) {
+      return new Response(JSON.stringify(mapJsonResponse(responseValue)), {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+    }
+
+    if (isFile(responseValue)) {
+      return new Response(await responseValue.bytes(), {
+        headers: {
+          'Content-Type': responseValue.type,
+        },
+      })
+    }
+  })
+
   .use(authController)
   .use(usersController)
   .use(notesController)

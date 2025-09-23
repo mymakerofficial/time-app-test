@@ -1,5 +1,4 @@
-import { Cookie, Elysia } from 'elysia'
-import { servicesPlugin } from '@/config/services.ts'
+import type { Cookie } from 'elysia'
 import { isString, isUndefined } from '@time-app-test/shared/guards.ts'
 import {
   MissingAuthorizationHeader,
@@ -16,7 +15,7 @@ export interface SessionContext {
   cookie: Record<string, Cookie<unknown>>
 }
 
-class Session {
+export class Session {
   readonly #context: SessionContext
   readonly #tokenService: TokenService
 
@@ -121,22 +120,3 @@ class ValidatedSession extends Session {
     return this.#deviceId
   }
 }
-
-export const sessionPlugin = new Elysia({ name: 'session' })
-  .use(servicesPlugin)
-  .resolve({ as: 'scoped' }, (context) => ({
-    session: new Session(context),
-  }))
-  .macro({
-    validateSession: (enabled: true) => ({
-      resolve: async ({ session }) => {
-        if (!enabled || !session) {
-          return
-        }
-        const validatedSession = await session.validateSession()
-        return {
-          session: validatedSession,
-        }
-      },
-    }),
-  })

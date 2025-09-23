@@ -44,9 +44,23 @@ export function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 
+export function isPlainObject(
+  value: unknown,
+): value is Record<string, unknown> {
+  return isObject(value) && Object.getPrototypeOf(value) === Object.prototype
+}
+
 export function hasProperty<X, Y extends PropertyKey>(
   obj: X,
   prop: Y,
 ): obj is X & Record<Y, unknown> {
   return obj != null && typeof obj === 'object' && prop in obj
+}
+
+export function isDate(value: unknown): value is Date {
+  return value instanceof Date && !isNaN(value.valueOf())
+}
+
+export function isFile(value: unknown): value is File {
+  return value instanceof File
 }

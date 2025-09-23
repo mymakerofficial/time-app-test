@@ -15,6 +15,6 @@ export class AttachmentsService {
   }
 
   async getAsFile(id: string) {
-    return new Blob([await this.#attachmentsPersistence.getContentById(id)])
+    return new File([await this.#attachmentsPersistence.getContentById(id)], id)
   }
 }

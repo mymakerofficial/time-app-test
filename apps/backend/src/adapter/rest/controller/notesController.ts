@@ -1,5 +1,4 @@
 import { createApiController } from '@/adapter/rest/utils/apiController.ts'
-import { createLocalHook } from '@/adapter/rest/utils/zodAdapter.ts'
 import {
   CreateNoteBodySchema,
   GetAllNotesResponseSchema,
@@ -15,10 +14,10 @@ export const notesController = createApiController({
       const userId = session.getCurrentUserId()
       return await notesService.getAll(userId)
     },
-    createLocalHook({
+    {
       response: GetAllNotesResponseSchema,
       validateSession: true,
-    }),
+    },
   )
   .put(
     '/',
@@ -29,8 +28,8 @@ export const notesController = createApiController({
         ...body,
       })
     },
-    createLocalHook({
+    {
       body: CreateNoteBodySchema,
       validateSession: true,
-    }),
+    },
   )
