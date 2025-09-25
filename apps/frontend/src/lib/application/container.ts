@@ -8,13 +8,16 @@ import { AttachmentsApi } from '@/lib/application/attachments/api.ts'
 import { AttachmentsService } from '@/lib/application/attachments/attachmentsService.ts'
 
 export const container = new Container()
-  .add('session', getSessionContext)
-  .add('authApi', (container) => new AuthApi(container))
-  .add('authService', (container) => new AuthService(container))
-  .add('notesApi', (container) => new NotesApi(container))
-  .add('notesService', (container) => new NotesService(container))
-  .add('attachmentsApi', (container) => new AttachmentsApi(container))
-  .add('attachmentsService', (container) => new AttachmentsService(container))
+  .register('session', getSessionContext)
+  .register('authApi', (container) => new AuthApi(container))
+  .register('authService', (container) => new AuthService(container))
+  .register('notesApi', (container) => new NotesApi(container))
+  .register('notesService', (container) => new NotesService(container))
+  .register('attachmentsApi', (container) => new AttachmentsApi(container))
+  .register(
+    'attachmentsService',
+    (container) => new AttachmentsService(container),
+  )
   .build()
 
 export function useContainer() {

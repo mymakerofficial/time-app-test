@@ -1,8 +1,10 @@
-import { Elysia } from 'elysia'
 import { Pool } from 'pg'
 import { nodeDrizzle } from '@/lib/drizzle/drizzle.ts'
 import * as schema from '@/adapter/db/schema/schema.ts'
-import { Container } from '@time-app-test/shared/helper/container/container.ts'
+import {
+  Container,
+  InferContainerShape,
+} from '@time-app-test/shared/helper/container/container.ts'
 import { createClient } from 'redis'
 import { TokenService } from '@/application/service/tokenService'
 import { RedisAuthCache } from '@/adapter/redis/auth/authCache'
@@ -15,17 +17,14 @@ import { AttachmentsService } from '@/application/service/attachmentsService.ts'
 import { AuthService } from '@/application/service/authService.ts'
 import { UserPersistence } from '@/adapter/db/persistence/userPersistence.ts'
 import { ExtendedDatabaseOrTransaction } from '@/lib/drizzle/types.ts'
+import { Config } from '@time-app-test/shared/model/domain/config.ts'
 
 export type DB = ExtendedDatabaseOrTransaction<typeof schema>
 
-function createContainer() {
+export function createBaseContainer(config: Config.ApplicationConfig) {
   return new Container()
-    .add('config', () => ({
-      pgConnectionString:
-        'postgres://postgres_user:password@localhost:5432/postgres_db',
-      redisConnectionString: 'redis://localhost:6379',
-    }))
-    .add('db', async ({ config }) => {
+    .register('config', () => config)
+    .register('db', async ({ config }) => {
       const pool = new Pool({
         connectionString: config.pgConnectionString,
       })
@@ -36,28 +35,52 @@ function createContainer() {
         logger: true,
       })
     })
-    .add('redis', async ({ config }) => {
+    .register('redis', async ({ config }) => {
       return (await createClient({
         url: config.redisConnectionString,
       }).connect()) as any // as RedisClientType
     })
-    .add('authCache', (container) => new RedisAuthCache(container))
-    .add('tokenService', () => new TokenService())
-    .add('authPersistence', (container) => new AuthPersistence(container))
-    .add('userPersistence', (container) => new UserPersistence(container))
-    .add('notesPersistence', (container) => new NotesPersistence(container))
-    .add(
+}
+
+type BaseContainerShape = InferContainerShape<
+  ReturnType<typeof createBaseContainer>
+>
+
+export function createServiceContainer(
+  base: Container<{}, false, BaseContainerShape, true>,
+  transacting: boolean,
+) {
+  return base
+    .extend()
+    .registerIf(
+      'tx',
+      () => transacting,
+      async ({ db }) => {
+        return db.createTransaction()
+      },
+    )
+    .registerIf(
+      'db',
+      () => transacting,
+      ({ tx }) => tx,
+    )
+    .register('authCache', (container) => new RedisAuthCache(container))
+    .register('tokenService', () => new TokenService())
+    .register('authPersistence', (container) => new AuthPersistence(container))
+    .register('userPersistence', (container) => new UserPersistence(container))
+    .register(
+      'notesPersistence',
+      (container) => new NotesPersistence(container),
+    )
+    .register(
       'attachmentsPersistence',
       (container) => new AttachmentsPersistence(container),
     )
-    .add('userService', (container) => new UserService(container))
-    .add('authService', (container) => new AuthService(container))
-    .add('notesService', (container) => new NotesService(container))
-    .add('attachmentsService', (container) => new AttachmentsService(container))
+    .register('userService', (container) => new UserService(container))
+    .register('authService', (container) => new AuthService(container))
+    .register('notesService', (container) => new NotesService(container))
+    .register(
+      'attachmentsService',
+      (container) => new AttachmentsService(container),
+    )
 }
-
-export const servicesPlugin = new Elysia({ name: 'services' }).decorate(
-  await createContainer().buildAsync((key) => {
-    console.log(`Instantiating ${key}...`)
-  }),
-)

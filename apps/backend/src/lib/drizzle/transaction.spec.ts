@@ -33,10 +33,14 @@ test('drizzle transaction', async () => {
     await tx4.insert(foo).values({ message: 'tx4' })
   })
   await tx1.commit()
+  const tx5 = await db.createTransaction()
+  await tx5.insert(foo).values({ message: 'tx5' })
+  await tx5.commit()
 
   expect(await db.select().from(foo)).toEqual([
     { message: 'no transaction' },
     { message: 'tx1' },
     { message: 'tx4' },
+    { message: 'tx5' },
   ])
 })

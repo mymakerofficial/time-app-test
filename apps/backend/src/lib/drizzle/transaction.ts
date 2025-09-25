@@ -8,6 +8,8 @@ import {
 import type { DrizzleConfig } from 'drizzle-orm/utils'
 import { extendedDrizzleFactory } from '@/lib/drizzle/extension.ts'
 
+const RollbackSymbol = Symbol('rollback')
+
 export class DrizzleTransactionFactory<
   TSchema extends Record<string, unknown> = Record<string, never>,
 > {
@@ -34,15 +36,17 @@ export class DrizzleTransactionFactory<
                   await txPromise
                 },
                 rollback: async () => {
-                  rejectTx()
+                  rejectTx(RollbackSymbol)
                   await txPromise
                 },
               }),
             )
           })
         })
-        .catch(() => {
-          // rolling back, throws... just ignore it
+        .catch((error) => {
+          if (error !== RollbackSymbol) {
+            throw error
+          }
         })
     })
 

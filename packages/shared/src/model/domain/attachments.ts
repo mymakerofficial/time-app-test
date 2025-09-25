@@ -2,7 +2,6 @@ import z from 'zod'
 import { nanoid } from 'nanoid'
 import { MimeTypeSchema } from '@/model/domain/mimeType.ts'
 import { UserIdSchema } from '@/model/domain/user.ts'
-import { uInt8Array } from '@/zod.ts'
 
 export namespace Attachments {
   export const IdSchema = z.nanoid().meta({

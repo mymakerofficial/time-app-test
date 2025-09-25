@@ -21,56 +21,146 @@ function ensureSync<T>(
   return maybePromise
 }
 
+interface ContainerBuildConfig {
+  logger: (name: string) => void
+}
+
 type AddService<
   TShape extends { [K: string]: unknown },
   TName extends string,
   TService,
-> = Prettify<TShape & { [K in TName]: Awaited<TService> }>
-type CombineIsPromise<TPromise, TService> =
-  TService extends Promise<unknown> ? true : TPromise
+  TOptional extends boolean = false,
+> = Prettify<
+  TShape & {
+    [K in TName]: TOptional extends true
+      ? Awaited<TService> | undefined
+      : Awaited<TService>
+  }
+>
+type CombineIsPromise<TParentIsPromise, TIsPromise, TService> =
+  TParentIsPromise extends true
+    ? true
+    : TService extends Promise<unknown>
+      ? true
+      : TIsPromise
+
+export type InferContainerShape<T> =
+  T extends Container<{}, boolean, infer U> ? U : never
+
+type ConstructorEntry<TShape> = {
+  predicate?: (container: Readonly<object>) => boolean
+  constructor: (
+    container: Readonly<object>,
+  ) => MaybePromise<TShape[keyof TShape]>
+}
 
 export class Container<
+  TParentShape extends { [K: string]: unknown } = {},
+  TParentIsPromise extends boolean = false,
   TShape extends { [K: string]: unknown } = {},
-  TIsPromise extends boolean = false,
+  TIsPromise extends TParentIsPromise extends true
+    ? true
+    : boolean = TParentIsPromise extends true ? true : false,
 > {
-  private constructors = new Map<
-    keyof TShape,
-    (container: Readonly<object>) => MaybePromise<TShape[keyof TShape]>
-  >()
+  private constructors = new Map<keyof TShape, ConstructorEntry<TShape>>()
+
+  private cache = {} as TShape
+
+  constructor(private parent?: Container<TParentShape, TParentIsPromise>) {}
 
   private entries() {
     return [...this.constructors.entries()] as [
       keyof TShape,
-      (container: Readonly<object>) => MaybePromise<TShape[keyof TShape]>,
+      ConstructorEntry<TShape>,
     ][]
   }
 
-  add<TName extends Exclude<string, keyof TShape>, TService>(
+  register<TName extends string, TService>(
     name: TName,
-    fn: (container: Readonly<TShape>) => TService,
+    constructor: (container: Readonly<TParentShape & TShape>) => TService,
   ) {
-    this.constructors.set(name, fn as any)
+    this.constructors.set(name, { constructor: constructor as any })
     return this as Container<
+      TParentShape,
+      TParentIsPromise,
       AddService<TShape, TName, TService>,
-      CombineIsPromise<TIsPromise, TService>
+      CombineIsPromise<TParentIsPromise, TIsPromise, TService>
     >
   }
 
-  async buildAsync(logCallback?: (key: string) => void) {
-    const items = {} as TShape
-    for (const [key, constructor] of this.entries()) {
-      logCallback?.(String(key))
-      items[key] = await toPromise(constructor(items))
-    }
-    return items as Readonly<TShape>
+  registerIf<TName extends string, TPredicate extends boolean, TService>(
+    name: TName,
+    predicate: (container: Readonly<TParentShape & TShape>) => TPredicate,
+    constructor: (container: Readonly<TParentShape & TShape>) => TService,
+  ) {
+    this.constructors.set(name, {
+      predicate: predicate as any,
+      constructor: constructor as any,
+    })
+    return this as Container<
+      TParentShape,
+      TParentIsPromise,
+      AddService<TShape, TName, TService>,
+      CombineIsPromise<TParentIsPromise, TIsPromise, TService>
+    >
   }
 
-  build(logCallback?: (key: string) => void) {
-    const items = {} as TShape
-    for (const [key, constructor] of this.entries()) {
-      logCallback?.(String(key))
-      items[key] = ensureSync(key, constructor(items))
+  /**
+   * Creates a new container that has access to this containers services.
+   *  Building the new container won't include services from this container.
+   */
+  extend() {
+    return new Container(this) as unknown as Container<
+      TShape,
+      TIsPromise,
+      {},
+      TIsPromise extends true ? true : false
+    >
+  }
+
+  async buildAsync(config?: ContainerBuildConfig) {
+    const parentServices = (await this.parent?.buildAsync(config)) ?? {}
+    const constructors = this.entries()
+    for (const [key, { predicate, constructor }] of constructors) {
+      if (predicate?.({ ...parentServices, ...this.cache }) === false) {
+        continue
+      }
+      config?.logger?.(String(key))
+      this.cache[key] = await toPromise(
+        constructor({ ...parentServices, ...this.cache }),
+      )
+      this.constructors.delete(key)
     }
-    return items as NeverIf<Readonly<TShape>, TIsPromise>
+    return this.cache as Readonly<TShape>
+  }
+
+  build(config?: ContainerBuildConfig) {
+    const parentServices = this.parent?.build(config) ?? {}
+    const constructors = this.entries()
+    for (const [key, { predicate, constructor }] of constructors) {
+      if (predicate?.({ ...parentServices, ...this.cache }) === false) {
+        continue
+      }
+      config?.logger?.(String(key))
+      this.cache[key] = ensureSync(
+        key,
+        constructor({ ...parentServices, ...this.cache }),
+      )
+      this.constructors.delete(key)
+    }
+    return this.cache as NeverIf<Readonly<TShape>, TIsPromise>
+  }
+
+  async prepareAsync(config?: ContainerBuildConfig) {
+    await this.buildAsync(config)
+    return this as Container<TParentShape, false, TShape, false>
+  }
+
+  prepare(config?: ContainerBuildConfig) {
+    this.build(config)
+    return this as unknown as NeverIf<
+      Container<TParentShape, false, TShape, false>,
+      TIsPromise
+    >
   }
 }

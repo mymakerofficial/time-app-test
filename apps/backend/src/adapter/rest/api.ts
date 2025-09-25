@@ -13,68 +13,70 @@ import { ZodError } from 'zod'
 import { attachmentsController } from '@/adapter/rest/controller/attachmentsController.ts'
 import { isFile, isPlainObject } from '@time-app-test/shared/guards.ts'
 import { mapJsonResponse } from '@/adapter/rest/utils/jsonResponse.ts'
+import { Config } from '@time-app-test/shared/model/domain/config.ts'
 
-export const apiController = new Elysia({ prefix: '/api' })
-  .error({
-    API_ERROR: ApiError,
-    DRIZZLE_QUERY_ERROR: DrizzleQueryError,
-  })
-  .onError(({ code, error, path }) => {
-    console.error(path, code, error)
+export function apiController(config: Config.ApplicationConfig) {
+  return new Elysia({ prefix: '/api' })
+    .error({
+      API_ERROR: ApiError,
+      DRIZZLE_QUERY_ERROR: DrizzleQueryError,
+    })
+    .onError(({ code, error, path }) => {
+      console.error(path, code, error)
 
-    if (code === 'API_ERROR') {
-      // if (error.statusCode === HttpStatusCode.FORBIDDEN) {
-      //   return AccessDenied().toFetchResponse()
-      // }
-      return error.withPath(path).toFetchResponse()
-    } else if (code === 404) {
-      return PathNotFound({ path }).toFetchResponse()
-    } else if (code === 'UNKNOWN' && error instanceof ZodError) {
-      const issues = error.issues
-      const firstIssue = issues[0]
-      return ValidationError(
-        {
-          path: firstIssue.path.join('.'),
-          message: firstIssue.message,
-        },
-        { cause: issues, path },
-      ).toFetchResponse()
-    } else if (
-      code === 'VALIDATION' &&
-      error instanceof ElysiaValidationError
-    ) {
-      const errors = error.all
-      const firstError = errors[0]
-      return ValidationError(
-        {
-          path: 'path' in firstError ? firstError.path : undefined,
-          message: firstError.summary,
-        },
-        { cause: errors, path },
-      ).toFetchResponse()
-    }
+      if (code === 'API_ERROR') {
+        // if (error.statusCode === HttpStatusCode.FORBIDDEN) {
+        //   return AccessDenied().toFetchResponse()
+        // }
+        return error.withPath(path).toFetchResponse()
+      } else if (code === 404) {
+        return PathNotFound({ path }).toFetchResponse()
+      } else if (code === 'UNKNOWN' && error instanceof ZodError) {
+        const issues = error.issues
+        const firstIssue = issues[0]
+        return ValidationError(
+          {
+            path: firstIssue.path.join('.'),
+            message: firstIssue.message,
+          },
+          { cause: issues, path },
+        ).toFetchResponse()
+      } else if (
+        code === 'VALIDATION' &&
+        error instanceof ElysiaValidationError
+      ) {
+        const errors = error.all
+        const firstError = errors[0]
+        return ValidationError(
+          {
+            path: 'path' in firstError ? firstError.path : undefined,
+            message: firstError.summary,
+          },
+          { cause: errors, path },
+        ).toFetchResponse()
+      }
 
-    return UnexpectedError({ cause: error }).withPath(path).toFetchResponse()
-  })
-  .onAfterHandle(async ({ responseValue }) => {
-    if (isPlainObject(responseValue)) {
-      return new Response(JSON.stringify(mapJsonResponse(responseValue)), {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-    }
+      return UnexpectedError({ cause: error }).withPath(path).toFetchResponse()
+    })
+    .onAfterHandle(async ({ responseValue }) => {
+      if (isPlainObject(responseValue)) {
+        return new Response(JSON.stringify(mapJsonResponse(responseValue)), {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        })
+      }
 
-    if (isFile(responseValue)) {
-      return new Response(await responseValue.bytes(), {
-        headers: {
-          'Content-Type': responseValue.type,
-        },
-      })
-    }
-  })
-
-  .use(authController)
-  .use(usersController)
-  .use(notesController)
-  .use(attachmentsController)
+      if (isFile(responseValue)) {
+        return new Response(await responseValue.bytes(), {
+          headers: {
+            'Content-Type': responseValue.type,
+          },
+        })
+      }
+    })
+    .use(authController(config))
+    .use(usersController(config))
+    .use(notesController(config))
+    .use(attachmentsController(config))
+}

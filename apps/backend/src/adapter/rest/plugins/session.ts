@@ -1,42 +1,48 @@
 import { Elysia } from 'elysia'
-import { servicesPlugin } from '@/config/services.ts'
 import z from 'zod'
 import { Session } from '@/adapter/rest/utils/session.ts'
+import { servicesPlugin } from '@/adapter/rest/plugins/services.ts'
+import { Config } from '@time-app-test/shared/model/domain/config.ts'
 
-export const sessionPlugin = new Elysia({ name: 'session' })
-  .use(servicesPlugin)
-  .resolve({ as: 'scoped' }, (context) => ({
-    session: new Session(context),
-  }))
-  .macro({
-    authorizationHeader: {
-      headers: z.object({
-        authorization: z.string().regex(/^Bearer .+$/),
-      }),
-      // schema defined in a macro doesnt appear in openapi
-      detail: {
-        parameters: [
-          {
-            schema: {
-              type: 'string',
-              pattern: '^Bearer .+$',
+export function sessionPlugin(config: Config.ApplicationConfig) {
+  return new Elysia({ name: 'session' })
+    .onStart(() => {
+      console.log('Using session plugin')
+    })
+    .use(servicesPlugin(config))
+    .resolve({ as: 'global' }, (context) => ({
+      session: new Session(context),
+    }))
+    .macro({
+      authorizationHeader: {
+        headers: z.object({
+          authorization: z.string().regex(/^Bearer .+$/),
+        }),
+        // schema defined in a macro doesnt appear in openapi
+        detail: {
+          parameters: [
+            {
+              schema: {
+                type: 'string',
+                pattern: '^Bearer .+$',
+              },
+              in: 'header',
+              name: 'authorization',
             },
-            in: 'header',
-            name: 'authorization',
-          },
-        ],
+          ],
+        },
       },
-    },
-    validateSession: {
-      authorizationHeader: true,
-      resolve: async ({ session }) => {
-        if (!session) {
-          return
-        }
-        const validatedSession = await session.validateSession()
-        return {
-          session: validatedSession,
-        }
+      validateSession: {
+        authorizationHeader: true,
+        resolve: async ({ session }) => {
+          if (!session) {
+            return
+          }
+          const validatedSession = await session.validateSession()
+          return {
+            session: validatedSession,
+          }
+        },
       },
-    },
-  })
+    })
+}
